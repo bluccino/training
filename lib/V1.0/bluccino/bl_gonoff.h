@@ -9,8 +9,8 @@
 #ifndef __BL_GONOFF_H__
 #define __BL_GONOFF_H__
 
-#include "zlmodel.h"
-#include "zltype.h"
+#include "bl_mesh.h"
+#include "bl_type.h"
 
     #define STATE_OFF        0x00
     #define STATE_ON         0x01
@@ -43,20 +43,20 @@
     } BL_gonoff_status;
 
 
-    #define BL_OFF   ((u8_t)0)   // symbolic value for OFF
-    #define BL_ON    ((u8_t)1)   // symbolic value for ON
+    #define BL_OFF   ((uint8_t)0)   // symbolic value for OFF
+    #define BL_ON    ((uint8_t)1)   // symbolic value for ON
 
     typedef struct BL_gonoff_state
     {
-        u8_t onoff;
-        u8_t target_onoff;
+        uint8_t onoff;
+        uint8_t target_onoff;
 
-        u8_t last_tid;
-        u16_t last_src_addr;
-        u16_t last_dst_addr;
-        s64_t last_msg_timestamp;
+        uint8_t last_tid;
+        uint16_t last_src_addr;
+        uint16_t last_dst_addr;
+        int64_t last_msg_timestamp;
 
-        s32_t tt_delta;
+        int32_t tt_delta;
 
         BL_trans *transition;
     } BL_gonoff_state;
@@ -65,7 +65,7 @@
 // dynamic onoff model generation
 //==============================================================================
 /*
-    extern u8_t            zl_tid_onoff;          // TID for gonoff messages
+    extern uint8_t            zl_tid_onoff;          // TID for gonoff messages
     extern BL_gonoff_state zl_gonoff_state0;  // onoff state for GONOFF_CLI0
 
     BL_model *zl_gonoff_srv_add(BL_element *pel, BL_pub *ppub, BL_gonoff_state *pud);
@@ -88,8 +88,8 @@
 // send generic onoff message
 //==============================================================================
 
-    int zl_tx_gonoff_set(BL_model *pmod, u8_t on, u8_t tid, u8_t tt, u8_t d);
-    int zl_tx_gonoff_let(BL_model *pmod, u8_t on, u8_t tid, u8_t tt, u8_t d);
+    int zl_tx_gonoff_set(BL_model *pmod, uint8_t on, uint8_t tid, uint8_t tt, uint8_t d);
+    int zl_tx_gonoff_let(BL_model *pmod, uint8_t on, uint8_t tid, uint8_t tt, uint8_t d);
     int zl_tx_gonoff_get(BL_model *pmod);
 
 #endif // __BL_GONOFF_H__

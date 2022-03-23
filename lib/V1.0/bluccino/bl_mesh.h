@@ -62,6 +62,26 @@
     #define BL_SIGNED2LEVEL(signd)       (  (BL_level)(((BL_LONGSIGNED2LEVEL(signd)+1)/10)*10)     )
 
     #define BL_S2P(sgn)                  ((uint16_t)(BL_SIGNED2LEVEL(sgn)/100))
+
+//===================================================================================================
+// transition type
+//===================================================================================================
+
+  typedef struct BL_trans
+  {
+  	bool just_started;
+  	uint8_t type;
+  	uint8_t tt;
+  	uint8_t rt;
+  	uint8_t delay;
+  	uint32_t quo_tt;
+  	uint32_t counter;
+  	uint32_t total_duration;
+  	int64_t start_timestamp;
+
+  	struct k_timer timer;
+  } BL_trans;
+
 //===================================================================================================
 // event types
 //===================================================================================================

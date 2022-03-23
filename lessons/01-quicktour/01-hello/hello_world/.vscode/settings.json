@@ -1,0 +1,7 @@
+{
+  "nrf-connect.topdir": "/Users/hux/Bluenetics/Git/Zephyr/zephyrproject",
+  "nrf-connect.toolchain.path": "/opt/nordic/ncs/v1.8.0/toolchain",
+  "nrf-connect.applications": [
+    "/Users/hux/Bluenetics/Git/Bluccino/Training/novice-training/01-quicktour/01-hello/hello_world"
+  ]
+}

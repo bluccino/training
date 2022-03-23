@@ -5,22 +5,6 @@
 // Created by Hugo Pristauz on 2022-Feb-18
 // Copyright © 2022 Bluccino. All rights reserved.
 //==============================================================================
-//
-// LED interface:
-// - LED messages [LED:SET @id onoff] control the onoff state of one of the four
-// - LEDs @1..@4. LED @0 is the status LED which will be remapped to LED @1
-//
-// BUTTON interface
-// - button presses notify with [BUTTON:PRESS @id 1]   (@id = 1..4)
-// - button releases notify with [BUTTON:RELESE @id 1] (@id = 1..4)
-//
-// SWITCH interface
-// - each button (1..4) is assigned with a logical switch which is toggled
-//   on [BUTTON:PRESS @id,val] events
-// - each change of the logical switch state is notified by a
-//   [SWITCH:SET @id,onoff] event message
-//
-//==============================================================================
 
 #ifndef __BL_HW_H__
 #define __BL_HW_H__
@@ -29,82 +13,40 @@
 // public module interface
 //==============================================================================
 //
-// BC_HW Interfaces:
-//   SYS Interface:     [] = SYS(INIT)
-//   LED Interface:     [] = LED(SET,TOGGLE)
-//   BUTTON Interface:  [PRESS,RELEASE] = BUTTON(PRESS,RELEASE)
-//   SWITCH Interface:  [STS] = SWITCH(STS)
-//
-//                             +-------------+
-//                             |    BL_HW    |
-//                             +-------------+
-//                      INIT ->|    SYS:     |
-//                      TICK ->|             |
-//                             +-------------+
-//                       SET ->|    LED:     |
-//                    TOGGLE ->|             |
-//                             +-------------+
-//                     PRESS ->|   BUTTON:   |-> PRESS
-//                   RELEASE ->|             |-> RELEASE
-//==============================================================================
-// public module interface
-//==============================================================================
-//
-// BC_HW Interfaces:
-//   SYS Interface:     [] = SYS(INIT)
-//   LED Interface:     [] = LED(SET,TOGGLE)
-//   BUTTON Interface:  [PRESS,RELEASE] = BUTTON(PRESS,RELEASE)
-//   SWITCH Interface:  [STS] = SWITCH(STS)
-//
-//                             +-------------+
-//                             |    BL_HW    |
-//                             +-------------+
-//                      INIT ->|    SYS:     |
-//                      TICK ->|             |
-//                             +-------------+
-//                       SET ->|    LED:     |
-//                    TOGGLE ->|             |
-//                             +-------------+
-//                     PRESS ->|   BUTTON:   |-> PRESS
-//                   RELEASE ->|             |-> RELEASE
-//                     CLICK ->|             |-> CLICK
-//                      HOLD ->|             |-> HOLD
-//                             +-------------+
-//                       STS ->|   SWITCH:   |-> STS
-//                             +-------------+
-//  Input Messages:
-//    - [SYS:INIT <cb>]              init module, provide output callback
-//    - [SYS:TICK @id,cnt]           tick module
-//    - [LED:SET @id onoff]          set LED @id on/off (id=0..4)
-//    - [LED:TOGGLE @id]             toggle LED(@id), (id: 0..4)
-//    - [BUTTON:PRESS @id,0]         forward button press event to output
-//    - [BUTTON:RELEASE @id,time]    forward button release event to output
-//                                   note: time is PRESS->RELEASE elapsed time
-//    - [SWITCH:STS @id,onoff]       forward switch status update to output
-//
-//  Output Messages:
-//    - [BUTTON:PRESS @id,1]         output button press event
-//    - [BUTTON:RELEASE @id,0]       output button release event
-//    - [SWITCH:STS @id,onoff]       output switch status update
-//
-//==============================================================================
-//                             +-------------+
-//                       STS ->|   SWITCH:   |-> STS
-//                             +-------------+
-//  Input Messages:
-//    - [SYS:INIT <cb>]              init module, provide output callback
-//    - [SYS:TICK @id,cnt]           tick module
-//    - [LED:SET @id onoff]          set LED @id on/off (id=0..4)
-//    - [LED:TOGGLE @id]             toggle LED(@id), (id: 0..4)
-//    - [BUTTON:PRESS @id,0]         forward button press event to output
-//    - [BUTTON:RELEASE @id,time]    forward button release event to output
-//                                   note: time is PRESS->RELEASE elapsed time
-//    - [SWITCH:STS @id,onoff]       forward switch status update to output
-//
-//  Output Messages:
-//    - [BUTTON:PRESS @id,1]         output button press event
-//    - [BUTTON:RELEASE @id,0]       output button release event
-//    - [SWITCH:STS @id,onoff]       output switch status update
+// (B) := (BL_HWBUT);  (L) := (BL_HWLED)
+//                  +--------------------+
+//                  |       BL_HW        |
+//                  +--------------------+
+//                  |        SYS:        | SYS: interface
+// (v)->     INIT ->|       @id,cnt      | init module, store <out> callback
+// (v)->     TICK ->|       @id,cnt      | tick the module
+//                  +--------------------+
+//                  |        LED:        | LED: input interface
+// (v)->      SET ->|      @id,onoff     | set LED @id on/off (i=0..4)
+// (v)->   TOGGLE ->|                    | toggle LED @id (i=0..4)
+//                  +--------------------+
+//                  |       BUTTON:      | BUTTON: output interface
+// (^)<-    PRESS <-|        @id,1       | button @id pressed (rising edge)
+// (^)<-  RELEASE <-|        @id,0       | button @id released (falling edge)
+// (^)<-    CLICK <-|       @id,cnt      | button @id clicked (cnt: nmb. clicks)
+// (^)<-     HOLD <-|       @id,time     | button @id held (time: hold time)
+//                  +--------------------+
+//                  |       SWITCH:      | SWITCH: output interface
+// (^)<-      STS <-|      @id,onoff     | on/off status update of switch @id
+//                  +====================+
+//                  |        LED:        | LED: output interface
+// (L)<-      SET <-|      @id,onoff     | set LED @id on/off (i=0..4)
+// (L)<-   TOGGLE <-|                    | toggle LED @id (i=0..4)
+//                  +--------------------+
+//                  |       BUTTON:      | BUTTON: input interface
+// (B)->    PRESS ->|        @id,1       | button @id pressed (rising edge)
+// (B)->  RELEASE ->|        @id,0       | button @id released (falling edge)
+// (B)->    CLICK ->|       @id,cnt      | button @id clicked (cnt: nmb. clicks)
+// (B)->     HOLD ->|       @id,time     | button @id held (time: hold time)
+//                  +--------------------+
+//                  |       SWITCH:      | SWITCH: input interface
+// (B)->      STS ->|      @id,onoff     | on/off status update of switch @id
+//                  +--------------------+
 //
 //==============================================================================
 
