@@ -3391,23 +3391,16 @@ const struct bt_mesh_comp comp = {
 // public module interface
 //==============================================================================
 //
-// BL_DEVCOMP Interfaces
-//   SYS Interface:     [] = SYS(INIT)
-//   GOOSRV Interface:  [SET] = GOOSRV(#STS)
-//
-//                            +-------------------+
-//                            |    BL_DEVCOMP     |
-//                            +-------------------+
-//                     INIT ->|       SYS:        |
-//                            +-------------------+
-//                     #STS ->|      GOOSRV:      |-> STS ->(BL_CORE)
-//                            +-------------------+
-// Input Messages:
-//   [SYS:INIT <cout>]            init module, store callback
-//   [GOOSRV:#STS @id,val,<data>] relay input for output of [GOOSRV:STS ...] msg
-//
-// Output Messages:
-//   [GOOSRV:STS @id,val,<data>]  output [GOOSRV:STS ...] message to subscriber
+// (C) := (BL_CORE)
+//                  +--------------------+
+//                  |     BL_DEVCOMP     |
+//                  +--------------------+
+//                  |        SYS:        | SYS: interface
+// (C)->     INIT ->|       <out>        | init module, store <out> callback
+//                  +--------------------+
+//                  |       GOOSRV:      | GOOSRV: interface (generic onoff srv)
+// (C)<-      STS <-|   @id,<data>,val   | status [GOOSRV:STS @id,<data>,val]
+//                  +--------------------+
 //
 //==============================================================================
 
