@@ -264,7 +264,7 @@ void publish(struct k_work *work)
   	      bl_iid(pmod), pmod->elem_idx, pmod->mod_idx, on, tid,
   			  bl_mesh2ms(tt), bl_tick2ms(delay));
 
-    bt_mesh_model_msg_init(pmod->pub->msg, BL_OC_GONOFF_SET);
+    bt_mesh_model_msg_init(pmod->pub->msg, BL_GOO_SET);
 
     net_buf_simple_add_u8(pmod->pub->msg, on);
     net_buf_simple_add_u8(pmod->pub->msg, tid);
@@ -286,7 +286,7 @@ void publish(struct k_work *work)
   	      bl_iid(pmod), pmod->elem_idx, pmod->mod_idx, on, tid,
   			  bl_mesh2ms(tt), bl_tick2ms(delay));
 
-    bt_mesh_model_msg_init(pmod->pub->msg, BL_OC_GONOFF_LET);
+    bt_mesh_model_msg_init(pmod->pub->msg, BL_GOO_LET);
 
     net_buf_simple_add_u8(pmod->pub->msg, on);
     net_buf_simple_add_u8(pmod->pub->msg, tid);

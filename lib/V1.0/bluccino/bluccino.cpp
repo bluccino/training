@@ -117,7 +117,7 @@
 
   static WhenGooSrv when_goosrv = 0;
 
-  GooSrv::GooSrv(int id, WhenGooSrv cb) : Blob(BL_GOOSRV,id)
+  GooSrv::GooSrv(int id, WhenGooSrv cb) : Blob(BL_GOO_SRV,id)
   {
     when_goosrv = cb;
   }
@@ -146,7 +146,7 @@
         }
         return;
 
-      case BL_GOOSRV:
+      case BL_GOO_SRV:
         if (when_goosrv)
         {
           GooSrv obj(o->id,o->op);

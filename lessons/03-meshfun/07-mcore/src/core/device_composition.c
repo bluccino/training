@@ -241,7 +241,7 @@ static int gen_onoff_set_unack(struct bt_mesh_model *model,
 			       struct net_buf_simple *buf)
 {
   #if MIGRATION_STEP6
-    uint32_t oc = BL_OC_GONOFF_SET;
+    uint32_t oc = BL_GOO_SET;
     static long bl_log_gonoff_set_rx = 0;
     long cnt = ++bl_log_gonoff_set_rx;
     BL_gonoff_set *pay = &post.pay.gooset;
@@ -340,7 +340,7 @@ SUBMIT:  dummy = 1;                    // need this in order to use label
   			 struct net_buf_simple *buf)
   {
     #if MIGRATION_STEP6
-      uint32_t oc = BL_OC_GONOFF_SET;
+      uint32_t oc = BL_GOO_SET;
       static long bl_log_gonoff_set_rx = 0;
       long cnt = ++bl_log_gonoff_set_rx;
       BL_gonoff_set *pay = &post.pay.gooset;

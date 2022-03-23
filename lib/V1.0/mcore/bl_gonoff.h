@@ -19,13 +19,13 @@
 
         // mesh model ID and mesh model operation codes
 
-    #define BL_MID_GONOFF_CLI       BT_MESH_MODEL_ID_GEN_ONOFF_CLI
-    #define BL_MID_GONOFF_SRV       BT_MESH_MODEL_ID_GEN_ONOFF_SRV
+    #define BL_GOO_CLI       BT_MESH_MODEL_ID_GEN_ONOFF_CLI
+    #define BL_GOO_SRV       BT_MESH_MODEL_ID_GEN_ONOFF_SRV
 
-    #define BL_OC_GONOFF_GET        BT_MESH_MODEL_OP_2(0x82, 0x01)
-    #define BL_OC_GONOFF_SET        BT_MESH_MODEL_OP_2(0x82, 0x02)
-    #define BL_OC_GONOFF_LET        BT_MESH_MODEL_OP_2(0x82, 0x03)
-    #define BL_OC_GONOFF_STS     BT_MESH_MODEL_OP_2(0x82, 0x04)
+    #define BL_GOO_GET        BT_MESH_MODEL_OP_2(0x82, 0x01)
+    #define BL_GOO_SET        BT_MESH_MODEL_OP_2(0x82, 0x02)
+    #define BL_GOO_LET        BT_MESH_MODEL_OP_2(0x82, 0x03)
+    #define BL_GOO_STS     BT_MESH_MODEL_OP_2(0x82, 0x04)
 
     typedef struct BL_gonoff_set
     {

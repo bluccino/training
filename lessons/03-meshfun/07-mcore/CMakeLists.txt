@@ -37,7 +37,6 @@ target_sources(app PRIVATE
 	       ${LMO}/bl_basis.c
 
 	       ${CORE}/bl_core.c
-	       ${CORE}/app_gpio.c
 	       ${CORE}/storage.c
 	       ${CORE}/ble_mesh.c
 	       ${CORE}/device_composition.c

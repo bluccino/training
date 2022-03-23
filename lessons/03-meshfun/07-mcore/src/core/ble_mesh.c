@@ -24,10 +24,10 @@
 #include "bluccino.h"
 
 #ifndef MIGRATION_STEP1
-  #define MIGRATION_STEP1         0    // TODO introduce bl_core()
+  #define MIGRATION_STEP1         1    // TODO introduce bl_core()
 #endif
 #ifndef MIGRATION_STEP2
-  #define MIGRATION_STEP2         0    // TODO introduce bl_core()
+  #define MIGRATION_STEP2         1    // TODO introduce bl_core()
 #endif
 
 //==============================================================================
@@ -75,92 +75,70 @@ static void prov_reset(void)
   #endif // MIGRATION_STEP2
 }
 
-#if MIGRATION_STEP2
 //==============================================================================
 // provisioning link open/close callbacks
 //==============================================================================
 
-static void link_open(bt_mesh_prov_bearer_t bearer)
-{
-	BL_ob o = {_MESH, ATT_, 1, NULL};
-	bl_core(&o,1);              // post [MESH:ATT 1] to core, which posts it up
-}
+  static void link_open(bt_mesh_prov_bearer_t bearer)
+  {
+  	BL_ob o = {_MESH, ATT_, 1, NULL};
+  	bl_core(&o,1);              // post [MESH:ATT 1] to core, which posts it up
+  }
 
-static void link_close(bt_mesh_prov_bearer_t bearer)
-{
-	BL_ob o = {_MESH, ATT_, 0, NULL};
-	bl_core(&o,0);              // post [MESH:ATT 0] to core, which posts it up
-}
+  static void link_close(bt_mesh_prov_bearer_t bearer)
+  {
+  	BL_ob o = {_MESH, ATT_, 0, NULL};
+  	bl_core(&o,0);              // post [MESH:ATT 0] to core, which posts it up
+  }
 
 //==============================================================================
 // provisioning table
 //==============================================================================
-#endif // MIGRATION_STEP2
 
-static uint8_t dev_uuid[16] = { 0xdd, 0xdd };
+  static uint8_t dev_uuid[16] = { 0xdd, 0xdd };
 
-static const struct bt_mesh_prov prov = {
-	.uuid = dev_uuid,
+  static const struct bt_mesh_prov prov = {
+  	.uuid = dev_uuid,
 
-#ifdef OOB_AUTH_ENABLE
+  #ifdef OOB_AUTH_ENABLE
 
-	.output_size = 6,
-	.output_actions = BT_MESH_DISPLAY_NUMBER | BT_MESH_DISPLAY_STRING,
-	.output_number = output_number,
-	.output_string = output_string,
+  	.output_size = 6,
+  	.output_actions = BT_MESH_DISPLAY_NUMBER | BT_MESH_DISPLAY_STRING,
+  	.output_number = output_number,
+  	.output_string = output_string,
 
-#endif
-#if MIGRATION_STEP2
-  .link_open = link_open,              // to activate attention mode
-  .link_close = link_close,            // to deactivate attention mode
-#endif // MIGRATION_STEP2
-	.complete = prov_complete,
-	.reset = prov_reset,
-};
-
-void bt_ready(void)
-{
-	int err;
-	struct bt_le_oob oob;
-
-  #if MIGRATION_STEP2
-  	LOG(2,BL_B "Bluetooth initialized");
-	#else
-  	printk("Bluetooth initialized\n");
   #endif
+    .link_open = link_open,              // to activate attention mode
+    .link_close = link_close,            // to deactivate attention mode
+  	.complete = prov_complete,
+  	.reset = prov_reset,
+  };
 
-	err = bt_mesh_init(&prov, &comp);
-	if (err)
-	{
-    #if MIGRATION_STEP2
-	  	LOG(ERR "Initializing mesh failed (err %d)", err);
-		#else
-	  	printk("Initializing mesh failed (err %d)\n", err);
-		#endif
-		return;
-	}
+  void bt_ready(void)
+  {
+  	int err;
+  	struct bt_le_oob oob;
 
-	if (IS_ENABLED(CONFIG_SETTINGS)) {
-		settings_load();
-	}
+  	LOG(4,BL_B "Bluetooth initialized");
 
-	/* Use identity address as device UUID */
-	if (bt_le_oob_get_local(BT_ID_DEFAULT, &oob))
-	{
-          #if MIGRATION_STEP2
-  		LOG(1,BL_R "Identity Address unavailable");
-	  #else
-  		printk("Identity Address unavailable\n");
-	  #endif
-	} else {
-		memcpy(dev_uuid, oob.addr.a.val, 6);
-	}
+  	err = bt_mesh_init(&prov, &comp);
+  	if (err)
+  	{
+  	  bl_err(err,"initializing mesh failed");
+  		return;
+  	}
 
-	bt_mesh_prov_enable(BT_MESH_PROV_GATT | BT_MESH_PROV_ADV);
+  	if (IS_ENABLED(CONFIG_SETTINGS)) {
+  		settings_load();
+  	}
 
-	#if MIGRATION_STEP2
-    LOG(2,BL_B"Mesh initialized");
-	#else
-    printk("Mesh initialized\n");
-	#endif
-}
+  	  // use identity address as device UUID
+
+  	if (bt_le_oob_get_local(BT_ID_DEFAULT, &oob))
+    	LOG(1,BL_R "Identity Address unavailable");
+  	else
+  		memcpy(dev_uuid, oob.addr.a.val, 6);
+
+  	bt_mesh_prov_enable(BT_MESH_PROV_GATT | BT_MESH_PROV_ADV);
+    LOG(4,BL_B"mesh initialized");
+  }

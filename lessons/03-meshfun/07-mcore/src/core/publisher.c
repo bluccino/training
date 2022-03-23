@@ -13,13 +13,15 @@
 #include "publisher.h"
 
 #include "bluccino.h"
+#include "bl_mesh.h"
+#include "bl_gonoff.h"
 
 //==============================================================================
 // CORE level logging shorthands
 //==============================================================================
 
   #define LOG                     LOG_CORE
-  #define LOGO(lvl,col,o,val)     LOGO_CORE(lvl,col"devcomp:",o,val)
+  #define LOGO(lvl,col,o,val)     LOGO_CORE(lvl,col"publisher:",o,val)
   #define LOG0(lvl,col,o,val)     LOGO_CORE(lvl,col,o,val)
 
 //==============================================================================
@@ -251,3 +253,95 @@ LOG(4,BL_R"snd [GOOCLI:LET @1,0]");
 		printk("bt_mesh_model_publish: err: %d\n", err);
 	}
 }
+
+//==============================================================================
+// transmit generic onoff set
+//==============================================================================
+
+  static int tx_gooset(BL_model *pmod, BL_u8 on, BL_u8 tid, BL_u8 tt, BL_u8 delay)
+  {
+    LOG(5,"tx_gooset($%d[%d|%d],%d,#%d,/%d,&%d)",
+  	      bl_iid(pmod), pmod->elem_idx, pmod->mod_idx, on, tid,
+  			  bl_mesh2ms(tt), bl_tick2ms(delay));
+
+    bt_mesh_model_msg_init(pmod->pub->msg, BL_GOO_SET);
+
+    net_buf_simple_add_u8(pmod->pub->msg, on);
+    net_buf_simple_add_u8(pmod->pub->msg, tid);
+    net_buf_simple_add_u8(pmod->pub->msg, tt);
+    net_buf_simple_add_u8(pmod->pub->msg, delay);
+
+    return bt_mesh_model_publish(pmod);
+  }
+
+//==============================================================================
+// transmit generic onoff let
+//==============================================================================
+
+  static int tx_goolet(BL_model *pmod, BL_u8 on, BL_u8 tid, BL_u8 tt, BL_u8 delay)
+  {
+    LOG(5,"tx_goolet($%d[%d|%d], %d,#%d,/%d,&%d)",
+  	      bl_iid(pmod), pmod->elem_idx, pmod->mod_idx, on, tid,
+  			  bl_mesh2ms(tt), bl_tick2ms(delay));
+
+    bt_mesh_model_msg_init(pmod->pub->msg, BL_GOO_LET);
+
+    net_buf_simple_add_u8(pmod->pub->msg, on);
+    net_buf_simple_add_u8(pmod->pub->msg, tid);
+    net_buf_simple_add_u8(pmod->pub->msg, tt);
+    net_buf_simple_add_u8(pmod->pub->msg, delay);
+
+    return bt_mesh_model_publish(pmod);
+  }
+
+//==============================================================================
+// GOOCLI publisher
+//==============================================================================
+
+  static int goocli_pub(BL_ob *o, int val)
+  {
+    static BL_iid goocli[4] = {GONOFF_CLI0,GONOFF_CLI0,GONOFF_CLI0,GONOFF_CLI0};
+
+    LOG0(4,BL_R "pub",o,val);
+    bl_assert(o->id > 0 && o->id <= 4);
+
+    BL_model *pmod = bl_model(goocli[o->id-1]);
+    bool onoff = (val != 0);
+    BL_u8 tid = 0;
+    BL_u8 tt = 0;
+    BL_u8 delay = 0;
+
+    switch (bl_id(o))
+    {
+      case BL_ID(_GOOCLI,LET_):
+        tx_goolet(pmod, onoff, tid, tt, delay);
+        return 0;
+
+      case BL_ID(_GOOCLI,SET_):
+        tx_gooset(pmod, onoff, tid, tt, delay);
+        return 0;                      // OK
+
+      default:
+        return -1;                     // bad arg
+    }
+  }
+
+//==============================================================================
+// new publisher
+//==============================================================================
+
+  int bl_pub(BL_ob *o, int val)
+  {
+    if (o->id < 1 || o->id > 4)
+      return -1;                       // bad args
+
+    switch (bl_id(o))
+    {
+      case BL_ID(_GOOCLI,LET_):
+      case BL_ID(_GOOCLI,SET_):
+        return goocli_pub(o,val);      // publisg generic onoff LET or SET
+
+      default:
+        return -1;                     // not supported
+    }
+  }
