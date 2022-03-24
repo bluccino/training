@@ -4,101 +4,77 @@
 //
 // Created by Hugo Pristauz on 2022-Jan-02
 // Copyright © 2022 Bluccino. All rights reserved.
-
-//  Reset system
-//  - after system init the app calls [RESET:INC <timeout>] which increments
-//    the reset counter (non-volatile memory), while a timer with <timeout>
-//    is started at the same time, which emits the event [RESET:DUE] after
-//    timeout
-//  - The call [RESET:INC] returns the current value of the reset counter. Based
-//    on this value the application may give an indication to the user (e.g.
-//    different kinf of LED pattern depending on the value, or may invoke a
-//    mesh node reset [RESET:PRV] to unprovision the node
-//==============================================================================
-// mcore derived from:
-// Bluetooth: Mesh Generic OnOff, Generic Level, Lighting & Vendor Models
-// Copyright (c) 2018 Vikrant More
-// SPDX-License-Identifier: Apache-2.0
 //==============================================================================
 
 #ifndef __BL_CORE_H__
 #define __BL_CORE_H__
 
-  #include "bluccino.h"
-
-//==============================================================================
-// migration defaults
-//==============================================================================
-
-  #ifndef MIGRATION_STEP1
-    #define MIGRATION_STEP1         1
-  #endif
-  #ifndef MIGRATION_STEP2
-    #define MIGRATION_STEP2         1
-  #endif
-  #ifndef MIGRATION_STEP3
-    #define MIGRATION_STEP3         1
-  #endif
-  #ifndef MIGRATION_STEP4
-    #define MIGRATION_STEP4         1
-  #endif
-  #ifndef MIGRATION_STEP5
-    #define MIGRATION_STEP5         1
-  #endif
-  #ifndef MIGRATION_STEP6
-    #define MIGRATION_STEP6         1
-  #endif
-
 //==============================================================================
 // public module interface
 //==============================================================================
 //
-// BL_CORE Interfaces:
-//   [] = SYS(INIT,TICK,TOCK)
-//   [PRV,ATT] = SET(PRV,ATT)
-//   [DUE] = RESET(#DUE,INC,PRV)
-//   [] = BUTTON(INC,PRV)
-//   [] = SWITCH(STS)
-//                                +-------------+
-//                                |   BL_CORE   |
-//                                +-------------+
-//                         INIT ->|     SYS:    |
-//                         TICK ->|             |
-//                         TOCK ->|             |
-//                                +-------------+
-//                          PRV ->|     SET:    |-> PRV
-//                          ATT ->|             |-> ATT
-//                                +-------------+
-//                         #DUE ->|    RESET:   |-> DUE
-//                          INC ->|             |
-//                          PRV ->|             |
-//                                +-------------+
-//                                |   BUTTON:   |-> PRESS
-//                                |             |-> RELEASE
-//                                +-------------+
-//                                |   SWITCH:   |-> STS
-//                                +-------------+
-//
-//  Input Messages:
-//    - [SYS:INIT <cb>]                init module
-//    - [SYS:TICK @id cnt]             tick the module
-//    - [SYS:TOCK @id cnt]             tock the module
-//    - [SET:PRV val]                  provision on/off
-//    - [SET:ATT val]                  attention on/off
-//    - [RESET:#DUE]                   reset timer is due
-//    - [RESET:INC <ms>]               inc reset counter & set due (<ms>) timer
-//    - [RESET:PRV]                    unprovision node
-//
-//  Output Messages:
-//    - [SET:PRV val]                  provision on/off
-//    - [SET:ATT val]                  attention on/off
-//    - [RESET:DUE]                    reset timer due notification
-//    - [BUTTON:PRESS @id 1]           button press @ channel @id
-//    - [BUTTON:RELEASE @id 1]         button release @ channel @id
-//    - [SWITCH:STS @id,onoff]         output switch status update
+// (H) := (BL_HW)
+//                  +--------------------+
+//                  |       BL_CORE      |
+//                  +--------------------+
+//                  |        SYS:        | SYS: public interface
+// (v)->     INIT ->|       @id,cnt      | init module, store <out> callback
+// (v)->     TICK ->|       @id,cnt      | tick the module
+// (v)->     TOCK ->|       @id,cnt      | tock the module
+//                  +--------------------+
+//                  |        SET:        | SET: public interface
+// (^)<-      PRV <-|       onoff        | provision on/off
+// (^)<-      ATT <-|       onoff        | attention on/off
+//                  +--------------------+
+//                  |       RESET:       | RESET: public interface
+// (^)<-      DUE <-|                    | reset timer is due
+// (v)->      INC ->|         ms         | inc reset counter & set due timer
+// (v)->      PRV ->|                    | unprovision node
+//                  +--------------------+
+//                  |        LED:        | LED: public interface
+// (v)->      SET ->|      @id,onoff     | set LED @id on/off (i=0..4)
+// (v)->   TOGGLE ->|                    | toggle LED @id (i=0..4)
+//                  +--------------------+
+//                  |       BUTTON:      | BUTTON: public interface
+// (^)<-    PRESS <-|        @id,1       | button @id pressed (rising edge)
+// (^)<-  RELEASE <-|        @id,0       | button @id released (falling edge)
+// (^)<-    CLICK <-|       @id,cnt      | button @id clicked (cnt: nmb. clicks)
+// (^)<-     HOLD <-|       @id,time     | button @id held (time: hold time)
+//                  +--------------------+
+//                  |       SWITCH:      | SWITCH: public interface
+// (^)<-      STS <-|      @id,onoff     | on/off status update of switch @id
+//                  +--------------------+
+//                  |        NVM:        | NVM: public interface
+// (#)<-    READY <-|       ready        | notification that NVM is now ready
+// (v)->    STORE ->|      @id,val       | store value in NVM at location @id
+// (v)->   RECALL ->|        @id         | recall value in NVM at location @id
+// (v)->     SAVE ->|                    | save NVM cache to NVM
+//                  +--------------------+
 //
 //==============================================================================
 
   int bl_core(BL_ob *o, int val);      // public module interface
+
+//==============================================================================
+// syntactic sugar: store value to non volatile memory (NVM)
+// - usage: bl_store(id,val)           // store value at NVM location @id
+//==============================================================================
+
+  static inline int bl_store(int id, int val)
+  {
+    BL_ob oo = {_NVM,STORE_,id,NULL};
+    return bl_core(&oo,val);
+  }
+
+//==============================================================================
+// syntactic sugar: recall value from non volatile memory (NVM)
+// - usage: val = bl_recall(id)        // recall value from NMV location @id
+//==============================================================================
+
+  static inline int bl_recall(int id)
+  {
+    BL_ob oo = {_NVM,RECALL_,id,NULL};
+    return bl_core(&oo,0);
+  }
 
 #endif // __BL_CORE_H__

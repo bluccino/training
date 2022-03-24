@@ -1,5 +1,5 @@
 //==============================================================================
-// mcore.c (version 7 - copied files from 07-mcore)
+// bl_mcore.c (version 7 - copied files from 07-mcore)
 // multi model mesh demo based mesh core (combining all stuff)
 //
 // Created by Hugo Pristauz on 2022-Jan-02
@@ -20,12 +20,17 @@
   #undef LOGO
 
   #include "bl_core.c"
+  #undef LOG
+  #undef LOGO
 
   #include "no_transition_work_handler.c"
   #undef LOG
   #undef LOGO
 
   #include "publisher.c"
+  #undef LOG
+  #undef LOGO
+  #undef LOG0
   #undef ONOFF
 
   #include "state_binding.c"
@@ -33,5 +38,10 @@
   #undef LOGO
 
   #include "storage.c"
+  #undef LOG
+  #undef LOGO
+  #undef LOG0
 
   #include "transition.c"
+  #undef LOG
+  #undef LOGO

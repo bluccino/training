@@ -24,7 +24,6 @@
   #include "storage.h"
   #include "transition.h"
   #include "publisher.h"
-  #include "app_gpio.h"
 
   #define _DUE_    BL_HASH(DUE_)       // hashed opcode for DUE
 

@@ -1,42 +1,9 @@
-//==============================================================================
-// ble_mesh.h
-// multi model mesh demo based mesh core
-//
-// Adopted to Bluccino by Hugo Pristauz on 2022-Jan-07
-// Copyright © 2022 Bluccino. All rights reserved.
-//==============================================================================
-//
-// BLEMESH Interfaces:
-//   SYS interface: [] = SYS(INIT,READY)
-//   SET interface: [PRV,ATT] = SET(#PRV,#ATT)
-//
-//                          +---------------+
-//                          |    BLEMESH    |
-//                          +---------------+
-//                   INIT ->|               |
-//                          |      SYS      |
-//                  READY ->|               |
-//                          +---------------+
-//                   #PRV ->|               |-> PRV
-//                          |      SET      |
-//                   #ATT ->|               |-> ATT
-//                          +---------------+
-//
-//  Input Messages:
-//    - [SYS:INIT <cb>]     init module
-//    - [SYS:READY]         init BLE/Mesh when Bluetooth is ready
-//    - [SET:#PRV val]      post provisioning on/off to output
-//    - [SET:#ATT val]      post attentioning on/off to output
-//
-//  Output Messages:
-//    - [SET:PRV val]       provisioning on/off
-//    - [SET:ATT val]       attentioning on/off
-//
-//==============================================================================
-// Bluetooth: Mesh Generic OnOff, Generic Level, Lighting & Vendor Models
-// Copyright (c) 2018 Vikrant More
-// SPDX-License-Identifier: Apache-2.0
-//==============================================================================
+/* Bluetooth: Mesh Generic OnOff, Generic Level, Lighting & Vendor Models
+ *
+ * Copyright (c) 2018 Vikrant More
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
 
 #ifndef _BLE_MESH_H
 #define _BLE_MESH_H
@@ -47,8 +14,6 @@
 #include <bluetooth/l2cap.h>
 #include <bluetooth/hci.h>
 #include <bluetooth/mesh.h>
-
-#include "bl_core.h"          // MIGRATION_STEP5
 
 /* Model Operation Codes */
 #define	BT_MESH_MODEL_OP_GEN_ONOFF_GET          BT_MESH_MODEL_OP_2(0x82, 0x01)
@@ -143,20 +108,6 @@
 #define	BT_MESH_MODEL_LIGHT_CTL_TEMP_RANGE_SET_UNACK \
 	BT_MESH_MODEL_OP_2(0x82, 0x6C)
 
-//==============================================================================
-// public module interface
-//==============================================================================
-
-  int blemesh(BL_ob *o, int val);
-
-//==============================================================================
-// syntactic sugar: blemesh_ready // start BT & mesh init when Bluetooth ready)
-// - usage: blemesh_ready()       // calls local bt_ready()
-//==============================================================================
-
-  static inline void blemesh_ready(void)
-  {
-    bl_sys(blemesh,READY_,NULL,0);
-  }
+void bt_ready(void);
 
 #endif

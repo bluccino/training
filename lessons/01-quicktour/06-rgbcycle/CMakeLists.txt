@@ -8,9 +8,9 @@
 # project definition and path setup
 #===============================================================================
 
-  project(05-rgbcycle)
+  project(06-rgbcycle)
 
-  set (LIB ../../lib/V0.6)
+  set (LIB ../../../lib/V1.0)
   set (BLU ${LIB}/bluccino)
   set (HWCORE ${LIB}/hwcore)
   set (SRC src)

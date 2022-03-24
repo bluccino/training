@@ -8,6 +8,8 @@
 #ifndef _DEVICE_COMPOSITION_H
 #define _DEVICE_COMPOSITION_H
 
+  #include "bluccino.h"
+
 //================================================================================================
 // retrieving a model pointer
 //================================================================================================
@@ -155,23 +157,16 @@ void gen_level_publish_temp(struct bt_mesh_model *model);
 // public module interface
 //==============================================================================
 //
-// BL_DEVCOMP Interfaces
-//   SYS Interface:     [] = SYS(INIT)
-//   GOOSRV Interface:  [SET] = GOOSRV(#STS)
-//
-//                            +-------------------+
-//                            |    BL_DEVCOMP     |
-//                            +-------------------+
-//                     INIT ->|       SYS:        |
-//                            +-------------------+
-//                     #STS ->|      GOOSRV:      |-> STS
-//                            +-------------------+
-// Input Messages:
-//   [SYS:INIT <cb>]              init module, store callback
-//   [GOOSRV:#STS @id,val,<data>] internal input for [GOOSRV:STS ...] output
-//
-// Output Messages:
-//   [GOOSRV:STS @id,val,<data>]  output [GOOSRV:STS ...] message to subscriber
+// (C) := (BL_CORE)
+//                  +--------------------+
+//                  |     BL_DEVCOMP     |
+//                  +--------------------+
+//                  |        SYS:        | SYS: interface
+// (C)->     INIT ->|       <out>        | init module, store <out> callback
+//                  +--------------------+
+//                  |       GOOSRV:      | GOOSRV: interface (generic onoff srv)
+// (C)<-      STS <-|   @id,<data>,val   | status [GOOSRV:STS @id,<data>,val]
+//                  +--------------------+
 //
 //==============================================================================
 

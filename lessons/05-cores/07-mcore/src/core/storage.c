@@ -340,7 +340,7 @@
 // init module
 //==============================================================================
 
-  static int init(BL_ob *o, int val)
+  static int init_nvm(BL_ob *o, int val)
   {
     LOG(3,BL_C "init NVM");
 
@@ -393,7 +393,7 @@
     {
       case BL_ID(_SYS,INIT_):        // [SYS:INIT <out>]
         out = o->data;               // store output callback
-        return init(o,val);          // forward to init() worker
+        return init_nvm(o,val);          // forward to init() worker
 
       case BL_ID(_SYS,TOCK_):        // [SYS:TOCK @0,cnt]
         return tock(o,val);          // forward to tock() worker

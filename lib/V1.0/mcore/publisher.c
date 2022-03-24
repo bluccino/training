@@ -7,39 +7,44 @@
 
 #include <drivers/gpio.h>
 
-#include "bluccino.h"
-#include "bl_mesh.h"
-#include "bl_model.h"
-#include "bl_gonoff.h"
-
 #include "ble_mesh.h"
 #include "device_composition.h"
 #include "publisher.h"
 
-#define ONOFF
-#define GENERIC_LEVEL
+#include "bluccino.h"
+#include "bl_mesh.h"
+#include "bl_gonoff.h"
 
 //==============================================================================
 // CORE level logging shorthands
 //==============================================================================
 
   #define LOG                     LOG_CORE
-  #define LOGO(lvl,col,o,val)     LOGO_CORE(lvl,col"pub:",o,val)
+  #define LOGO(lvl,col,o,val)     LOGO_CORE(lvl,col"publisher:",o,val)
   #define LOG0(lvl,col,o,val)     LOGO_CORE(lvl,col,o,val)
-  #define ERR 1,BL_R
+
+//==============================================================================
+// Let's go
+//==============================================================================
+
+#define ONOFF
+#define GENERIC_LEVEL
 
 //==============================================================================
 // legacy publisher
 //==============================================================================
-#if !MIGRATION_STEP4
+#ifdef LEGACY_PUBLISHER  // never!
 
 static uint8_t tid;
 
 void publish(struct k_work *work)
 {
 	int err = 0;
-
+LOG(4,"publish ...");
 #ifndef ONE_LED_ONE_BUTTON_BOARD
+
+    // SW0 event
+
 	if (gpio_pin_get(button_device[0],
 			 DT_GPIO_PIN(DT_ALIAS(sw0), gpios)) == 1) {
 #if defined(ONOFF)
@@ -47,6 +52,7 @@ void publish(struct k_work *work)
 				       BT_MESH_MODEL_OP_GEN_ONOFF_SET_UNACK);
 		net_buf_simple_add_u8(root_models[3].pub->msg, 0x01);
 		net_buf_simple_add_u8(root_models[3].pub->msg, tid++);
+LOG(4,BL_R"snd [GOOCLI:LET @1,1]");
 		err = bt_mesh_model_publish(&root_models[3]);
 #elif defined(ONOFF_TT)
 		bt_mesh_model_msg_init(root_models[3].pub->msg,
@@ -63,13 +69,19 @@ void publish(struct k_work *work)
 		net_buf_simple_add_u8(vnd_models[0].pub->msg, tid++);
 		err = bt_mesh_model_publish(&vnd_models[0]);
 #endif
-	} else if (gpio_pin_get(button_device[1],
-				DT_GPIO_PIN(DT_ALIAS(sw1), gpios)) == 1) {
+	}
+
+    // SW1 event
+
+  else if (gpio_pin_get(button_device[1],
+				DT_GPIO_PIN(DT_ALIAS(sw1), gpios)) == 1)
+  {
 #if defined(ONOFF)
 		bt_mesh_model_msg_init(root_models[3].pub->msg,
 				       BT_MESH_MODEL_OP_GEN_ONOFF_SET_UNACK);
 		net_buf_simple_add_u8(root_models[3].pub->msg, 0x00);
 		net_buf_simple_add_u8(root_models[3].pub->msg, tid++);
+LOG(4,BL_R"snd [GOOCLI:LET @1,0]");
 		err = bt_mesh_model_publish(&root_models[3]);
 #elif defined(ONOFF_TT)
 		bt_mesh_model_msg_init(root_models[3].pub->msg,
@@ -241,22 +253,15 @@ void publish(struct k_work *work)
 	}
 #endif
 
-	if (err)
-  {
-    #if MIGRATION_STEP2
-		  LOG(ERR"bt_mesh_model_publish: err: %d", err);
-    #else
-		  printk("bt_mesh_model_publish: err: %d\n", err);
-    #endif
+	if (err) {
+		printk("bt_mesh_model_publish: err: %d\n", err);
 	}
 }
-
-#endif // !MIGRATION_STEP4
+#endif
 
 //==============================================================================
 // transmit generic onoff set
 //==============================================================================
-#if MIGRATION_STEP6
 
   static int tx_gooset(BL_model *pmod, BL_u8 on, BL_u8 tid, BL_u8 tt, BL_u8 delay)
   {
@@ -274,11 +279,9 @@ void publish(struct k_work *work)
     return bt_mesh_model_publish(pmod);
   }
 
-#endif // MIGRATION_STEP6
 //==============================================================================
 // transmit generic onoff let
 //==============================================================================
-#if MIGRATION_STEP6
 
   static int tx_goolet(BL_model *pmod, BL_u8 on, BL_u8 tid, BL_u8 tt, BL_u8 delay)
   {
@@ -296,7 +299,6 @@ void publish(struct k_work *work)
     return bt_mesh_model_publish(pmod);
   }
 
-#endif // MIGRATION_STEP6
 //==============================================================================
 // GOOCLI publisher
 //==============================================================================
@@ -305,23 +307,23 @@ void publish(struct k_work *work)
   {
     static BL_iid goocli[4] = {GONOFF_CLI0,GONOFF_CLI0,GONOFF_CLI0,GONOFF_CLI0};
 
-    LOGO(4,BL_R "goocli:",o,val);
+    LOG0(4,BL_R "pub",o,val);
     bl_assert(o->id > 0 && o->id <= 4);
 
     BL_model *pmod = bl_model(goocli[o->id-1]);
     bool onoff = (val != 0);
-    BL_u8 tid = 0;
+    static BL_u8 tid = 0;           // must be static
     BL_u8 tt = 0;
     BL_u8 delay = 0;
 
     switch (bl_id(o))
     {
       case BL_ID(_GOOCLI,LET_):
-        tx_goolet(pmod, onoff, tid, tt, delay);
+        tx_goolet(pmod, onoff, tid++, tt, delay);
         return 0;
 
       case BL_ID(_GOOCLI,SET_):
-        tx_gooset(pmod, onoff, tid, tt, delay);
+        tx_gooset(pmod, onoff, tid++, tt, delay);
         return 0;                      // OK
 
       default:
@@ -332,7 +334,6 @@ void publish(struct k_work *work)
 //==============================================================================
 // new publisher
 //==============================================================================
-#if MIGRATION_STEP5
 
   int bl_pub(BL_ob *o, int val)
   {
@@ -349,5 +350,3 @@ void publish(struct k_work *work)
         return -1;                     // not supported
     }
   }
-
-#endif // MIGRATION_STEP5

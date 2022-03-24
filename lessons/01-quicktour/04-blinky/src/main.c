@@ -1,5 +1,5 @@
 //==============================================================================
-// main.c for 03-blinky (small blink program with 4 LEDs involved)
+// main.c for 04-blinky (small blink program with 4 LEDs involved)
 //==============================================================================
 
   #include "bluccino.h"

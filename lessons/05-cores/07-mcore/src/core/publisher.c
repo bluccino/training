@@ -7,7 +7,6 @@
 
 #include <drivers/gpio.h>
 
-#include "app_gpio.h"
 #include "ble_mesh.h"
 #include "device_composition.h"
 #include "publisher.h"
@@ -32,6 +31,11 @@
 #define GENERIC_LEVEL
 
 static uint8_t tid;
+
+//==============================================================================
+// legacy publisher
+//==============================================================================
+#ifdef LEGACY_PUBLISHER // never
 
 void publish(struct k_work *work)
 {
@@ -254,6 +258,7 @@ LOG(4,BL_R"snd [GOOCLI:LET @1,0]");
 	}
 }
 
+#endif // LEGACY_PUBLISHER
 //==============================================================================
 // transmit generic onoff set
 //==============================================================================

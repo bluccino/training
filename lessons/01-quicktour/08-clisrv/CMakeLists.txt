@@ -30,5 +30,5 @@
 	               ${MAIN}/main.c         # main module
 				         ${BLU}/bluccino.c      # Bluccino standard library
 				         ${HWC}/bl_hw.c         # hardware core
-				         ${WLC}/mcore.c         # wireless core
+				         ${WLC}/bl_mcore.c      # wireless core
 	              )

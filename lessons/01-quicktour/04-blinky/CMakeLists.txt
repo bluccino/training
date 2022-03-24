@@ -8,9 +8,9 @@
 # project definition and path setup
 #===============================================================================
 
-  project(03-blinky)
+  project(04-blinky)
 
-  set (LIB ../../lib/V0.6)
+  set (LIB ../../../lib/V1.0)
   set (BLU ${LIB}/bluccino)
   set (HWC ${LIB}/hwcore)
   set (SRC src)

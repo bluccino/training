@@ -24,7 +24,7 @@
   #include "storage.h"
   #include "transition.h"
   #include "publisher.h"
-
+  
   #define _DUE_    BL_HASH(DUE_)       // hashed opcode for DUE
 
 //==============================================================================
@@ -37,16 +37,25 @@
   #define ERR 1,BL_R
 
 //==============================================================================
+// overview code migration from original onoff_app sample to a bluccino core
+//==============================================================================
+
+#include "bluccino.h"
+
+#ifndef MIGRATION_STEP1
+  #define MIGRATION_STEP1         0    // TODO introduce bl_core()
+#endif
+#ifndef MIGRATION_STEP2
+  #define MIGRATION_STEP2         0    // TODO introduce bl_core()
+#endif
+
+//==============================================================================
 // let's go ...
 //==============================================================================
 
-#ifndef CFG_BT_ENABLE                  // define in config.h
-  #define CFG_BT_ENABLE   1            // by default bluetooth will be enabled
-#endif
-
 #if defined(CONFIG_MCUMGR)
-  #include <mgmt/mcumgr/smp_bt.h>
-  #include "smp_svr.h"
+#include <mgmt/mcumgr/smp_bt.h>
+#include "smp_svr.h"
 #endif
 
 static bool reset;
@@ -123,15 +132,16 @@ static void light_default_status_init(void)
 void update_vnd_led_gpio(void)
 {
 #ifndef ONE_LED_ONE_BUTTON_BOARD
-  #if !MIGRATION_STEP4
-	  gpio_pin_set(led_device[1], DT_GPIO_PIN(DT_ALIAS(led1), gpios),
+/*
+	gpio_pin_set(led_device[1], DT_GPIO_PIN(DT_ALIAS(led1), gpios),
 		     vnd_user_data.current == STATE_ON);
-  #endif
+*/
 #endif
 }
 
 void update_led_gpio(void)
 {
+/*
 	uint8_t power, color;
 
 	power = 100 * ((float) ctl->light->current / 65535);
@@ -139,27 +149,20 @@ void update_led_gpio(void)
 		       (ctl->temp->range_max - ctl->temp->range_min));
 
   #if MIGRATION_STEP2
-	  LOG(5,"power-> %d, color-> %d", power, color);
+	  LOG(3,BL_G "power-> %d, color-> %d", power, color);
   #else
 	  printk("power-> %d, color-> %d\n", power, color);
   #endif
 
-  #if !MIGRATION_STEP4
-  	gpio_pin_set(led_device[0], DT_GPIO_PIN(DT_ALIAS(led0), gpios),
+	gpio_pin_set(led_device[0], DT_GPIO_PIN(DT_ALIAS(led0), gpios),
 		     ctl->light->current);
-  #endif
-
 #ifndef ONE_LED_ONE_BUTTON_BOARD
-  #if !MIGRATION_STEP4
-  	gpio_pin_set(led_device[2], DT_GPIO_PIN(DT_ALIAS(led2), gpios),
+	gpio_pin_set(led_device[2], DT_GPIO_PIN(DT_ALIAS(led2), gpios),
 		     power < 50);
-  #endif
-
-  #if !MIGRATION_STEP4
-  	gpio_pin_set(led_device[3], DT_GPIO_PIN(DT_ALIAS(led3), gpios),
+	gpio_pin_set(led_device[3], DT_GPIO_PIN(DT_ALIAS(led3), gpios),
 		     color < 50);
-  #endif
 #endif
+*/
 }
 
 void update_light_state(void)
@@ -172,37 +175,9 @@ void update_light_state(void)
 	}
 }
 
-#if !MIGRATION_STEP5             // explicite reset control by app
-static void short_time_multireset_bt_mesh_unprovisioning(void)
-{
-	if (reset_counter >= 4U)
-  {
-		reset_counter = 0U;
-    #if MIGRATION_STEP2
-		  LOG(1,BL_M "BT Mesh reset");
-    #else
-		  printk("BT Mesh reset\n");
-    #endif
-
-	  bt_mesh_reset();
-	}
-  else
-  {
-    #if MIGRATION_STEP2
-  		LOG(3,BL_M "reset counter -> %d", reset_counter);
-    #else
-		  printk("Reset Counter -> %d\n", reset_counter);
-    #endif
-		reset_counter++;
-	}
-
-	save_on_flash(RESET_COUNTER);
-}
-#endif // MIGRATION_STEP5
 //==============================================================================
 // unprovision node
 //==============================================================================
-#if MIGRATION_STEP5
 
   static int unprovision(BL_ob *o, int val) // uprovision mesh node
   {
@@ -212,7 +187,34 @@ static void short_time_multireset_bt_mesh_unprovisioning(void)
     return 0;                               // OK
   }
 
-#endif // MIGRATION_STEP5
+//==============================================================================
+// multi reset unprovisioning
+//==============================================================================
+
+  static void short_time_multireset_bt_mesh_unprovisioning(void)
+  {
+  	if (reset_counter >= 4U)
+    {
+  		reset_counter = 0U;
+      #if MIGRATION_STEP2
+  		  LOG(1,BL_M "BT Mesh reset");
+      #else
+  		  printk("BT Mesh reset\n");
+      #endif
+  		bt_mesh_reset();
+  	}
+    else
+    {
+      #if MIGRATION_STEP2
+    		LOG(1,BL_M "reset counter -> %d", reset_counter);
+      #else
+  		  printk("Reset Counter -> %d\n", reset_counter);
+      #endif
+  		reset_counter++;
+  	}
+
+  	save_on_flash(RESET_COUNTER);
+  }
 
 //==============================================================================
 // reset timer
@@ -222,16 +224,10 @@ static void reset_counter_timer_handler(struct k_timer *dummy)
 {
 	reset_counter = 0U;
 	save_on_flash(RESET_COUNTER);
-  #if MIGRATION_STEP2
-  	LOG(3,BL_M "reset counter set to zero");
-  #else
-  	printk("Reset Counter set to Zero\n");
-  #endif
+	LOG(3,BL_M "reset counter set to zero");
 
-  #if MIGRATION_STEP5
-    BL_ob oo = {_RESET,_DUE_,0,NULL};
-    bl_core(&oo,0);              // post [RESET:#DUE] to BL_CORE for output
-  #endif
+  BL_ob oo = {_RESET,_DUE_,0,NULL};
+  bl_core(&oo,0);              // post [RESET:#DUE] to BL_CORE for output
 }
 
 K_TIMER_DEFINE(reset_counter_timer, reset_counter_timer_handler, NULL);
@@ -239,7 +235,6 @@ K_TIMER_DEFINE(reset_counter_timer, reset_counter_timer_handler, NULL);
 //==============================================================================
 // increment reset counter (set due timer, return reset counter after increment)
 //==============================================================================
-#if MIGRATION_STEP5
 
   static int increment(BL_ob *o, int ms)   // inc reset counter, set due timer
   {
@@ -252,158 +247,144 @@ K_TIMER_DEFINE(reset_counter_timer, reset_counter_timer_handler, NULL);
     return reset_counter;                   // return counter value after inc
   }
 
-#endif // MIGRATION_STEP5
 //==============================================================================
 // init (fomer main())
 //==============================================================================
 
-#if MIGRATION_STEP1
-static int init_mcore(void)
-{
-#else
-void main(void)
-{
-#endif
-	//int err;
-
-	light_default_var_init();
-
-  #if !MIGRATION_STEP5
-	  app_gpio_init();
-  #endif
-
-	#if defined(CONFIG_MCUMGR)
-		smp_svr_init();
-	#endif
-
-  #if MIGRATION_STEP2
-	  LOG(3,BL_C "init BLE/Mesh ...");
-  #else
-	  printk("Initializing...\n");
-  #endif
-
-	ps_settings_init();
-
-	  // Initialize the Bluetooth Subsystem */
-
-  #if (CFG_BT_ENABLE)
-  	int err = bt_enable(NULL);
-  	if (err)
-          {
-      #if MIGRATION_STEP2
-  		  LOG(ERR "Bluetooth init failed (err %d)", err);
-      #else
-  		  printk("Bluetooth init failed (err %d)\n", err);
-      #endif
-  		return err;
-  	}
-  #endif
-
-  #if MIGRATION_STEP5
-    blemesh_ready();
-  #else
-	  bt_ready();
-  #endif
-
-	light_default_status_init();
-
-	update_light_state();
-
-  #if !MIGRATION_STEP5
-	  short_time_multireset_bt_mesh_unprovisioning();
-	  k_timer_start(&reset_counter_timer, K_MSEC(7000), K_NO_WAIT);
-  #endif
-
-	#if defined(CONFIG_MCUMGR)
-		/* Initialize the Bluetooth mcumgr transport. */
-		smp_bt_register();
-
-		k_timer_start(&smp_svr_timer, K_NO_WAIT, K_MSEC(1000));
-	#endif
-  #if MIGRATION_STEP1
-    return 0;                          // OK
-	#endif
-}
-
-#if MIGRATION_STEP1
-//==============================================================================
-// init bl_core modules
-//==============================================================================
-
   static int init(BL_ob *o, int val)
   {
-    LOG(2,BL_B"init Bluccino core");
+  	light_default_var_init();
 
-    bl_init(blemesh,bl_core);          // output of BLEMESH goes to here!
-    bl_init(bl_devcomp,bl_core);       // output of BL_DEVCMP goes to here!
-    bl_init(bl_hw,bl_core);            // output of BL_HW goes to here!
-    init_mcore();                      // init THIS module
-    return 0;
+  	#if defined(CONFIG_MCUMGR)
+  		smp_svr_init();
+  	#endif
+
+  	bl_init(bl_nvm,bl_core);         // init NVM, output => bl_core()
+
+  	LOG(3,BL_C "init BLE/Mesh...");
+
+  	  // init Bluetooth subsystem
+
+  	int err = bt_enable(NULL);
+  	if (err)
+    {
+  		bl_err(err,"Bluetooth init failed");
+  		return err;
+  	}
+
+  	bt_ready();
+
+  	light_default_status_init();
+
+  	update_light_state();
+
+  	short_time_multireset_bt_mesh_unprovisioning();
+  	k_timer_start(&reset_counter_timer, K_MSEC(7000), K_NO_WAIT);
+
+  	#if defined(CONFIG_MCUMGR)
+  		// init Bluetooth mcumgr transport
+  		smp_bt_register();
+
+  		k_timer_start(&smp_svr_timer, K_NO_WAIT, K_MSEC(1000));
+  	#endif
+    return 0;                          // OK
   }
 
 //==============================================================================
 // public module interface
 //==============================================================================
 //
-// BL_CORE Interfaces:
-//   [] = SYS(INIT,TICK,TOCK)
-//   [PRV,ATT] = SET(PRV,ATT)
-//   [DUE] = RESET(#DUE,INC,PRV)
-//   [] = BUTTON(INC,PRV)
-//   [] = SWITCH(STS)
-//                                +-------------+
-//                                |   BL_CORE   |
-//                                +-------------+
-//                         INIT ->|     SYS:    |
-//                         TICK ->|             |
-//                         TOCK ->|             |
-//                                +-------------+
-//                          PRV ->|     SET:    |-> PRV
-//                          ATT ->|             |-> ATT
-//                                +-------------+
-//                         #DUE ->|    RESET:   |-> DUE
-//                          INC ->|             |
-//                          PRV ->|             |
-//                                +-------------+
-//                                |   BUTTON:   |-> PRESS
-//                                |             |-> RELEASE
-//                                +-------------+
-//                                |   SWITCH:   |-> STS
-//                                +-------------+
-//
-//  Input Messages:
-//    - [SYS:INIT <cb>]                init module
-//    - [SYS:TICK @id cnt]             tick the module
-//    - [SYS:TOCK @id cnt]             tock the module
-//    - [SET:PRV val]                  provision on/off
-//    - [SET:ATT val]                  attention on/off
-//    - [RESET:#DUE]                   reset timer is due
-//    - [RESET:INC <ms>]               inc reset counter & set due (<ms>) timer
-//    - [RESET:PRV]                    unprovision node
-//
-//  Output Messages:
-//    - [SET:PRV val]                  provision on/off
-//    - [SET:ATT val]                  attention on/off
-//    - [RESET:DUE]                    reset timer due notification
-//    - [BUTTON:PRESS @id 1]           button press @ channel @id
-//    - [BUTTON:RELEASE @id 1]         button release @ channel @id
-//    - [SWITCH:STS @id,onoff]         output switch status update
+// (H) := (BL_HW); (N) := (BL_NVM)
+//                  +--------------------+
+//                  |       BL_CORE      |
+//                  +--------------------+
+//                  |        SYS:        | SYS: public interface
+// (v)->     INIT ->|       @id,cnt      | init module, store <out> callback
+// (v)->     TICK ->|       @id,cnt      | tick the module
+// (v)->     TOCK ->|       @id,cnt      | tock the module
+//                  +--------------------+
+//                  |        SET:        | SET: public interface
+// (^)<-      PRV <-|       onoff        | provision on/off
+// (^)<-      ATT <-|       onoff        | attention on/off
+//                  +--------------------+
+//                  |       RESET:       | RESET: public interface
+// (^)<-      DUE <-|                    | reset timer is due
+// (v)->      INC ->|         ms         | inc reset counter & set due timer
+// (v)->      PRV ->|                    | unprovision node
+//                  +--------------------+
+//                  |        LED:        | LED: public interface
+// (v)->      SET ->|      @id,onoff     | set LED @id on/off (i=0..4)
+// (v)->   TOGGLE ->|                    | toggle LED @id (i=0..4)
+//                  +--------------------+
+//                  |       BUTTON:      | BUTTON: public interface
+// (^)<-    PRESS <-|        @id,1       | button @id pressed (rising edge)
+// (^)<-  RELEASE <-|        @id,0       | button @id released (falling edge)
+// (^)<-    CLICK <-|       @id,cnt      | button @id clicked (cnt: nmb. clicks)
+// (^)<-     HOLD <-|       @id,time     | button @id held (time: hold time)
+//                  +--------------------+
+//                  |       SWITCH:      | SWITCH: public interface
+// (^)<-      STS <-|      @id,onoff     | on/off status update of switch @id
+//                  +--------------------+
+//                  |        NVM:        | NVM: public interface
+// (^)<-    READY <-|                    | notification that NVM is now ready
+// (v)->    STORE ->|      @id,val       | store value in NVM at location @id
+// (v)->   RECALL ->|        @id         | recall value in NVM at location @id
+// (v)->     SAVE ->|                    | save NVM cache to NVM
+//                  +====================+
+//                  |      PRIVATE       |
+//                  +====================+
+//                  |        SYS:        | SYS: private interface
+// (H)<-     INIT <-|      @id,cnt       | init module, store <out> callback
+// (H)<-     TICK <-|      @id,cnt       | tick the module
+// (H)<-     TOCK <-|      @id,cnt       | tock the module
+//                  +--------------------+
+//                  |        SET:        | SET: private interface
+// (#)->      PRV ->|       onoff        | provision on/off
+// (#)->      ATT ->|       onoff        | attention on/off
+//                  +--------------------+
+//                  |       RESET:       | RESET: private interface
+// (#)->      DUE ->|                    | reset timer is due
+//                  +--------------------+
+//                  |        LED:        | LED: output interface
+// (H)<-      SET <-|      @id,onoff     | set LED @id on/off (i=0..4)
+// (H)<-   TOGGLE <-|                    | toggle LED @id (i=0..4)
+//                  +--------------------+
+//                  |       BUTTON:      | BUTTON: input interface
+// (H)->    PRESS ->|        @id,1       | button @id pressed (rising edge)
+// (H)->  RELEASE ->|        @id,0       | button @id released (falling edge)
+// (H)->    CLICK ->|       @id,cnt      | button @id clicked (cnt: nmb. clicks)
+// (H)->     HOLD ->|       @id,time     | button @id held (time: hold time)
+//                  +--------------------+
+//                  |       SWITCH:      | SWITCH: input interface
+// (H)->      STS ->|      @id,onoff     | on/off status update of switch @id
+//                  +--------------------+
+//                  |        NVM:        | NVM: public interface
+// (N)->    READY ->|       ready        | notification that NVM is now ready
+// (N)<-    STORE <-|      @id,val       | store value in NVM at location @id
+// (N)<-   RECALL <-|        @id         | recall value in NVM at location @id
+// (N)<-     SAVE <-|                    | save NVM cache to NVM
+//                  +--------------------+
 //
 //==============================================================================
 
   int bl_core(BL_ob *o, int val)
   {
-    static BL_fct output = NULL;
+    static BL_fct out = NULL;
 
-    switch (BL_ID(o->cl,o->op))
+    switch (bl_id(o))
     {
-      case BL_ID(_SYS,INIT_):        // [SYS:INIT]
-        output = o->data;            // store output callback
-        return init(o,val);          // forward to init()
+      case BL_ID(_SYS,INIT_):        // [SYS:INIT <out>]
+        out = o->data;               // store output callback
+        LOG(2,BL_B "init Bluccino core");
+        bl_init(bl_devcomp,bl_core); // output of BL_DEVCMP goes to here!
+        bl_init(bl_hw,bl_core);      // output of BL_HW goes to here!
+        return init(o,val);          // forward to init() worker
 
       case BL_ID(_SYS,TICK_):        // [SYS:TICK @0,cnt]
-      case BL_ID(_SYS,TOCK_):        // [SYS:TICK @0,cnt]
         return 0;                    // OK - nothing to tick/tock
+
+      case BL_ID(_SYS,TOCK_):        // [SYS:TICK @0,cnt]
+        return bl_nvm(o,val);        // BL_NVM module to be tocked
 
       case BL_ID(_SET,PRV_):         // [SET:PRV val]  (provision)
       case BL_ID(_SET,ATT_):         // [SET:ATT val]  (attention)
@@ -411,12 +392,11 @@ void main(void)
       case BL_ID(_BUTTON,RELEASE_):  // [BUTTON:RELEASE @id] (button release)
       case BL_ID(_SWITCH,STS_):      // [BUTTON:RELEASE @id] (button release)
         LOGO(3,"",o,val);
-//return 0;
-      return bl_out(o,val,output); // output to subscriber
+        return bl_out(o,val,out);    // output to subscriber
 
       case BL_ID(_LED,SET_):         // [LED:SET @id,onoff]
       case BL_ID(_LED,TOGGLE_):      // [LED:SET @id,onoff]
-        return bl_hw(o,val);         // delegate to MGPIO submodule
+        return bl_hw(o,val);         // delegate to BL_HW driver
 
       case BL_ID(_RESET,INC_):       // cnt = [RESET:INC <ms>]
         return increment(o,val);     // delegate to increment()
@@ -425,18 +405,24 @@ void main(void)
         return unprovision(o,val);   // unprovision node
 
       case BL_ID(_RESET,_DUE_):      // [RESET:#DUE] reset timer is due
-        return bl_out(o,val,output); // output [RESET:DUE] (strip off hash bit)
+        return bl_out(o,val,out);    // output [RESET:DUE] (strip off hash bit)
 
       case BL_ID(_GOOCLI,LET_):      // [GOOCLI:LET] publish unack'ed GOO msg
       case BL_ID(_GOOCLI,SET_):      // [GOOCLI:SET] publish ack'ed GOO msg
         return bl_pub(o,val);        // publish [GOOCLI:LET] or [GOOCLI:SET] msg
 
       case BL_ID(_GOOSRV,STS_):      // [GOOSRV:STS] post GOO status msg upward
-        return bl_out(o,val,output); // publish [GOOCLI:LET] or [GOOCLI:SET] msg
+        return bl_out(o,val,out);    // publish [GOOCLI:LET] or [GOOCLI:SET] msg
+
+      case BL_ID(_NVM,READY_):       // [NVM:READY] notify that NVM is ready
+        return bl_out(o,val,out);    // output [NVM:READY] to subscriber
+
+      case BL_ID(_NVM,STORE_):       // [NVM:STORE @id,val] store value in NVM
+      case BL_ID(_NVM,RECALL_):      // val = [NVM:RECALL @id] recall NVM value
+      case BL_ID(_NVM,SAVE_):        // [NVM:SAVE] save NVM cache to NVM
+        return bl_nvm(o,val);        // forward to BL_NVM module
 
       default:
         return -1;                   // bad input
     }
   }
-
-#endif // MIGRATION_STEP1

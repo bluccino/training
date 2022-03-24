@@ -24,6 +24,8 @@
 //==============================================================================
 
   #include "bluccino.h"
+  #include "bl_mesh.h"
+  #include "bl_gonoff.h"
 
   #define _STS_   BL_HASH(STS_)        // hashed STS opcode
 
@@ -32,7 +34,7 @@
 //==============================================================================
 
   #define LOG                     LOG_CORE
-  #define LOGO(lvl,col,o,val)     LOGO_CORE(lvl,col"core:",o,val)
+  #define LOGO(lvl,col,o,val)     LOGO_CORE(lvl,col"devcomp:",o,val)
   #define LOG0(lvl,col,o,val)     LOGO_CORE(lvl,col,o,val)
 
 //==============================================================================
@@ -123,7 +125,8 @@ static struct bt_mesh_health_srv health_srv = {
 
 BT_MESH_HEALTH_PUB_DEFINE(health_pub, 0);
 
-/* Definitions of models publication context (Start) */
+  // Definitions of models publication context (Start)
+
 BT_MESH_MODEL_PUB_DEFINE(gen_onoff_srv_pub_root, NULL, 2 + 3);
 BT_MESH_MODEL_PUB_DEFINE(gen_onoff_cli_pub_root, NULL, 2 + 4);
 
@@ -238,13 +241,23 @@ static int gen_onoff_set_unack(struct bt_mesh_model *model,
 			       struct bt_mesh_msg_ctx *ctx,
 			       struct net_buf_simple *buf)
 {
+  #if MIGRATION_STEP6
+    uint32_t oc = BL_GOO_SET;
+    static long bl_log_gonoff_set_rx = 0;
+    long cnt = ++bl_log_gonoff_set_rx;
+    BL_gonoff_set *pay = &post.pay.gooset;
+  #endif
+
 	uint8_t tid, onoff, tt, delay;
 	int64_t now;
 
-	onoff = net_buf_simple_pull_u8(buf);
-	tid = net_buf_simple_pull_u8(buf);
+	pay->onoff = onoff = net_buf_simple_pull_u8(buf);
+	pay->tid = tid = net_buf_simple_pull_u8(buf);
 
-	if (onoff > STATE_ON) {
+  LOG(4,BL_R"rcv [GOOSRV:LET @id,%d]",pay->onoff);
+
+	if (onoff > STATE_ON)
+  {
 		return 0;
 	}
 
@@ -252,26 +265,35 @@ static int gen_onoff_set_unack(struct bt_mesh_model *model,
 	if (ctl->last_tid == tid &&
 	    ctl->last_src_addr == ctx->addr &&
 	    ctl->last_dst_addr == ctx->recv_dst &&
-	    (now - ctl->last_msg_timestamp <= (6 * MSEC_PER_SEC))) {
+	    (now - ctl->last_msg_timestamp <= (6 * MSEC_PER_SEC)))
+  {
 		return 0;
 	}
 
-	switch (buf->len) {
-	case 0x00:      /* No optional fields are available */
-		tt = ctl->tt;
-		delay = 0U;
-		break;
-	case 0x02:      /* Optional fields are available */
-		tt = net_buf_simple_pull_u8(buf);
-		if ((tt & 0x3F) == 0x3F) {
-			return 0;
-		}
+	switch (buf->len)
+  {
+  	case 0x00:      /* No optional fields are available */
+  		pay->tt = tt = ctl->tt;
+  		pay->delay = delay = 0U;
+  		break;
 
-		delay = net_buf_simple_pull_u8(buf);
-		break;
-	default:
-		return 0;
+    case 0x02:      /* Optional fields are available */
+  		pay->tt = tt = net_buf_simple_pull_u8(buf);
+  		if ((tt & 0x3F) == 0x3F)
+      {
+  			return 0;
+  		}
+
+  		pay->delay = delay = net_buf_simple_pull_u8(buf);
+  		break;
+
+  	default:
+  		return 0;
 	}
+
+  #if MIGRATION_STEP6
+    log_rx(5,BL_C "rx_goolet", oc, model, ctx, pay, cnt);
+  #endif
 
 	ctl->transition->counter = 0U;
 	k_timer_stop(&ctl->transition->timer);
@@ -288,6 +310,7 @@ static int gen_onoff_set_unack(struct bt_mesh_model *model,
 	if (ctl->light->target != ctl->light->current) {
 		set_transition_values(ONOFF);
 	} else {
+    goto SUBMIT;
 		return 0;
 	}
 
@@ -300,6 +323,14 @@ static int gen_onoff_set_unack(struct bt_mesh_model *model,
 	gen_onoff_publish(model);
 	onoff_handler();
 
+  #if MIGRATION_STEP6                  // post upward
+    bool dummy = 0;
+SUBMIT:  dummy = 1;                    // need this in order to use label
+    BL_ob oo = {_GOOSRV,_STS_,1,pay};
+    LOG0(5,BL_R"goosrv:let:",&oo,pay->onoff);
+    submit(&oo,pay->onoff);
+  #endif
+
 	return 0;
 }
 
@@ -311,40 +342,45 @@ static int gen_onoff_set_unack(struct bt_mesh_model *model,
   			 struct bt_mesh_msg_ctx *ctx,
   			 struct net_buf_simple *buf)
   {
-          #if MIGRATION_STEP6
-            uint32_t oc = BL_GOO_SET;
-            static long bl_log_gonoff_set_rx = 0;
-            long cnt = ++bl_log_gonoff_set_rx;
-            BL_gonoff_set *pay = &post.pay.gooset;
-          #endif
+    #if MIGRATION_STEP6
+      uint32_t oc = BL_GOO_SET;
+      static long bl_log_gonoff_set_rx = 0;
+      long cnt = ++bl_log_gonoff_set_rx;
+      BL_gonoff_set *pay = &post.pay.gooset;
+    #endif
 
-  	uint8_t tid, onoff, tt, delay;
+    uint8_t tid, onoff, tt, delay;
   	int64_t now;
 
-  	pay->onoff = onoff = net_buf_simple_pull_u8(buf);
-  	pay->tid = tid = net_buf_simple_pull_u8(buf);
+    pay->onoff = onoff = net_buf_simple_pull_u8(buf);
+    pay->tid = tid = net_buf_simple_pull_u8(buf);
+
+    LOG(4,BL_R"rcv [GOOSRV:SET @id,%d] #%d",pay->onoff,tid);
 
   	if (onoff > STATE_ON)
+    {
   		return 0;
+    }
 
   	now = k_uptime_get();
   	if (ctl->last_tid == tid &&
   	    ctl->last_src_addr == ctx->addr &&
   	    ctl->last_dst_addr == ctx->recv_dst &&
-  	    (now - ctl->last_msg_timestamp <= (6 * MSEC_PER_SEC))) {
+  	    (now - ctl->last_msg_timestamp <= (6 * MSEC_PER_SEC)))
+    {
   		(void)gen_onoff_get(model, ctx, buf);
   		return 0;
   	}
 
   	switch (buf->len)
     {
-    	case 0x00:      /* No optional fields are available */
-    		pay->tt = tt = ctl->tt;
-    		pay->delay = delay = 0U;
-    		break;
-    	case 0x02:      /* Optional fields are available */
-    		pay->tt = tt = net_buf_simple_pull_u8(buf);
-    		if ((tt & 0x3F) == 0x3F)
+      case 0x00:      /* No optional fields are available */
+        pay->tt = tt = ctl->tt;
+        pay->delay = delay = 0U;
+        break;
+      case 0x02:      /* Optional fields are available */
+        pay->tt = tt = net_buf_simple_pull_u8(buf);
+        if ((tt & 0x3F) == 0x3F)
         {
           goto SUBMIT;
     			return 0;
@@ -398,8 +434,9 @@ static int gen_onoff_set_unack(struct bt_mesh_model *model,
     #if MIGRATION_STEP6                  // post upward
       bool dummy = 0;
   SUBMIT:  dummy = 1;                    // need this in order to use label
+
       BL_ob oo = {_GOOSRV,_STS_,1,pay};
-      LOG0(4,BL_R"goosrv:rcv:",&oo,pay->onoff);
+      LOG0(5,"goosrv:set",&oo,pay->onoff);
       submit(&oo,pay->onoff);
     #endif
     return 0;
@@ -416,7 +453,8 @@ static int gen_onoff_status(struct bt_mesh_model *model,
 	LOG(5,"Acknownledgement from GEN_ONOFF_SRV");
 	LOG(5,"Present OnOff = %02x", net_buf_simple_pull_u8(buf));
 
-	if (buf->len == 2U) {
+	if (buf->len == 2U)
+  {
 		LOG(5,"Target OnOff = %02x", net_buf_simple_pull_u8(buf));
 		LOG(5,"Remaining Time = %02x", net_buf_simple_pull_u8(buf));
 	}
@@ -3097,31 +3135,43 @@ static int gen_level_status_temp(struct bt_mesh_model *model,
 
 /* message handlers (End) */
 
-/* Mapping of message handlers for Generic OnOff Server (0x1000) */
-static const struct bt_mesh_model_op gen_onoff_srv_op[] = {
-	{ BT_MESH_MODEL_OP_2(0x82, 0x01), BT_MESH_LEN_EXACT(0), gen_onoff_get },
-	{ BT_MESH_MODEL_OP_2(0x82, 0x02), BT_MESH_LEN_MIN(2),   gen_onoff_set },
-	{ BT_MESH_MODEL_OP_2(0x82, 0x03), BT_MESH_LEN_MIN(2),   gen_onoff_set_unack },
-	BT_MESH_MODEL_OP_END,
-};
+//==============================================================================
+// Mapping of message handlers for Generic OnOff Server (0x1000)
+//==============================================================================
 
-/* Mapping of message handlers for Generic OnOff Client (0x1001) */
-static const struct bt_mesh_model_op gen_onoff_cli_op[] = {
-	{ BT_MESH_MODEL_OP_2(0x82, 0x04), BT_MESH_LEN_MIN(1),   gen_onoff_status },
-	BT_MESH_MODEL_OP_END,
-};
+  static const struct bt_mesh_model_op gen_onoff_srv_op[] =
+  {
+  	{ BT_MESH_MODEL_OP_2(0x82, 0x01), BT_MESH_LEN_EXACT(0),gen_onoff_get },
+  	{ BT_MESH_MODEL_OP_2(0x82, 0x02), BT_MESH_LEN_MIN(2),  gen_onoff_set },
+  	{ BT_MESH_MODEL_OP_2(0x82, 0x03), BT_MESH_LEN_MIN(2),  gen_onoff_set_unack},
+  	BT_MESH_MODEL_OP_END,
+  };
 
-/* Mapping of message handlers for Generic Level (Light) Server (0x1002) */
-static const struct bt_mesh_model_op gen_level_srv_op[] = {
-	{ BT_MESH_MODEL_OP_2(0x82, 0x05), BT_MESH_LEN_EXACT(0), gen_level_get },
-	{ BT_MESH_MODEL_OP_2(0x82, 0x06), BT_MESH_LEN_MIN(3),   gen_level_set },
-	{ BT_MESH_MODEL_OP_2(0x82, 0x07), BT_MESH_LEN_MIN(3),   gen_level_set_unack },
-	{ BT_MESH_MODEL_OP_2(0x82, 0x09), BT_MESH_LEN_MIN(5),   gen_delta_set },
-	{ BT_MESH_MODEL_OP_2(0x82, 0x0A), BT_MESH_LEN_MIN(5),   gen_delta_set_unack },
-	{ BT_MESH_MODEL_OP_2(0x82, 0x0B), BT_MESH_LEN_MIN(3),   gen_move_set },
-	{ BT_MESH_MODEL_OP_2(0x82, 0x0C), BT_MESH_LEN_MIN(3),   gen_move_set_unack },
-	BT_MESH_MODEL_OP_END,
-};
+//==============================================================================
+// Mapping of message handlers for Generic OnOff Client (0x1001)
+//==============================================================================
+
+  static const struct bt_mesh_model_op gen_onoff_cli_op[] =
+  {
+  	{ BT_MESH_MODEL_OP_2(0x82, 0x04), BT_MESH_LEN_MIN(1),  gen_onoff_status },
+  	BT_MESH_MODEL_OP_END,
+  };
+
+//==============================================================================
+// Mapping of message handlers for Generic Level (Light) Server (0x1002)
+//==============================================================================
+
+  static const struct bt_mesh_model_op gen_level_srv_op[] =
+  {
+  	{ BT_MESH_MODEL_OP_2(0x82, 0x05), BT_MESH_LEN_EXACT(0),gen_level_get },
+  	{ BT_MESH_MODEL_OP_2(0x82, 0x06), BT_MESH_LEN_MIN(3),  gen_level_set },
+  	{ BT_MESH_MODEL_OP_2(0x82, 0x07), BT_MESH_LEN_MIN(3),  gen_level_set_unack},
+  	{ BT_MESH_MODEL_OP_2(0x82, 0x09), BT_MESH_LEN_MIN(5),  gen_delta_set },
+  	{ BT_MESH_MODEL_OP_2(0x82, 0x0A), BT_MESH_LEN_MIN(5),  gen_delta_set_unack},
+  	{ BT_MESH_MODEL_OP_2(0x82, 0x0B), BT_MESH_LEN_MIN(3),  gen_move_set },
+  	{ BT_MESH_MODEL_OP_2(0x82, 0x0C), BT_MESH_LEN_MIN(3),  gen_move_set_unack},
+  	BT_MESH_MODEL_OP_END,
+  };
 
 /* Mapping of message handlers for Generic Level (Light) Client (0x1003) */
 static const struct bt_mesh_model_op gen_level_cli_op[] = {
@@ -3254,71 +3304,75 @@ static const struct bt_mesh_model_op gen_level_srv_op_temp[] = {
 	BT_MESH_MODEL_OP_END,
 };
 
-/* Mapping of message handlers for Generic Level (Temp.) Client (0x1003) */
-static const struct bt_mesh_model_op gen_level_cli_op_temp[] = {
-	{ BT_MESH_MODEL_OP_2(0x82, 0x08), BT_MESH_LEN_MIN(2), gen_level_status_temp },
-	BT_MESH_MODEL_OP_END,
-};
+//==============================================================================
+// Mapping of message handlers for Generic Level (Temp.) Client (0x1003)
+//==============================================================================
 
-struct bt_mesh_model root_models[] = {
-	BT_MESH_MODEL_CFG_SRV,
-	BT_MESH_MODEL_HEALTH_SRV(&health_srv, &health_pub),
+  static const struct bt_mesh_model_op gen_level_cli_op_temp[] =
+  {
+  	{ BT_MESH_MODEL_OP_2(0x82, 0x08), BT_MESH_LEN_MIN(2),gen_level_status_temp},
+  	BT_MESH_MODEL_OP_END,
+  };
 
-	BT_MESH_MODEL(BT_MESH_MODEL_ID_GEN_ONOFF_SRV,
-		      gen_onoff_srv_op, &gen_onoff_srv_pub_root,
-		      NULL),
-	BT_MESH_MODEL(BT_MESH_MODEL_ID_GEN_ONOFF_CLI,
-		      gen_onoff_cli_op, &gen_onoff_cli_pub_root,
-		      NULL),
+//==============================================================================
+// device composition - root models
+//==============================================================================
 
-	BT_MESH_MODEL(BT_MESH_MODEL_ID_GEN_LEVEL_SRV,
-		      gen_level_srv_op, &gen_level_srv_pub_root,
-		      NULL),
-	BT_MESH_MODEL(BT_MESH_MODEL_ID_GEN_LEVEL_CLI,
-		      gen_level_cli_op, &gen_level_cli_pub_root,
-		      NULL),
+  struct bt_mesh_model root_models[] =
+  {
+  	BT_MESH_MODEL_CFG_SRV,
+  	BT_MESH_MODEL_HEALTH_SRV(&health_srv, &health_pub),
 
-	BT_MESH_MODEL(BT_MESH_MODEL_ID_GEN_DEF_TRANS_TIME_SRV,
-		      gen_def_trans_time_srv_op,
-		      &gen_def_trans_time_srv_pub,
-		      NULL),
-	BT_MESH_MODEL(BT_MESH_MODEL_ID_GEN_DEF_TRANS_TIME_CLI,
-		      gen_def_trans_time_cli_op,
-		      &gen_def_trans_time_cli_pub,
-		      NULL),
+//	BT_MESH_MODEL(BT_MESH_MODEL_ID_GEN_ONOFF_SRV, gen_onoff_srv_op,
+//		      &gen_onoff_pub_srv_s_0, &onoff_state[1]),
 
-	BT_MESH_MODEL(BT_MESH_MODEL_ID_GEN_POWER_ONOFF_SRV,
-		      gen_power_onoff_srv_op, &gen_power_onoff_srv_pub,
-		      NULL),
-	BT_MESH_MODEL(BT_MESH_MODEL_ID_GEN_POWER_ONOFF_SETUP_SRV,
-		      gen_power_onoff_setup_srv_op,
-		      &gen_power_onoff_srv_pub,
-		      NULL),
-	BT_MESH_MODEL(BT_MESH_MODEL_ID_GEN_POWER_ONOFF_CLI,
-		      gen_power_onoff_cli_op, &gen_power_onoff_cli_pub,
-		      NULL),
+  	BT_MESH_MODEL(BT_MESH_MODEL_ID_GEN_ONOFF_SRV,
+  		      gen_onoff_srv_op, &gen_onoff_srv_pub_root, NULL),
+  	BT_MESH_MODEL(BT_MESH_MODEL_ID_GEN_ONOFF_CLI,
+  		      gen_onoff_cli_op, &gen_onoff_cli_pub_root, NULL),
+  	BT_MESH_MODEL(BT_MESH_MODEL_ID_GEN_LEVEL_SRV,
+  		      gen_level_srv_op, &gen_level_srv_pub_root, NULL),
+  	BT_MESH_MODEL(BT_MESH_MODEL_ID_GEN_LEVEL_CLI,
+  		      gen_level_cli_op, &gen_level_cli_pub_root, NULL),
+  	BT_MESH_MODEL(BT_MESH_MODEL_ID_GEN_DEF_TRANS_TIME_SRV,
+  		      gen_def_trans_time_srv_op, &gen_def_trans_time_srv_pub, NULL),
+  	BT_MESH_MODEL(BT_MESH_MODEL_ID_GEN_DEF_TRANS_TIME_CLI,
+  		      gen_def_trans_time_cli_op,
+  		      &gen_def_trans_time_cli_pub,
+  		      NULL),
 
-	BT_MESH_MODEL(BT_MESH_MODEL_ID_LIGHT_LIGHTNESS_SRV,
-		      light_lightness_srv_op, &light_lightness_srv_pub,
-		      NULL),
-	BT_MESH_MODEL(BT_MESH_MODEL_ID_LIGHT_LIGHTNESS_SETUP_SRV,
-		      light_lightness_setup_srv_op,
-		      &light_lightness_srv_pub,
-		      NULL),
-	BT_MESH_MODEL(BT_MESH_MODEL_ID_LIGHT_LIGHTNESS_CLI,
-		      light_lightness_cli_op, &light_lightness_cli_pub,
-		      NULL),
+  	BT_MESH_MODEL(BT_MESH_MODEL_ID_GEN_POWER_ONOFF_SRV,
+  		      gen_power_onoff_srv_op, &gen_power_onoff_srv_pub,
+  		      NULL),
+  	BT_MESH_MODEL(BT_MESH_MODEL_ID_GEN_POWER_ONOFF_SETUP_SRV,
+  		      gen_power_onoff_setup_srv_op,
+  		      &gen_power_onoff_srv_pub,
+  		      NULL),
+  	BT_MESH_MODEL(BT_MESH_MODEL_ID_GEN_POWER_ONOFF_CLI,
+  		      gen_power_onoff_cli_op, &gen_power_onoff_cli_pub,
+  		      NULL),
 
-	BT_MESH_MODEL(BT_MESH_MODEL_ID_LIGHT_CTL_SRV,
-		      light_ctl_srv_op, &light_ctl_srv_pub,
-		      NULL),
-	BT_MESH_MODEL(BT_MESH_MODEL_ID_LIGHT_CTL_SETUP_SRV,
-		      light_ctl_setup_srv_op, &light_ctl_srv_pub,
-		      NULL),
-	BT_MESH_MODEL(BT_MESH_MODEL_ID_LIGHT_CTL_CLI,
-		      light_ctl_cli_op, &light_ctl_cli_pub,
-		      NULL),
-};
+  	BT_MESH_MODEL(BT_MESH_MODEL_ID_LIGHT_LIGHTNESS_SRV,
+  		      light_lightness_srv_op, &light_lightness_srv_pub,
+  		      NULL),
+  	BT_MESH_MODEL(BT_MESH_MODEL_ID_LIGHT_LIGHTNESS_SETUP_SRV,
+  		      light_lightness_setup_srv_op,
+  		      &light_lightness_srv_pub,
+  		      NULL),
+  	BT_MESH_MODEL(BT_MESH_MODEL_ID_LIGHT_LIGHTNESS_CLI,
+  		      light_lightness_cli_op, &light_lightness_cli_pub,
+  		      NULL),
+
+  	BT_MESH_MODEL(BT_MESH_MODEL_ID_LIGHT_CTL_SRV,
+  		      light_ctl_srv_op, &light_ctl_srv_pub,
+  		      NULL),
+  	BT_MESH_MODEL(BT_MESH_MODEL_ID_LIGHT_CTL_SETUP_SRV,
+  		      light_ctl_setup_srv_op, &light_ctl_srv_pub,
+  		      NULL),
+  	BT_MESH_MODEL(BT_MESH_MODEL_ID_LIGHT_CTL_CLI,
+  		      light_ctl_cli_op, &light_ctl_cli_pub,
+  		      NULL),
+  };
 
 struct bt_mesh_model vnd_models[] = {
 	BT_MESH_MODEL_VND(CID_ZEPHYR, 0x4321, vnd_ops,
@@ -3338,52 +3392,52 @@ struct bt_mesh_model s0_models[] = {
 		      NULL),
 };
 
-static struct bt_mesh_elem elements[] = {
-	BT_MESH_ELEM(0, root_models, vnd_models),
-	BT_MESH_ELEM(0, s0_models, BT_MESH_MODEL_NONE),
-};
+//==============================================================================
+// total device composition structure
+//==============================================================================
 
-const struct bt_mesh_comp comp = {
-	.cid = CID_ZEPHYR,
-	.elem = elements,
-	.elem_count = ARRAY_SIZE(elements),
-};
+  static struct bt_mesh_elem elements[] =
+  {
+  	BT_MESH_ELEM(0, root_models, vnd_models),
+  	BT_MESH_ELEM(0, s0_models, BT_MESH_MODEL_NONE),
+  };
+
+  const struct bt_mesh_comp comp =
+  {
+  	.cid = CID_ZEPHYR,
+  	.elem = elements,
+  	.elem_count = ARRAY_SIZE(elements),
+  };
 
 //==============================================================================
 // public module interface
 //==============================================================================
 //
-// BL_DEVCOMP Interfaces
-//   SYS Interface:     [] = SYS(INIT)
-//   GOOSRV Interface:  [SET] = GOOSRV(#STS)
-//
-//                            +-------------------+
-//                            |    BL_DEVCOMP     |
-//                            +-------------------+
-//                     INIT ->|       SYS:        |
-//                            +-------------------+
-//                     #STS ->|      GOOSRV:      |-> STS
-//                            +-------------------+
-// Input Messages:
-//   [SYS:INIT <cb>]              init module, store callback
-//   [GOOSRV:#STS @id,val,<data>] relay input for output of [GOOSRV:STS ...] msg
-//
-// Output Messages:
-//   [GOOSRV:STS @id,val,<data>]  output [GOOSRV:STS ...] message to subscriber
+// (C) := (BL_CORE)
+//                  +--------------------+
+//                  |     BL_DEVCOMP     |
+//                  +--------------------+
+//                  |        SYS:        | SYS: interface
+// (C)->     INIT ->|       <out>        | init module, store <out> callback
+//                  +--------------------+
+//                  |       GOOSRV:      | GOOSRV: interface (generic onoff srv)
+// (C)<-      STS <-|   @id,<data>,val   | status [GOOSRV:STS @id,<data>,val]
+//                  +--------------------+
 //
 //==============================================================================
 
   int bl_devcomp(BL_ob *o, int val)
   {
-    static BL_fct output = NULL;
+    static BL_fct out = NULL;          // store <out> callback
+
     switch (bl_id(o))                  // dispatch message ID
     {
-      case BL_ID(_SYS,INIT_):
-        output = o->data;              // store output callback
+      case BL_ID(_SYS,INIT_):          // [SYS:INIT <out>]
+        out = o->data;                 // store <out> callback
         return 0;                      // OK
 
       case BL_ID(_GOOSRV,_STS_):
-        return bl_out(o,val,output);
+        return bl_out(o,val,out);
 
       default:
         return -1;                     // bad args

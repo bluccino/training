@@ -1,5 +1,5 @@
 //==============================================================================
-// main.c for 05-rgbcycle (tiny RGB LED cycle control by buttons)
+// main.c for 06-rgbcycle (tiny RGB LED cycle control by buttons)
 //==============================================================================
 
   #include "bluccino.h"
@@ -19,6 +19,6 @@
 
   void main(void)
   {
-    bl_hello(4,"05-rgbcycle (click any button to activate another LED");
+    bl_hello(4,"06-rgbcycle (click any button to activate another LED");
     bl_run(NULL,10,100,when);          // run - output goes to when()
   }
