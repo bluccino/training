@@ -307,18 +307,18 @@ LOG(4,BL_R"snd [GOOCLI:LET @1,0]");
 
     BL_model *pmod = bl_model(goocli[o->id-1]);
     bool onoff = (val != 0);
-    BL_u8 tid = 0;
+    static BL_u8 tid = 0;           // must be static
     BL_u8 tt = 0;
     BL_u8 delay = 0;
 
     switch (bl_id(o))
     {
       case BL_ID(_GOOCLI,LET_):
-        tx_goolet(pmod, onoff, tid, tt, delay);
+        tx_goolet(pmod, onoff, tid++, tt, delay);
         return 0;
 
       case BL_ID(_GOOCLI,SET_):
-        tx_gooset(pmod, onoff, tid, tt, delay);
+        tx_gooset(pmod, onoff, tid++, tt, delay);
         return 0;                      // OK
 
       default:

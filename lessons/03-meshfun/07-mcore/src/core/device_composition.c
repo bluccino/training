@@ -42,16 +42,16 @@
 //==============================================================================
 
 #ifndef MIGRATION_STEP1
-  #define MIGRATION_STEP1         0    // introduce bl_core()
+  #define MIGRATION_STEP1         1    // introduce bl_core()
 #endif
 #ifndef MIGRATION_STEP2
-  #define MIGRATION_STEP2         0    // emit provisioned/attention messages
+  #define MIGRATION_STEP2         1    // emit provisioned/attention messages
 #endif
 #ifndef MIGRATION_STEP3
-  #define MIGRATION_STEP3         0    // set onoff state
+  #define MIGRATION_STEP3         1    // set onoff state
 #endif
 #ifndef MIGRATION_STEP6
-  #define MIGRATION_STEP6         0    // receive mesh messages
+  #define MIGRATION_STEP6         1    // receive mesh messages
 #endif
 
 //==============================================================================
@@ -255,7 +255,8 @@ static int gen_onoff_set_unack(struct bt_mesh_model *model,
 
   LOG(4,BL_R"rcv [GOOSRV:LET @id,%d]",pay->onoff);
 
-	if (onoff > STATE_ON) {
+	if (onoff > STATE_ON)
+  {
 		return 0;
 	}
 
@@ -263,7 +264,8 @@ static int gen_onoff_set_unack(struct bt_mesh_model *model,
 	if (ctl->last_tid == tid &&
 	    ctl->last_src_addr == ctx->addr &&
 	    ctl->last_dst_addr == ctx->recv_dst &&
-	    (now - ctl->last_msg_timestamp <= (6 * MSEC_PER_SEC))) {
+	    (now - ctl->last_msg_timestamp <= (6 * MSEC_PER_SEC)))
+  {
 		return 0;
 	}
 
@@ -352,7 +354,7 @@ SUBMIT:  dummy = 1;                    // need this in order to use label
     pay->onoff = onoff = net_buf_simple_pull_u8(buf);
     pay->tid = tid = net_buf_simple_pull_u8(buf);
 
-    LOG(4,BL_R"rcv [GOOSRV:LET @id,%d]",pay->onoff);
+    LOG(4,BL_R"rcv [GOOSRV:SET @id,%d] #%d",pay->onoff,tid);
 
   	if (onoff > STATE_ON)
     {
@@ -432,11 +434,8 @@ SUBMIT:  dummy = 1;                    // need this in order to use label
       bool dummy = 0;
   SUBMIT:  dummy = 1;                    // need this in order to use label
 
-
-
-
       BL_ob oo = {_GOOSRV,_STS_,1,pay};
-      LOG0(5,"goosrv:set:",&oo,pay->onoff);
+      LOG0(5,"goosrv:set",&oo,pay->onoff);
       submit(&oo,pay->onoff);
     #endif
     return 0;
