@@ -71,7 +71,7 @@
                         "GET","STS","TRIG","TICK","TOCK","CMD","VAL","LEVEL", \
                         "ONOFF","COUNT","TOGGLE","INC","DEC","PAY", "ADV", \
                         "BEACON","SEND","PRESS","RELEASE","CLICK","HOLD","MS", \
-                        "STORE","RECALL"}
+                        "STORE","RECALL","SAVE"}
 
     typedef enum BL_op
             {
@@ -121,6 +121,7 @@
 
               STORE_,                  // store data
               RECALL_,                 // recall data
+              SAVE_,                   // save data
             } BL_op;
 
   #endif // BL_OP_TEXT

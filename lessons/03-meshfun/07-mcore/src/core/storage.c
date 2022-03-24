@@ -16,6 +16,8 @@
 
   #include "bluccino.h"
 
+  #define _READY_   BL_HASH(READY_)    // hashed symbol #READY
+
 //==============================================================================
 // NVM level logging shorthands
 //==============================================================================
@@ -48,6 +50,7 @@
 
   static void save_reset_counter(void)
   {
+    LOG(4,"store: @reset_counter,%d",reset_counter);
   	settings_save_one("ps/rc", &reset_counter, sizeof(reset_counter));
   }
 
@@ -159,6 +162,25 @@
   }
 
 //==============================================================================
+// notify readiness
+//==============================================================================
+
+  static void nvm_ready_worker(struct k_work *work)
+  {
+    ready = true;
+    BL_ob oo = {_NVM,_READY_,0,NULL};
+    LOGO(4,BL_M,&oo,ready);
+    bl_nvm(&oo,ready);                   // post [NVM:READY] via <out>
+  }
+
+  K_WORK_DEFINE(nvm_ready_work, nvm_ready_worker);
+
+  static void submit_nvm_ready(void)
+  {
+    k_work_submit(&nvm_ready_work);
+  }
+
+//==============================================================================
 // save on flash
 //==============================================================================
 
@@ -170,25 +192,27 @@
   	const char *next;
 
   	key_len = settings_name_next(key, &next);
-LOG(4,"ps_set - key:%s",next?next:"???");
+    //LOG(4,"ps_set - key:%s",next?next:"???");
 
   	if (!next)
     {
   		if (!strncmp(key, "nvm", key_len))
       {
   			len = read_cb(cb_arg, &nvm_cache, sizeof(nvm_cache));
-        LOG(4,BL_M "NVM is now ready");
-        ready = true;
+  	    submit_nvm_ready();
       }
 
   		if (!strncmp(key, "rc", key_len))
       {
   			len = read_cb(cb_arg, &reset_counter, sizeof(reset_counter));
-        LOG(4,"NVM: reset counter = %d",reset_counter);
+        //LOG(4,"ps_set: reset counter = %d",reset_counter);
       }
 
   		if (!strncmp(key, "gdtt", key_len))
+      {
   			len = read_cb(cb_arg, &ctl->tt, sizeof(ctl->tt));
+        //LOG(4,"ps_set: tt = %d",ctl->tt);
+      }
 
   		if (!strncmp(key, "gpo", key_len))
   			len = read_cb(cb_arg, &ctl->onpowerup, sizeof(ctl->onpowerup));
@@ -237,6 +261,16 @@ LOG(4,"ps_set - key:%s",next?next:"???");
          };
 
 //==============================================================================
+// save NVM cache to NVM
+//==============================================================================
+
+  static int save(BL_ob *o, int val)
+  {
+    save_nvm_cache();
+    return 0;                          // OK
+  }
+
+//==============================================================================
 // store value in NVM
 //==============================================================================
 
@@ -258,7 +292,7 @@ LOG(4,"ps_set - key:%s",next?next:"???");
   }
 
 //==============================================================================
-// store value in NVM
+// recall value from NVM
 //==============================================================================
 
   static int recall(BL_ob *o, int val)
@@ -272,17 +306,34 @@ LOG(4,"ps_set - key:%s",next?next:"???");
   }
 
 //==============================================================================
-// backup NVM cache in NVM
+// tock module
 //==============================================================================
 
-  static void backup(void)
+  static int tock(BL_ob *o, int val)
   {
-    if (ready && dirty)
+    if (val % 2 == 0)                  // every 2 seconds
     {
-      LOG(4,"backup NVM cache ...");
-      save_nvm_cache();
-      dirty = false;
+      if (!ready && val >= 4)          // if not ready in 4 seconds
+      {
+        LOG(4,BL_R "reset NVM cache (since wasn't ready within 4s)");
+
+        for (int i=0; i<BL_LEN(nvm_cache); i++)
+          nvm_cache[i] = 0;            // init NVM cache
+
+        ready = true;
+        dirty = true;
+
+  	    submit_nvm_ready();            // notify higher levels
+      }
+
+      if (ready && dirty)
+      {
+        LOG(4,"backup NVM cache ...");
+        save(o,val);
+        dirty = false;
+      }
     }
+    return 0;                          // OK
   }
 
 //==============================================================================
@@ -314,17 +365,22 @@ LOG(4,"ps_set - key:%s",next?next:"???");
 // public module interface
 //==============================================================================
 //
+// (C) := (BL_CORE)
 //                  +--------------------+
 //                  |       BL_NVM       | non volatile memory access
 //                  +--------------------+
 //                  |        SYS:        | SYS: public interface
-// (#)->     INIT ->|       @id,cnt      | init module, store <out> callback
-// (#)->     TOCK ->|       @id,cnt      | tock the module
+// (C)->     INIT ->|       @id,cnt      | init module, store <out> callback
+// (C)->     TOCK ->|       @id,cnt      | tock the module
 //                  +--------------------+
 //                  |        NVM:        | NVM: public interface
-// (#)<-    READY <-|                    | notification that NVM is now ready
-// (#)->    STORE ->|      @id,val       | store value in NVM at location @id
-// (#)->   RECALL ->|        @id         | recall value in NVM at location @id
+// (C)<-    READY <-|       ready        | notification that NVM is now ready
+// (C)->    STORE ->|      @id,val       | store value in NVM at location @id
+// (C)->   RECALL ->|        @id         | recall value in NVM at location @id
+// (C)->     SAVE ->|                    | save NVM cache to NVM
+//                  +====================+
+//                  |        NVM:        | NVM: private interface
+// (#)->   #READY ->|       ready        | notification that NVM is now ready
 //                  +--------------------+
 //
 //==============================================================================
@@ -340,15 +396,19 @@ LOG(4,"ps_set - key:%s",next?next:"???");
         return init(o,val);          // forward to init() worker
 
       case BL_ID(_SYS,TOCK_):        // [SYS:TOCK @0,cnt]
-        if (val % 2 == 0)            // every 2 seconds
-          backup();                  // backup NVM cache every 2s if dirty
-        return 0;                    // OK
+        return tock(o,val);          // forward to tock() worker
+
+      case BL_ID(_NVM,_READY_):      // [NVM:#READY ready]
+        return bl_out(o,val,out);    // forward to store() worker
 
       case BL_ID(_NVM,STORE_):       // [NVM:STORE @id,val]
         return store(o,val);         // forward to store() worker
 
       case BL_ID(_NVM,RECALL_):      // val = [NVM:RECALL @id]
         return recall(o,val);        // forward to recall() worker
+
+      case BL_ID(_NVM,SAVE_):        // [NVM:STORE @id,val]
+        return save(o,val);          // forward to save() worker
 
       default:
         return -1;                   // bad input

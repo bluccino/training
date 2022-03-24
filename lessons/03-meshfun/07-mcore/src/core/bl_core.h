@@ -45,9 +45,10 @@
 // (^)<-      STS <-|      @id,onoff     | on/off status update of switch @id
 //                  +--------------------+
 //                  |        NVM:        | NVM: public interface
-// (#)<-    READY <-|                    | notification that NVM is now ready
+// (#)<-    READY <-|       ready        | notification that NVM is now ready
 // (v)->    STORE ->|      @id,val       | store value in NVM at location @id
 // (v)->   RECALL ->|        @id         | recall value in NVM at location @id
+// (v)->     SAVE ->|                    | save NVM cache to NVM
 //                  +--------------------+
 //
 //==============================================================================

@@ -5,6 +5,7 @@
 - derived from 02-mcore
 - change CMakeLists.txt, config.h and README.rst (this file)
 - make extension to device_composition.c (according to 06-mcore)
+- added NVM functionality
 
 #===============================================================================
 # 02-mcore (Bluccino mesh core)

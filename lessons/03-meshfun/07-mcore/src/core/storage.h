@@ -36,17 +36,19 @@ void save_on_flash(uint8_t id);
 // public module interface
 //==============================================================================
 //
+// (C) := (BL_CORE)
 //                  +--------------------+
 //                  |       BL_NVM       | non volatile memory access
 //                  +--------------------+
 //                  |        SYS:        | SYS: public interface
-// (#)->     INIT ->|       @id,cnt      | init module, store <out> callback
-// (#)->     TOCK ->|       @id,cnt      | tock the module
+// (C)->     INIT ->|       @id,cnt      | init module, store <out> callback
+// (C)->     TOCK ->|       @id,cnt      | tock the module
 //                  +--------------------+
 //                  |        NVM:        | NVM: public interface
-// (#)<-    READY <-|                    | notification that NVM is now ready
-// (#)->    STORE ->|      @id,val       | store value in NVM at location @id
-// (#)->   RECALL ->|        @id         | recall value in NVM at location @id
+// (C)<-    READY <-|       ready        | notification that NVM is now ready
+// (C)->    STORE ->|      @id,val       | store value in NVM at location @id
+// (C)->   RECALL ->|        @id         | recall value in NVM at location @id
+// (C)->     SAVE ->|                    | save NVM cache to NVM
 //                  +--------------------+
 //
 //==============================================================================

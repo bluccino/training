@@ -144,7 +144,7 @@
         return 0;                      // OK
 
       case BL_ID(_SYS,TOCK_):          // [SYS:TOCK @id,cnt]
-        if (val % 5 == 0)              // log every 5th tock
+        if (val % 20 == 0)             // log every 20th tock
           LOGO(1,"I'm alive! ",o,val); // log to see we are alife
         return 0;                      // OK
 
@@ -166,6 +166,7 @@
         return 0;                      // OK
 
       case BL_ID(_NVM,READY_):         // [GOOSRV:STS] status update
+        LOGO(1,BL_M,o,val);            
         starts = bl_recall(0);         // recall system starts from NVM @0
         bl_store(0,++starts);          // store back incremented value at NVM @0
         LOG(1,BL_M "system start #%d",starts);

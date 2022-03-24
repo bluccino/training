@@ -330,6 +330,7 @@ K_TIMER_DEFINE(reset_counter_timer, reset_counter_timer_handler, NULL);
 // (^)<-    READY <-|                    | notification that NVM is now ready
 // (v)->    STORE ->|      @id,val       | store value in NVM at location @id
 // (v)->   RECALL ->|        @id         | recall value in NVM at location @id
+// (v)->     SAVE ->|                    | save NVM cache to NVM
 //                  +====================+
 //                  |      PRIVATE       |
 //                  +====================+
@@ -359,9 +360,10 @@ K_TIMER_DEFINE(reset_counter_timer, reset_counter_timer_handler, NULL);
 // (H)->      STS ->|      @id,onoff     | on/off status update of switch @id
 //                  +--------------------+
 //                  |        NVM:        | NVM: public interface
-// (N)->    READY ->|                    | notification that NVM is now ready
+// (N)->    READY ->|       ready        | notification that NVM is now ready
 // (N)<-    STORE <-|      @id,val       | store value in NVM at location @id
 // (N)<-   RECALL <-|        @id         | recall value in NVM at location @id
+// (N)<-     SAVE <-|                    | save NVM cache to NVM
 //                  +--------------------+
 //
 //==============================================================================
@@ -380,8 +382,10 @@ K_TIMER_DEFINE(reset_counter_timer, reset_counter_timer_handler, NULL);
         return init(o,val);          // forward to init() worker
 
       case BL_ID(_SYS,TICK_):        // [SYS:TICK @0,cnt]
-      case BL_ID(_SYS,TOCK_):        // [SYS:TICK @0,cnt]
         return 0;                    // OK - nothing to tick/tock
+
+      case BL_ID(_SYS,TOCK_):        // [SYS:TICK @0,cnt]
+        return bl_nvm(o,val);        // BL_NVM module to be tocked
 
       case BL_ID(_SET,PRV_):         // [SET:PRV val]  (provision)
       case BL_ID(_SET,ATT_):         // [SET:ATT val]  (attention)
@@ -416,6 +420,7 @@ K_TIMER_DEFINE(reset_counter_timer, reset_counter_timer_handler, NULL);
 
       case BL_ID(_NVM,STORE_):       // [NVM:STORE @id,val] store value in NVM
       case BL_ID(_NVM,RECALL_):      // val = [NVM:RECALL @id] recall NVM value
+      case BL_ID(_NVM,SAVE_):        // [NVM:SAVE] save NVM cache to NVM
         return bl_nvm(o,val);        // forward to BL_NVM module
 
       default:
