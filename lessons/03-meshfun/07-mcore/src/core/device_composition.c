@@ -125,7 +125,8 @@ static struct bt_mesh_health_srv health_srv = {
 
 BT_MESH_HEALTH_PUB_DEFINE(health_pub, 0);
 
-/* Definitions of models publication context (Start) */
+  // Definitions of models publication context (Start)
+
 BT_MESH_MODEL_PUB_DEFINE(gen_onoff_srv_pub_root, NULL, 2 + 3);
 BT_MESH_MODEL_PUB_DEFINE(gen_onoff_cli_pub_root, NULL, 2 + 4);
 
@@ -3134,31 +3135,43 @@ static int gen_level_status_temp(struct bt_mesh_model *model,
 
 /* message handlers (End) */
 
-/* Mapping of message handlers for Generic OnOff Server (0x1000) */
-static const struct bt_mesh_model_op gen_onoff_srv_op[] = {
-	{ BT_MESH_MODEL_OP_2(0x82, 0x01), BT_MESH_LEN_EXACT(0), gen_onoff_get },
-	{ BT_MESH_MODEL_OP_2(0x82, 0x02), BT_MESH_LEN_MIN(2),   gen_onoff_set },
-	{ BT_MESH_MODEL_OP_2(0x82, 0x03), BT_MESH_LEN_MIN(2),   gen_onoff_set_unack },
-	BT_MESH_MODEL_OP_END,
-};
+//==============================================================================
+// Mapping of message handlers for Generic OnOff Server (0x1000)
+//==============================================================================
 
-/* Mapping of message handlers for Generic OnOff Client (0x1001) */
-static const struct bt_mesh_model_op gen_onoff_cli_op[] = {
-	{ BT_MESH_MODEL_OP_2(0x82, 0x04), BT_MESH_LEN_MIN(1),   gen_onoff_status },
-	BT_MESH_MODEL_OP_END,
-};
+  static const struct bt_mesh_model_op gen_onoff_srv_op[] =
+  {
+  	{ BT_MESH_MODEL_OP_2(0x82, 0x01), BT_MESH_LEN_EXACT(0),gen_onoff_get },
+  	{ BT_MESH_MODEL_OP_2(0x82, 0x02), BT_MESH_LEN_MIN(2),  gen_onoff_set },
+  	{ BT_MESH_MODEL_OP_2(0x82, 0x03), BT_MESH_LEN_MIN(2),  gen_onoff_set_unack},
+  	BT_MESH_MODEL_OP_END,
+  };
 
-/* Mapping of message handlers for Generic Level (Light) Server (0x1002) */
-static const struct bt_mesh_model_op gen_level_srv_op[] = {
-	{ BT_MESH_MODEL_OP_2(0x82, 0x05), BT_MESH_LEN_EXACT(0), gen_level_get },
-	{ BT_MESH_MODEL_OP_2(0x82, 0x06), BT_MESH_LEN_MIN(3),   gen_level_set },
-	{ BT_MESH_MODEL_OP_2(0x82, 0x07), BT_MESH_LEN_MIN(3),   gen_level_set_unack },
-	{ BT_MESH_MODEL_OP_2(0x82, 0x09), BT_MESH_LEN_MIN(5),   gen_delta_set },
-	{ BT_MESH_MODEL_OP_2(0x82, 0x0A), BT_MESH_LEN_MIN(5),   gen_delta_set_unack },
-	{ BT_MESH_MODEL_OP_2(0x82, 0x0B), BT_MESH_LEN_MIN(3),   gen_move_set },
-	{ BT_MESH_MODEL_OP_2(0x82, 0x0C), BT_MESH_LEN_MIN(3),   gen_move_set_unack },
-	BT_MESH_MODEL_OP_END,
-};
+//==============================================================================
+// Mapping of message handlers for Generic OnOff Client (0x1001)
+//==============================================================================
+
+  static const struct bt_mesh_model_op gen_onoff_cli_op[] =
+  {
+  	{ BT_MESH_MODEL_OP_2(0x82, 0x04), BT_MESH_LEN_MIN(1),  gen_onoff_status },
+  	BT_MESH_MODEL_OP_END,
+  };
+
+//==============================================================================
+// Mapping of message handlers for Generic Level (Light) Server (0x1002)
+//==============================================================================
+
+  static const struct bt_mesh_model_op gen_level_srv_op[] =
+  {
+  	{ BT_MESH_MODEL_OP_2(0x82, 0x05), BT_MESH_LEN_EXACT(0),gen_level_get },
+  	{ BT_MESH_MODEL_OP_2(0x82, 0x06), BT_MESH_LEN_MIN(3),  gen_level_set },
+  	{ BT_MESH_MODEL_OP_2(0x82, 0x07), BT_MESH_LEN_MIN(3),  gen_level_set_unack},
+  	{ BT_MESH_MODEL_OP_2(0x82, 0x09), BT_MESH_LEN_MIN(5),  gen_delta_set },
+  	{ BT_MESH_MODEL_OP_2(0x82, 0x0A), BT_MESH_LEN_MIN(5),  gen_delta_set_unack},
+  	{ BT_MESH_MODEL_OP_2(0x82, 0x0B), BT_MESH_LEN_MIN(3),  gen_move_set },
+  	{ BT_MESH_MODEL_OP_2(0x82, 0x0C), BT_MESH_LEN_MIN(3),  gen_move_set_unack},
+  	BT_MESH_MODEL_OP_END,
+  };
 
 /* Mapping of message handlers for Generic Level (Light) Client (0x1003) */
 static const struct bt_mesh_model_op gen_level_cli_op[] = {
@@ -3291,71 +3304,75 @@ static const struct bt_mesh_model_op gen_level_srv_op_temp[] = {
 	BT_MESH_MODEL_OP_END,
 };
 
-/* Mapping of message handlers for Generic Level (Temp.) Client (0x1003) */
-static const struct bt_mesh_model_op gen_level_cli_op_temp[] = {
-	{ BT_MESH_MODEL_OP_2(0x82, 0x08), BT_MESH_LEN_MIN(2), gen_level_status_temp },
-	BT_MESH_MODEL_OP_END,
-};
+//==============================================================================
+// Mapping of message handlers for Generic Level (Temp.) Client (0x1003)
+//==============================================================================
 
-struct bt_mesh_model root_models[] = {
-	BT_MESH_MODEL_CFG_SRV,
-	BT_MESH_MODEL_HEALTH_SRV(&health_srv, &health_pub),
+  static const struct bt_mesh_model_op gen_level_cli_op_temp[] =
+  {
+  	{ BT_MESH_MODEL_OP_2(0x82, 0x08), BT_MESH_LEN_MIN(2),gen_level_status_temp},
+  	BT_MESH_MODEL_OP_END,
+  };
 
-	BT_MESH_MODEL(BT_MESH_MODEL_ID_GEN_ONOFF_SRV,
-		      gen_onoff_srv_op, &gen_onoff_srv_pub_root,
-		      NULL),
-	BT_MESH_MODEL(BT_MESH_MODEL_ID_GEN_ONOFF_CLI,
-		      gen_onoff_cli_op, &gen_onoff_cli_pub_root,
-		      NULL),
+//==============================================================================
+// device composition - root models
+//==============================================================================
 
-	BT_MESH_MODEL(BT_MESH_MODEL_ID_GEN_LEVEL_SRV,
-		      gen_level_srv_op, &gen_level_srv_pub_root,
-		      NULL),
-	BT_MESH_MODEL(BT_MESH_MODEL_ID_GEN_LEVEL_CLI,
-		      gen_level_cli_op, &gen_level_cli_pub_root,
-		      NULL),
+  struct bt_mesh_model root_models[] =
+  {
+  	BT_MESH_MODEL_CFG_SRV,
+  	BT_MESH_MODEL_HEALTH_SRV(&health_srv, &health_pub),
 
-	BT_MESH_MODEL(BT_MESH_MODEL_ID_GEN_DEF_TRANS_TIME_SRV,
-		      gen_def_trans_time_srv_op,
-		      &gen_def_trans_time_srv_pub,
-		      NULL),
-	BT_MESH_MODEL(BT_MESH_MODEL_ID_GEN_DEF_TRANS_TIME_CLI,
-		      gen_def_trans_time_cli_op,
-		      &gen_def_trans_time_cli_pub,
-		      NULL),
+//	BT_MESH_MODEL(BT_MESH_MODEL_ID_GEN_ONOFF_SRV, gen_onoff_srv_op,
+//		      &gen_onoff_pub_srv_s_0, &onoff_state[1]),
 
-	BT_MESH_MODEL(BT_MESH_MODEL_ID_GEN_POWER_ONOFF_SRV,
-		      gen_power_onoff_srv_op, &gen_power_onoff_srv_pub,
-		      NULL),
-	BT_MESH_MODEL(BT_MESH_MODEL_ID_GEN_POWER_ONOFF_SETUP_SRV,
-		      gen_power_onoff_setup_srv_op,
-		      &gen_power_onoff_srv_pub,
-		      NULL),
-	BT_MESH_MODEL(BT_MESH_MODEL_ID_GEN_POWER_ONOFF_CLI,
-		      gen_power_onoff_cli_op, &gen_power_onoff_cli_pub,
-		      NULL),
+  	BT_MESH_MODEL(BT_MESH_MODEL_ID_GEN_ONOFF_SRV,
+  		      gen_onoff_srv_op, &gen_onoff_srv_pub_root, NULL),
+  	BT_MESH_MODEL(BT_MESH_MODEL_ID_GEN_ONOFF_CLI,
+  		      gen_onoff_cli_op, &gen_onoff_cli_pub_root, NULL),
+  	BT_MESH_MODEL(BT_MESH_MODEL_ID_GEN_LEVEL_SRV,
+  		      gen_level_srv_op, &gen_level_srv_pub_root, NULL),
+  	BT_MESH_MODEL(BT_MESH_MODEL_ID_GEN_LEVEL_CLI,
+  		      gen_level_cli_op, &gen_level_cli_pub_root, NULL),
+  	BT_MESH_MODEL(BT_MESH_MODEL_ID_GEN_DEF_TRANS_TIME_SRV,
+  		      gen_def_trans_time_srv_op, &gen_def_trans_time_srv_pub, NULL),
+  	BT_MESH_MODEL(BT_MESH_MODEL_ID_GEN_DEF_TRANS_TIME_CLI,
+  		      gen_def_trans_time_cli_op,
+  		      &gen_def_trans_time_cli_pub,
+  		      NULL),
 
-	BT_MESH_MODEL(BT_MESH_MODEL_ID_LIGHT_LIGHTNESS_SRV,
-		      light_lightness_srv_op, &light_lightness_srv_pub,
-		      NULL),
-	BT_MESH_MODEL(BT_MESH_MODEL_ID_LIGHT_LIGHTNESS_SETUP_SRV,
-		      light_lightness_setup_srv_op,
-		      &light_lightness_srv_pub,
-		      NULL),
-	BT_MESH_MODEL(BT_MESH_MODEL_ID_LIGHT_LIGHTNESS_CLI,
-		      light_lightness_cli_op, &light_lightness_cli_pub,
-		      NULL),
+  	BT_MESH_MODEL(BT_MESH_MODEL_ID_GEN_POWER_ONOFF_SRV,
+  		      gen_power_onoff_srv_op, &gen_power_onoff_srv_pub,
+  		      NULL),
+  	BT_MESH_MODEL(BT_MESH_MODEL_ID_GEN_POWER_ONOFF_SETUP_SRV,
+  		      gen_power_onoff_setup_srv_op,
+  		      &gen_power_onoff_srv_pub,
+  		      NULL),
+  	BT_MESH_MODEL(BT_MESH_MODEL_ID_GEN_POWER_ONOFF_CLI,
+  		      gen_power_onoff_cli_op, &gen_power_onoff_cli_pub,
+  		      NULL),
 
-	BT_MESH_MODEL(BT_MESH_MODEL_ID_LIGHT_CTL_SRV,
-		      light_ctl_srv_op, &light_ctl_srv_pub,
-		      NULL),
-	BT_MESH_MODEL(BT_MESH_MODEL_ID_LIGHT_CTL_SETUP_SRV,
-		      light_ctl_setup_srv_op, &light_ctl_srv_pub,
-		      NULL),
-	BT_MESH_MODEL(BT_MESH_MODEL_ID_LIGHT_CTL_CLI,
-		      light_ctl_cli_op, &light_ctl_cli_pub,
-		      NULL),
-};
+  	BT_MESH_MODEL(BT_MESH_MODEL_ID_LIGHT_LIGHTNESS_SRV,
+  		      light_lightness_srv_op, &light_lightness_srv_pub,
+  		      NULL),
+  	BT_MESH_MODEL(BT_MESH_MODEL_ID_LIGHT_LIGHTNESS_SETUP_SRV,
+  		      light_lightness_setup_srv_op,
+  		      &light_lightness_srv_pub,
+  		      NULL),
+  	BT_MESH_MODEL(BT_MESH_MODEL_ID_LIGHT_LIGHTNESS_CLI,
+  		      light_lightness_cli_op, &light_lightness_cli_pub,
+  		      NULL),
+
+  	BT_MESH_MODEL(BT_MESH_MODEL_ID_LIGHT_CTL_SRV,
+  		      light_ctl_srv_op, &light_ctl_srv_pub,
+  		      NULL),
+  	BT_MESH_MODEL(BT_MESH_MODEL_ID_LIGHT_CTL_SETUP_SRV,
+  		      light_ctl_setup_srv_op, &light_ctl_srv_pub,
+  		      NULL),
+  	BT_MESH_MODEL(BT_MESH_MODEL_ID_LIGHT_CTL_CLI,
+  		      light_ctl_cli_op, &light_ctl_cli_pub,
+  		      NULL),
+  };
 
 struct bt_mesh_model vnd_models[] = {
 	BT_MESH_MODEL_VND(CID_ZEPHYR, 0x4321, vnd_ops,
@@ -3375,16 +3392,22 @@ struct bt_mesh_model s0_models[] = {
 		      NULL),
 };
 
-static struct bt_mesh_elem elements[] = {
-	BT_MESH_ELEM(0, root_models, vnd_models),
-	BT_MESH_ELEM(0, s0_models, BT_MESH_MODEL_NONE),
-};
+//==============================================================================
+// total device composition structure
+//==============================================================================
 
-const struct bt_mesh_comp comp = {
-	.cid = CID_ZEPHYR,
-	.elem = elements,
-	.elem_count = ARRAY_SIZE(elements),
-};
+  static struct bt_mesh_elem elements[] =
+  {
+  	BT_MESH_ELEM(0, root_models, vnd_models),
+  	BT_MESH_ELEM(0, s0_models, BT_MESH_MODEL_NONE),
+  };
+
+  const struct bt_mesh_comp comp =
+  {
+  	.cid = CID_ZEPHYR,
+  	.elem = elements,
+  	.elem_count = ARRAY_SIZE(elements),
+  };
 
 //==============================================================================
 // public module interface
