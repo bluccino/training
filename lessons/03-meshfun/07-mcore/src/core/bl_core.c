@@ -260,9 +260,9 @@ K_TIMER_DEFINE(reset_counter_timer, reset_counter_timer_handler, NULL);
   		smp_svr_init();
   	#endif
 
-  	LOG(3,BL_C "init BLE/Mesh...");
+  	bl_init(bl_nvm,bl_core);         // init NVM, output => bl_core()
 
-  	ps_settings_init();
+  	LOG(3,BL_C "init BLE/Mesh...");
 
   	  // init Bluetooth subsystem
 
@@ -295,7 +295,7 @@ K_TIMER_DEFINE(reset_counter_timer, reset_counter_timer_handler, NULL);
 // public module interface
 //==============================================================================
 //
-// (H) := (BL_HW)
+// (H) := (BL_HW); (N) := (BL_NVM)
 //                  +--------------------+
 //                  |       BL_CORE      |
 //                  +--------------------+
@@ -313,18 +313,23 @@ K_TIMER_DEFINE(reset_counter_timer, reset_counter_timer_handler, NULL);
 // (v)->      INC ->|         ms         | inc reset counter & set due timer
 // (v)->      PRV ->|                    | unprovision node
 //                  +--------------------+
-//                  |        LED:        | LED: input interface
+//                  |        LED:        | LED: public interface
 // (v)->      SET ->|      @id,onoff     | set LED @id on/off (i=0..4)
 // (v)->   TOGGLE ->|                    | toggle LED @id (i=0..4)
 //                  +--------------------+
-//                  |       BUTTON:      | BUTTON: output interface
+//                  |       BUTTON:      | BUTTON: public interface
 // (^)<-    PRESS <-|        @id,1       | button @id pressed (rising edge)
 // (^)<-  RELEASE <-|        @id,0       | button @id released (falling edge)
 // (^)<-    CLICK <-|       @id,cnt      | button @id clicked (cnt: nmb. clicks)
 // (^)<-     HOLD <-|       @id,time     | button @id held (time: hold time)
 //                  +--------------------+
-//                  |       SWITCH:      | SWITCH: output interface
+//                  |       SWITCH:      | SWITCH: public interface
 // (^)<-      STS <-|      @id,onoff     | on/off status update of switch @id
+//                  +--------------------+
+//                  |        NVM:        | NVM: public interface
+// (^)<-    READY <-|                    | notification that NVM is now ready
+// (v)->    STORE ->|      @id,val       | store value in NVM at location @id
+// (v)->   RECALL ->|        @id         | recall value in NVM at location @id
 //                  +====================+
 //                  |      PRIVATE       |
 //                  +====================+
@@ -353,6 +358,11 @@ K_TIMER_DEFINE(reset_counter_timer, reset_counter_timer_handler, NULL);
 //                  |       SWITCH:      | SWITCH: input interface
 // (H)->      STS ->|      @id,onoff     | on/off status update of switch @id
 //                  +--------------------+
+//                  |        NVM:        | NVM: public interface
+// (N)->    READY ->|                    | notification that NVM is now ready
+// (N)<-    STORE <-|      @id,val       | store value in NVM at location @id
+// (N)<-   RECALL <-|        @id         | recall value in NVM at location @id
+//                  +--------------------+
 //
 //==============================================================================
 
@@ -360,7 +370,7 @@ K_TIMER_DEFINE(reset_counter_timer, reset_counter_timer_handler, NULL);
   {
     static BL_fct out = NULL;
 
-    switch (BL_ID(o->cl,o->op))
+    switch (bl_id(o))
     {
       case BL_ID(_SYS,INIT_):        // [SYS:INIT <out>]
         out = o->data;               // store output callback
@@ -400,6 +410,13 @@ K_TIMER_DEFINE(reset_counter_timer, reset_counter_timer_handler, NULL);
 
       case BL_ID(_GOOSRV,STS_):      // [GOOSRV:STS] post GOO status msg upward
         return bl_out(o,val,out);    // publish [GOOCLI:LET] or [GOOCLI:SET] msg
+
+      case BL_ID(_NVM,READY_):       // [NVM:READY] notify that NVM is ready
+        return bl_out(o,val,out);    // output [NVM:READY] to subscriber
+
+      case BL_ID(_NVM,STORE_):       // [NVM:STORE @id,val] store value in NVM
+      case BL_ID(_NVM,RECALL_):      // val = [NVM:RECALL @id] recall NVM value
+        return bl_nvm(o,val);        // forward to BL_NVM module
 
       default:
         return -1;                   // bad input

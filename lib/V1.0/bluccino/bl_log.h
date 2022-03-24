@@ -123,19 +123,51 @@
 #endif
 
 //==============================================================================
+// MAIN Logging
+//==============================================================================
+
+#ifndef CFG_LOG_MAIN
+    #define CFG_LOG_MAIN    1           // MAIN logging is by default on
+#endif
+
+#if (CFG_LOG_MAIN)
+    #define LOG_MAIN(l,f,...)    BL_LOG(CFG_LOG_MAIN-1+l,f,##__VA_ARGS__)
+    #define LOGO_MAIN(l,f,o,v)   bl_logo(CFG_LOG_MAIN-1+l,f,o,v)
+#else
+    #define LOG_MAIN(l,f,...)    {}     // empty
+    #define LOGO_MAIN(l,f,o,v)   {}     // empty
+#endif
+
+//==============================================================================
 // MESH Logging
 //==============================================================================
 
 #ifndef CFG_LOG_MESH
-    #define CFG_LOG_MESH    1           // MESH logging is by default on
+    #define CFG_LOG_MESH    1          // MESH logging is by default on
 #endif
 
 #if (CFG_LOG_MESH)
     #define LOG_MESH(l,f,...)    BL_LOG(CFG_LOG_MESH-1+l,f,##__VA_ARGS__)
     #define LOGO_MESH(l,f,o,v)   bl_logo(CFG_LOG_MESH-1+l,f,o,v)
 #else
-    #define LOG_MESH(l,f,...)    {}     // empty
-    #define LOGO_MESH(l,f,o,v)   {}     // empty
+    #define LOG_MESH(l,f,...)    {}    // empty
+    #define LOGO_MESH(l,f,o,v)   {}    // empty
+#endif
+
+//==============================================================================
+// NVM Logging
+//==============================================================================
+
+#ifndef CFG_LOG_NVM
+    #define CFG_LOG_NVM    1           // NVM logging is by default on
+#endif
+
+#if (CFG_LOG_NVM)
+    #define LOG_NVM(l,f,...)    BL_LOG(CFG_LOG_NVM-1+l,f,##__VA_ARGS__)
+    #define LOGO_NVM(l,f,o,v)   bl_logo(CFG_LOG_NVM-1+l,f,o,v)
+#else
+    #define LOG_NVM(l,f,...)    {}     // empty
+    #define LOGO_NVM(l,f,o,v)   {}     // empty
 #endif
 
 //==============================================================================

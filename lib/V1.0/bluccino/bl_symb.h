@@ -19,7 +19,7 @@
                         "SET","GET","MESH","BLE","NGMN","CFGSRV","CFGCLI",\
                         "HEASRV","HEACLI","GOOCLI","GOOSRV","GLVCLI","GLVSRV",\
                         "BUTTON", "SWITCH", "LED",           \
-                        "CTRL","SCAN","ADVT","SOS"}
+                        "CTRL","SCAN","ADVT","SOS","NVM"}
 
     typedef enum BL_cl                 // class tag
             {
@@ -55,7 +55,8 @@
               _SCAN,                   // scanning
               _ADVT,                   // advertizer
               _SOS,                    // SOS module
-            } BL_cl;                     // class tag
+              _NVM,                    // non volatile memory
+            } BL_cl;                   // class tag
 
   #endif // BL_CL_TEXT
 
@@ -69,7 +70,8 @@
                         "PING","PONG","PRV","ATT","DUE","SET","LET", \
                         "GET","STS","TRIG","TICK","TOCK","CMD","VAL","LEVEL", \
                         "ONOFF","COUNT","TOGGLE","INC","DEC","PAY", "ADV", \
-                        "BEACON","SEND","PRESS","RELEASE","CLICK","HOLD","MS"}
+                        "BEACON","SEND","PRESS","RELEASE","CLICK","HOLD","MS", \
+                        "STORE","RECALL"}
 
     typedef enum BL_op
             {
@@ -116,6 +118,9 @@
               CLICK_,                  // button click
               HOLD_,                   // button hold
               MS_,                     // millisecond (grace time)
+
+              STORE_,                  // store data
+              RECALL_,                 // recall data
             } BL_op;
 
   #endif // BL_OP_TEXT

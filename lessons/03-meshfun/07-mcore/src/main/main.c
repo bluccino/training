@@ -56,6 +56,7 @@
 
   #include "bluccino.h"
   #include "bl_basis.h"
+  #include "bl_core.h"
 
 //==============================================================================
 // MAIN level logging shorthands
@@ -75,6 +76,7 @@
   #define T_BLINK   1000                    // 1000 ms RGB blink period
 
   static volatile int id = 0;               // THE LED id
+  static int starts = 0;                    // counts system starts
 
 //==============================================================================
 // helper: attention blinker (let green status LED @0 attention blinking)
@@ -123,6 +125,9 @@
 //                  |       GOOCLI:      | GOOCLI: ifc. (generic on/off client)
 // (v)<-      SET <-|      @id,onoff     | publish generic on/off SET command
 //                  +--------------------+
+//                  |         NVM:       | NVM: interface (non volatile memory)
+// (^)->    READY ->|                    | notify that NVM is ready
+//                  +--------------------+
 //
 //==============================================================================
 
@@ -159,6 +164,12 @@
         if (o->id == 1)
           bl_led(2,val);               // switch LED @2
         return 0;                      // OK
+
+      case BL_ID(_NVM,READY_):         // [GOOSRV:STS] status update
+        starts = bl_recall(0);         // recall system starts from NVM @0
+        bl_store(0,++starts);          // store back incremented value at NVM @0
+        LOG(1,BL_M "system start #%d",starts);
+        return 0;
 
       default:
         return bl_basis(o,val);        // else forward event to BL_BASE module
