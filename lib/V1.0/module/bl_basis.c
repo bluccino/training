@@ -22,8 +22,8 @@
 //==============================================================================
 
   #define LOG                     LOG_BASIS
-  #define LOGO(lvl,col,o,val)     LOGO_MAIN(lvl,col"bl_basis:",o,val)
-  #define LOG0(lvl,col,o,val)     LOGO_MAIN(lvl,col,o,val)
+  #define LOGO(lvl,col,o,val)     LOGO_BASIS(lvl,col"bl_basis:",o,val)
+  #define LOG0(lvl,col,o,val)     LOGO_BASIS(lvl,col,o,val)
 
 //==============================================================================
 // locals
@@ -89,6 +89,9 @@
       }
 
       case BL_ID(_SYS,TICK_):               // receive [RESET<DUE] event
+if (val%20==0)
+  LOG(1,BL_R"startup - count:%d",count);
+
         if (count > 0)                      // if startup in progress
         {
           static bool old;
@@ -103,7 +106,7 @@
         return 0;                           // OK
 
       case BL_ID(_RESET,_INC_):             // [RESET:#INC] entry point
-        count = bl_fwd(bl_down,_RESET,o,T_STARTUP); // startup reset int'val
+        count = bl_out(o,T_STARTUP,bl_down);// startup reset interval
         return 0;                           // OK
 
       case BL_ID(_RESET,DUE_):              // receive [RESET:DUE] event
@@ -247,41 +250,41 @@
 // public module interface
 //==============================================================================
 //
-// BL_BASE Interfaces:
-//   SYS Interface:      [] = SYS(INIT,TICK)
-//   GET Interface:      [] = GET(PRV,ATT,BUSY)
-//   SET Interface:      [] = SET(PRV,ATT)
-//   HDL Interface:      [] = HDL(INC)
-//   BUTTON Interface:   [] = BUTTON(PRESS)
-//   LED Interface:      [LED] = HDL()
-//   RESET Interface:    [INC,PRV] = RESET(INC,DUE)
-//
-//                          +-----------------+
-//                          |     BL_BASE     |
-//                          +-----------------+
-//                   INIT ->|      SYS:       |
-//                   TICK ->|                 |
-//                          +-----------------+
-//                    PRV ->|      GET:       |
-//                    ATT ->|                 |
-//                   BUSY ->|                 |
-//                          +-----------------+
-//                    PRV ->|      SET:       |
-//                    ATT ->|                 |
-//                          +-----------------+
-//                  PRESS ->|     BUTTON:     |
-//                          +-----------------+
-//                          |       LED:      |-> LED
-//                          +-----------------+
-//                    INC ->|     RESET:      |-> INC
-//                    DUE ->|                 |-> PRV
-//                          +-----------------+
+// (A) := (APP)
+//                  +--------------------+
+//                  |      BL_BASIS      |
+//                  +--------------------+
+//                  |        SYS:        | SYS: interface
+// (A)->     INIT ->|       <out>        | init module, store <out> callback
+// (A)->     TICK ->|       @id,cnt      | tick the module
+//                  +--------------------+
+//                  |        GET:        | GET:interface
+// (A)->      PRV ->|        sts         | get provision status
+// (A)->      ATT ->|        sts         | get attention status
+// (A)->     BUSY ->|        sts         | get busy status
+//                  +--------------------+
+//                  |        SET:        | SET: interface
+// (A)->      PRV ->|       onoff        | receive provision status
+// (A)->      ATT ->|       onoff        | receive attention status
+//                  +--------------------+
+//                  |       BUTTON:      | BUTTON: interface
+// (A)->    PRESS ->|        @id,1       | receive button press messages
+//                  +--------------------+
+//                  |        LED:        | LED: interface
+// (v)<-       SET<-|     @id,onoff      |
+//                  +--------------------+
+//                  |       RESET:       | RESET: interface
+// (A)->      DUE ->|                    | reset counter is due
+//                  +--------------------+
 //
 //==============================================================================
 
   int bl_basis(BL_ob *o, int val)
   {
     BL_fct output = NULL;              // to store output callback
+
+if (!bl_is(o,_SYS,TICK_))
+ LOGO(1,BL_R"basis:",o,val);
 
     switch (bl_id(o))                  // dispatch message ID
     {

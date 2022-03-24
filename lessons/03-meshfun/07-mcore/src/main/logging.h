@@ -49,7 +49,8 @@
 //==============================================================================
 
   #define CFG_LOG_API             1    // Bluccino API logging
-  #define CFG_LOG_APP             1    // APP logging
+  #define CFG_LOG_APP             1    // app logging
+  #define CFG_LOG_BASIS           1    // basis logging
   #define CFG_LOG_CORE            1    // core logging
   #define CFG_LOG_LLL             1    // LLL logging
   #define CFG_LOG_MAIN            1    // main logging

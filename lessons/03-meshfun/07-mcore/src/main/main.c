@@ -105,31 +105,24 @@
 // public app module interface
 //==============================================================================
 //
-// APP Interfaces:
-//   SYS Interface: [] = SYS(INIT,TICK,TOCK)
-//
-//                        +--------------------+
-//                        |        APP         |
-//                        +--------------------+
-//                 INIT ->|        SYS:        |
-//                 TICK ->|                    |
-//                 TOCK ->|                    |
-//                        +--------------------+
-//                  STS ->|      SWITCH:       |
-//                        +--------------------+
-//                  STS ->|      GOOSRV:       |
-//                        +--------------------+
-//                        |      GOOCLI:       |-o SET
-//                        +--------------------+
-// Input Messages:
-//   [SYS:INIT <cb>]          init app, ignore output callback
-//   [SYS:TICK @id,cnt]       ticking the app
-//   [SYS:TOCK @id,cnt]       tocking the app
-//   [SWITCH:STS @id,sts]     receive status update from switch @id
-//   [GOOSRV:STS @id,sts]     receive status update from generic onoffserver @id
-//
-// Output Messages:
-//   [GOOCLI:SET @id,val]     publish SET message via generic onoff client
+// (B) := (BL_HWBUT);  (L) := (BL_HWLED)
+//                  +--------------------+
+//                  |        APP         |
+//                  +--------------------+
+//                  |        SYS:        | SYS: interface
+// (v)->     INIT ->|       @id,cnt      | init module, store <out> callback
+// (v)->     TICK ->|       @id,cnt      | tick the module
+// (v)->     TOCK ->|       @id,cnt      | tock the module
+//                  +--------------------+
+//                  |       SWITCH:      | SWITCH: output interface
+// (^)->      STS ->|       @id,sts      | on/off status update of switch @id
+//                  +--------------------+
+//                  |       GOOSRV:      | GOOSRV: ifc. (generic on/off server)
+// (^)->      STS ->|       @id,sts      | on/off server status update
+//                  +--------------------+
+//                  |       GOOCLI:      | GOOCLI: ifc. (generic on/off client)
+// (v)<-      SET <-|      @id,onoff     | publish generic on/off SET command
+//                  +--------------------+
 //
 //==============================================================================
 

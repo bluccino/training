@@ -13,17 +13,8 @@
 // public module interface
 //==============================================================================
 //
-// BL_BASE Interfaces:
-//   SYS Interface:      [] = SYS(INIT,TICK)
-//   GET Interface:      [] = GET(PRV,ATT,BUSY)
-//   SET Interface:      [] = SET(PRV,ATT)
-//   HDL Interface:      [] = HDL(INC)
-//   BUTTON Interface:   [] = BUTTON(PRESS)
-//   LED Interface:      [LED] = HDL()
-//   RESET Interface:    [INC,PRV] = RESET(INC,DUE)
-//
 //                          +-----------------+
-//                          |     BL_BASE     |
+//                          |    BL_BASIS     |
 //                          +-----------------+
 //                   INIT ->|      SYS:       |
 //                   TICK ->|                 |

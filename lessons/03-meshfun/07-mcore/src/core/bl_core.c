@@ -218,21 +218,20 @@ void update_light_state(void)
   }
 
 //==============================================================================
-// reset counter timer handler
+// reset timer
 //==============================================================================
 
-  static void reset_counter_timer_handler(struct k_timer *dummy)
-  {
-  	reset_counter = 0U;
-  	save_on_flash(RESET_COUNTER);
-    #if MIGRATION_STEP2
-    	LOG(3,BL_M "reset counter set to zero");
-    #else
-    	printk("Reset Counter set to Zero\n");
-    #endif
-  }
+static void reset_counter_timer_handler(struct k_timer *dummy)
+{
+	reset_counter = 0U;
+	save_on_flash(RESET_COUNTER);
+	LOG(3,BL_M "reset counter set to zero");
 
-  K_TIMER_DEFINE(reset_counter_timer, reset_counter_timer_handler, NULL);
+  BL_ob oo = {_RESET,_DUE_,0,NULL};
+  bl_core(&oo,0);              // post [RESET:#DUE] to BL_CORE for output
+}
+
+K_TIMER_DEFINE(reset_counter_timer, reset_counter_timer_handler, NULL);
 
 //==============================================================================
 // increment reset counter (set due timer, return reset counter after increment)

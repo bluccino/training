@@ -58,7 +58,7 @@
 //                  |       BL_HW        |
 //                  +--------------------+
 //                  |        SYS:        | SYS: interface
-// (v)->     INIT ->|       @id,cnt      | init module, store <out> callback
+// (v)->     INIT ->|       <out>        | init module, store <out> callback
 // (v)->     TICK ->|       @id,cnt      | tick the module
 //                  +--------------------+
 //                  |        LED:        | LED: input interface
