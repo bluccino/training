@@ -4,15 +4,26 @@
 
   #include "bluccino.h"
 
-  static int when(BL_ob *o, int val)   // callback, catching Bluccino events
-  {                                    // o->id represents button @id
-    if ( bl_switch(o) )                // [SWITCH:STS @id,val] message?
-      bl_led(o->id,val);               // set LED(@id) on/off
-    return 0;                          // OK
+  static int app(BL_ob *o, int val)    // app receiving event messages
+  {
+    switch (bl_id(o))                  // dispatch message ID
+    {
+      case BL_ID(_SYS,INIT_):          // [SYS:INIT <out>] message?
+        bl_logo(1,BL_B,o,val);         // event message log in blue
+    
+      case BL_ID(_SYS,TOCK_):          // [SYS:TOCK @id,cnt] message?
+        bl_logo(1,BL_G,o,val);         // event message log in green
+    
+      case BL_ID(_SWITCH,STS_):        // [SWITCH:STS @id,val] message?
+        bl_led(o->id,val);             // set LED(@id) on/off
+
+      default:
+        return 0;                      // OK
+    }
   }
 
   void main(void)
   {
     bl_hello(5,"05-ledtoggle (click button to toggle related LED");
-    bl_run(NULL,10,1000,when);         // run Bluccino engine, output => <when>
+    bl_run(app,10,1000,app);           // run Bluccino engine, output => APP
   }
