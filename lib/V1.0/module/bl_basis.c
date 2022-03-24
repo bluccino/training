@@ -33,22 +33,27 @@
 
 //==============================================================================
 //
-//                          +-----------------+
-//                          |     STARTUP     |
-//                          +-----------------+
-//                   INIT ->|      SYS:       |
-//                   TICK ->|                 |
-//                          +-----------------+
-//                   #INC ->|     RESET:      |
-//                    INC ->|                 |-> INC ->(BL_DOWN)
-//                    DUE ->|                 |-> PRV ->(BL_DOWN)
-//                          +-----------------+
-//                   BUSY ->|      GET:       |
-//                          +-----------------+
-//                  PRESS ->|     BUTTON:     |
-//                          +-----------------+
-//                          |       LED:      |->(v) LED (DOWN)
-//                          +-----------------+
+// (A) := (APP)
+//                  +--------------------+
+//                  |      STARTUP       |
+//                  +--------------------+
+//                  |        SYS:        | SYS: interface
+// (#)->     INIT ->|       <out>        | init module, store <out> callback
+// (#)->     TICK ->|       @id,cnt      | tick the module
+//                  +--------------------+
+//                  |        GET:        | GET:interface
+// (#)->     BUSY ->|        sts         | get startup busy status
+//                  +--------------------+
+//                  |       BUTTON:      | BUTTON: interface
+// (#)<-    PRESS <-|        @id,1       | receive button press messages
+//                  +--------------------+
+//                  |        LED:        | LED: interface
+// (v)<-       SET<-|     @id,onoff      |
+//                  +--------------------+
+//                  |       RESET:       | RESET: interface
+// (A)->      DUE ->|                    | reset counter is due
+// (v)<-      PRV <-|                    | unprovision node (node reset)
+//                  +--------------------+
 //
 //==============================================================================
 // module startup (optionally reset mesh node during startup)
@@ -89,9 +94,6 @@
       }
 
       case BL_ID(_SYS,TICK_):               // receive [RESET<DUE] event
-if (val%20==0)
-  LOG(1,BL_R"startup - count:%d",count);
-
         if (count > 0)                      // if startup in progress
         {
           static bool old;
@@ -122,7 +124,8 @@ if (val%20==0)
         if (count > 3)
         {
           LOG(1,BL_R"unprovision node");    // let us know
-          return bl_msg(bl_down,_RESET,PRV_,0,NULL,0);   // unprovision node
+          BL_ob oo = {_RESET,PRV_,0,NULL};  // [RESET:PRV] message
+          return bl_down(&oo,0);            // unprovision node
         }
 
         if (count > 0)                      // if we are still in startup phase
@@ -139,16 +142,20 @@ if (val%20==0)
 
 //==============================================================================
 //
-//                          +-----------------+
-//                          |    ATTENTION    |
-//                          +-----------------+
-//                   INIT ->|      SYS:       |
-//                   TICK ->|                 |
-//                          +-----------------+
-//                    ATT ->|      SET:       |
-//                          +-----------------+
-//                    ATT ->|      GET:       |
-//                          +-----------------+
+// (A) := (APP)
+//                  +--------------------+
+//                  |      ATTENTION     |
+//                  +--------------------+
+//                  |        SYS:        | SYS: interface
+// (#)->     INIT ->|       <out>        | init module, store <out> callback
+// (#)->     TICK ->|       @id,cnt      | tick the module
+//                  +--------------------+
+//                  |        GET:        | GET:interface
+// (#)->      ATT ->|        sts         | get attention status
+//                  +--------------------+
+//                  |        SET:        | SET: interface
+// (#)->      ATT ->|        sts         | receive & store attention status
+//                  +--------------------+
 //
 //==============================================================================
 // module attention (handle attention state changes and perform blinking)
@@ -191,16 +198,25 @@ if (val%20==0)
 
 //==============================================================================
 //
-//                      +-----------------+
-//                      |    PROVISION    |
-//                      +-----------------+
-//               INIT ->|      SYS:       |
-//               TICK ->|                 |
-//                      +-----------------+
-//                PRV ->|      SET:       |
-//                      +-----------------+
-//                PRV ->|      GET:       |
-//                      +-----------------+
+// (A) := (APP)
+//                  +--------------------+
+//                  |     PROVISION      |
+//                  +--------------------+
+//                  |        SYS:        | SYS: interface
+// (A)->     INIT ->|       <out>        | init module, store <out> callback
+// (A)->     TICK ->|       @id,cnt      | tick the module
+//                  +--------------------+
+//                  |        GET:        | GET:interface
+// (A)->      PRV ->|        sts         | get provision status
+// (A)->      ATT ->|        sts         | get attention status
+// (A)->     BUSY ->|        sts         | get busy status
+//                  +--------------------+
+//                  |        SET:        | SET: interface
+// (#)->      PRV ->|       onoff        | receive and store provision status
+//                  +--------------------+
+//                  |        GET:        | GET: interface
+// (#)->      PRV ->|       onoff        | retrieve provision status
+//                  +--------------------+
 //
 //==============================================================================
 // module provision (handle provision state changes and perform blinking)
@@ -271,7 +287,7 @@ if (val%20==0)
 // (A)->    PRESS ->|        @id,1       | receive button press messages
 //                  +--------------------+
 //                  |        LED:        | LED: interface
-// (v)<-       SET<-|     @id,onoff      |
+// (v)<-      SET <-|     @id,onoff      |
 //                  +--------------------+
 //                  |       RESET:       | RESET: interface
 // (A)->      DUE ->|                    | reset counter is due
@@ -282,9 +298,6 @@ if (val%20==0)
   int bl_basis(BL_ob *o, int val)
   {
     BL_fct output = NULL;              // to store output callback
-
-if (!bl_is(o,_SYS,TICK_))
- LOGO(1,BL_R"basis:",o,val);
 
     switch (bl_id(o))                  // dispatch message ID
     {
