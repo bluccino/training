@@ -36,9 +36,9 @@ Bluccino Primitives Used
 - bl_is(): used for dispatching of Bluccino event messages
 - bl_led(): LED on/off or toggle control for given LED @id
 
-#===============================================================================
-# Exercices
-#===============================================================================
+================================================================================
+Exercices
+================================================================================
 
 Exercise 1
 - study the log output in the console are of the form
@@ -53,4 +53,4 @@ Exercise 2
 - rewrite the app for a nRF52840 dongle, which has one status LED (@1) and
   3 LEDs for RGB display (@2:red, @3:green, @4:blue)
 - in this modified app a button click should toggle the status LED, while
-  a button hold (long press) should toggle all 3 RGB LEDs at the same time  
+  a button hold (long press) should toggle all 3 RGB LEDs at the same time

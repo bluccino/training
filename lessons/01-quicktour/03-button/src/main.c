@@ -7,7 +7,10 @@
   int app(BL_ob *o, int val)           // app function, handling all messages
   {                                    // which are forwarded by Bluccino layer
     if ( bl_is(o,_BUTTON,PRESS_) )     // dispatch [BUTTON:PRESS sts] event
+    {
+      bl_logo(1,"app:",o,val);         // log the [BUTTON:PRESS sts]
       bl_led(o->id,-1);
+    }
     return 0;                          // OK
   }
 
