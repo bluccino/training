@@ -8,7 +8,7 @@
 # project definition and path setup
 #===============================================================================
 
-  project(05-ledtoggle)
+  project(06-ledtoggle)
 
   set (LIB ../../../lib/V1.0)
   set (BLU ${LIB}/bluccino)

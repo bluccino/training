@@ -13,12 +13,12 @@
   #include "bl_hwled.h"
 
 //==============================================================================
-// CORE level logging shorthands
+// LED level logging shorthands
 //==============================================================================
 
-  #define LOG                     LOG_CORE
-  #define LOGO(lvl,col,o,val)     LOGO_CORE(lvl,col"led:",o,val)
-  #define LOG0(lvl,col,o,val)     LOGO_CORE(lvl,col,o,val)
+  #define LOG                     LOG_LED
+  #define LOGO(lvl,col,o,val)     LOGO_LED(lvl,col"led:",o,val)
+  #define LOG0(lvl,col,o,val)     LOGO_LED(lvl,col,o,val)
   #define ERR 1,BL_R
 
 //==============================================================================

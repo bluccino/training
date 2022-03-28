@@ -138,6 +138,9 @@
             const void *data;          // pointer to data
           } BL_ob;
 
-  typedef int (*BL_fct)(BL_ob *o, int value);
+    // define "OVAL" function interface and callback type
+
+  typedef int (*BL_oval)(BL_ob *o, int value);
+  typedef BL_oval BL_fct;              // alias to be compatible to legacy stuff
 
 #endif // __BL_SYMB_H__

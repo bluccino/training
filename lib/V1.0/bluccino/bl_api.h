@@ -243,6 +243,16 @@
   void bl_run(BL_fct app, int tick_ms, int tock_ms, BL_fct when);
 
 //==============================================================================
+// syntactic sugar: run app where app()and when() function are the same
+// - usage: bl_engine(app,10,100)   // run app with 10/1000 tick/tock periods
+//==============================================================================
+
+  static inline void bl_engine(BL_fct app, int tick_ms, int tock_ms)
+  {
+    bl_run(app, tick_ms,tock_ms, app); // callbacks are the same
+  }
+
+//==============================================================================
 // public module interface: supporting [SYS:INIT|WHEN|TICK|TOCK]
 //==============================================================================
 

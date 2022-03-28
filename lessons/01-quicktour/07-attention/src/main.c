@@ -26,7 +26,7 @@
         bl_log(1,"%s",provision?msg1:msg2);
 
         if (attention)
-          bl_log(1,BL_M"attention state");
+          bl_log(1,BL_M "attention state");
         return 0;                      // OK
 
       case BL_ID(_SET,ATT_):
@@ -49,5 +49,5 @@
   void main(void)
   {
     bl_hello(5,"07-attention");
-    bl_run(app,10,1000,app);           // run 10/1000ms tick/tock engine
+    bl_engine(app,10,1000);            // run 10/1000ms tick/tock engine
   }

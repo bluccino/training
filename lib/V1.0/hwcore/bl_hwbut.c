@@ -17,12 +17,12 @@
   #define _STS_         BL_HASH(STS_)        // #STS opcode
 
 //==============================================================================
-// CORE level logging shorthands
+// BUTTON level logging shorthands
 //==============================================================================
 
-  #define LOG                     LOG_CORE
-  #define LOGO(lvl,col,o,val)     LOGO_CORE(lvl,col"button:",o,val)
-  #define LOG0(lvl,col,o,val)     LOGO_CORE(lvl,col,o,val)
+  #define LOG                     LOG_BUTTON
+  #define LOGO(lvl,col,o,val)     LOGO_BUTTON(lvl,col"button:",o,val)
+  #define LOG0(lvl,col,o,val)     LOGO_BUTTON(lvl,col,o,val)
   #define ERR 1,BL_R
 
 //==============================================================================

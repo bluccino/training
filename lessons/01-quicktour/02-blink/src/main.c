@@ -2,7 +2,7 @@
 // main.c for 02-blink (tiny LED toggle control)
 //==============================================================================
 
-  #include "bluccino.h"
+  #include "bluccino.h"                // access Bluccino stuff
 
   void main(void)
   {

@@ -91,6 +91,22 @@
 #endif
 
 //==============================================================================
+// BUTTON Logging
+//==============================================================================
+
+#ifndef CFG_LOG_BUTTON
+    #define CFG_LOG_BUTTON    1           // BUTTON logging is by default on
+#endif
+
+#if (CFG_LOG_BUTTON)
+    #define LOG_BUTTON(l,f,...)    BL_LOG(CFG_LOG_BUTTON-1+l,f,##__VA_ARGS__)
+    #define LOGO_BUTTON(l,f,o,v)   bl_logo(CFG_LOG_BUTTON-1+l,f,o,v)
+#else
+    #define LOG_BUTTON(l,f,...)    {}     // empty
+    #define LOGO_BUTTON(l,f,o,v)   {}     // empty
+#endif
+
+//==============================================================================
 // CORE Logging
 //==============================================================================
 
@@ -120,6 +136,22 @@
 #else
     #define LOG_GPIO(l,f,...)    {}     // empty
     #define LOGO_GPIO(l,f,o,v)   {}     // empty
+#endif
+
+//==============================================================================
+// LED Logging
+//==============================================================================
+
+#ifndef CFG_LOG_LED
+    #define CFG_LOG_LED    1           // LED logging is by default on
+#endif
+
+#if (CFG_LOG_LED)
+    #define LOG_LED(l,f,...)    BL_LOG(CFG_LOG_LED-1+l,f,##__VA_ARGS__)
+    #define LOGO_LED(l,f,o,v)   bl_logo(CFG_LOG_LED-1+l,f,o,v)
+#else
+    #define LOG_LED(l,f,...)    {}     // empty
+    #define LOGO_LED(l,f,o,v)   {}     // empty
 #endif
 
 //==============================================================================

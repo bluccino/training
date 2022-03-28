@@ -1,16 +1,29 @@
-//==============================================================================
-// 01-hello demo (hello world)
-//==============================================================================
+================================================================================
+01-hello demo (hello world)
+================================================================================
 
+About the Sample App
 - the simplest program to get running with Bluccino
 - uses the Bluccino bl_prt() function
 - bl_prt() is an exact equivalent for the Zephyr printk() function, supporting
   variable argument lists
 - note that bl_prt() requires a newline character (\n) at the end of the line
 
-#===============================================================================
-# Zephyr Project structure
-#===============================================================================
+Lessons to Learn
+- how to write a 'hello world' program within Bluccino framework
+- how to print a message to console with Bluccino primitives (bl_prt)
+- get familar with Zephyr project structure (src folder for the source code,
+  CMakeLists.txt, project config file prj.conf, README.rst file)
+- get familar with the two step Zephyr build process (CMake process, after that
+  compilation and linking)
+- how to run an application
+
+Bluccino Primitives Used
+- bl_prt(): generic (formatted) print function (like printf() or printk())
+
+================================================================================
+Zephyr Project structure
+================================================================================
 
 - 01-hello shows alread the common Zephyr project structure, which should be
   understood (at least coarsly) from the beginning
@@ -23,9 +36,9 @@
      +- README.rst           readme file (giving some overview information)
      +- sample.yaml          device tree binding info and test case definitions
 
-#===============================================================================
-# CMakeLists.txt
-#===============================================================================
+================================================================================
+CMakeLists.txt
+================================================================================
 
 - important to understand is CMakeLists.txt file with the following details
 - 1) setting up the project name
@@ -35,9 +48,9 @@
 - 5) defining include folders ${SRC} and ${BLU}
 - 6) linking both ${SRC}/main.c file and ${BLU}/bluccino.c library source
 
-#===============================================================================
-# Exercices
-#===============================================================================
+================================================================================
+Exercices
+================================================================================
 
 Exercise 1
 - logging is essential during the debugging of event driven applications and

@@ -91,7 +91,7 @@
     if (err)
     {
       if (bl_dbg(1))                            // errors come @ verbose level 1
-        bl_prt(BL_R "error %d: %s\n",err,msg);  // in RED text!
+        bl_prt(BL_R "error %d: %s\n" BL_0,err,msg);  // in RED text!
     }
     return err;
   }

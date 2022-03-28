@@ -212,6 +212,11 @@
         level = 5;
         break;
 
+      case BL_ID(_LED,SET_):
+      case BL_ID(_LED,TOGGLE_):
+        LOGO(level,"@",o,val);
+        return bl_down(o,val);
+
       default:
         break;
     }
@@ -256,7 +261,7 @@
     nolog = nolog || (o->cl == _SYS);
 
     if ( !nolog )
-      bl_logo(3,"down",o,val);         // not suppressed messages are logged
+      bl_logo(3,"down:",o,val);         // not suppressed messages are logged
 
     return bl_core(o,val);             // forward down to BL_CORE module
   }
@@ -269,7 +274,7 @@
 
   __weak int bl_up(BL_ob *o, int val)
   {
-    bl_logo(3,"up",o,val);
+    bl_logo(3,"up:",o,val);
     return bl_in(o,val);
   }
 

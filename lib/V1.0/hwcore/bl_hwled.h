@@ -48,15 +48,4 @@
     return bl_init(bl_hwled,cb);
   }
 
-//==============================================================================
-// syntactic sugar: set LED @id on off (@id: 0..4)
-// - usage: bl_hwled_set(id,val)
-//==============================================================================
-
-  static inline int bl_hwled_set(int id, int val)
-  {
-    BL_ob oo = {_LED,SET_,id,NULL};
-    return bl_hwled(&oo,val);
-  }
-
 #endif // __BL_HWLED_H__

@@ -70,15 +70,37 @@
   static inline int bl_led(int id, int val)
   {
     BL_ob oo = {_LED,val<0?TOGGLE_:SET_,id,NULL};
-    return bl_down(&oo,val<0?0:val);
+    return bl_in(&oo,val<0?0:val);
+  }
+
+//==============================================================================
+// syntactic sugar: set LED @id on/off
+// - usage: bl_led_set(bl_in,id,val)   // val 0:off, 1:on
+//==============================================================================
+
+  static inline int bl_led_set(BL_oval module,int id, int val)
+  {
+    BL_ob oo = {_LED,BL_HASH(SET_),id,NULL};
+    return module(&oo,val);
+  }
+
+//==============================================================================
+// syntactic sugar: togggle LED @id (@id: 0..4)
+// - usage: bl_led_toggle(bl_in,id)
+//==============================================================================
+
+  static inline int bl_led_toggle(BL_oval module, int id)
+  {
+    BL_ob oo = {_LED,BL_HASH(TOGGLE_),id,NULL};
+    return bl_in(&oo,0);
   }
 
 //==============================================================================
 // syntactic sugar: check if message is a button press message ([BUTTON:PRESS])
-// - usage: pressed = bl_press(o)
+// - usage: pressed = bl_pressed(o)
 //==============================================================================
 
-  static inline bool bl_press(BL_ob *o)
+  static inline bool bl_pressed(BL_ob *o)
   {
     return  bl_is(o,_BUTTON,PRESS_);
   }
@@ -88,17 +110,17 @@
 // - usage: released = bl_released(o)
 //==============================================================================
 
-  static inline bool bl_release(BL_ob *o)
+  static inline bool bl_released(BL_ob *o)
   {
     return  bl_is(o,_BUTTON,RELEASE_);
   }
 
 //==============================================================================
 // syntactic sugar: check if message is a switch status update ([SWITCH:STS])
-// - usage: switched = bl_switch(o)
+// - usage: switched = bl_switched(o)
 //==============================================================================
 
-  static inline bool bl_switch(BL_ob *o)
+  static inline bool bl_switched(BL_ob *o)
   {
     return  bl_is(o,_SWITCH,STS_);
   }
