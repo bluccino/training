@@ -15,10 +15,10 @@ App Description
 - it also shows, from which module (MAIN) the messages are being posted
 
 Lessons to Learn
-- learn how to transmit simple data with Bluccino messages, and how to use the
+- learn how to transmit complex data with Bluccino messages, and how to use the
   @id argument
-- learn how Bluccino module interfaces are graphically documented
-- get familar with event message flow charts, and how to label message flow
+- learn how to use syntactic sugar
+- the standard way of dispatching
 
 Bluccino Primitives Used
 - BL_ob: Bluccino object (used for Bluccino messaging)

@@ -36,6 +36,17 @@
   #define CTRL    5678                 // another fantasy number
 
 //==============================================================================
+// utility functions
+//==============================================================================
+
+  #define ID(cl,ob)    (((cl) << 16) | (op))
+
+  static int id(BL_obj *o)
+  {
+    return ID(o->cl,o->op);
+  }
+
+//==============================================================================
 // public APP module interface
 //==============================================================================
 //
@@ -51,13 +62,18 @@
 
   int app(BL_ob *o, int val)           // APP's OVAL interface
   {
-    BL_txt room = bl_data(o);
+    BL_txt room = bl_data(o);          // access data
 
-    if (o->cl==LIGHT && o->op==CTRL)   // dispatch message [LIGHT:CTRL]
-      bl_log(1,"[LIGHT:CTRL] message received :-)");
+    switch(id(o))
+    {
+      case ID(LIGHT,CTRL):             // dispatch message [LIGHT:CTRL]
+        bl_log(1,"[LIGHT:CTRL] message received :-)");
+        bl_log(1,"%s light @%d %s",room, o->id, val?"on":"off");
+        return 0;                      // OK
 
-    bl_log(1,"%s light @%d %s",room, o->id, val?"on":"off");
-    return 0;                          // OK
+      default:
+        return 0;                      // OK
+    }
   }
 
 //==============================================================================
