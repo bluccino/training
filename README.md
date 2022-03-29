@@ -3,4 +3,4 @@
 
 ## Bluccino Training
 
-* Entry Level Training
+* [Bluccino Entry Level Training](https://github.com/bluccino/training/wiki/Bluccino-Messaging)
