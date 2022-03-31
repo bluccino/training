@@ -69,7 +69,7 @@
 // notification and driver callbacks
 //==============================================================================
 
-  static BL_fct output = NULL;         // output callback
+  static BL_fct out = NULL;            // <out> callback
   static BL_fct test = NULL;           // test callback
 
 //==============================================================================
@@ -164,7 +164,7 @@
 
 //==============================================================================
 // output a message from Bluccino API or in general
-// - usage: bl_out(o,val,output)
+// - usage: bl_out(o,val,out)
 // - any hashed opcode has to be de-hashed (clear hash bit of opcode)
 //==============================================================================
 
@@ -172,13 +172,13 @@
   {
     if (call)                          // is an app callback provided?
     {
-      if ( !BL_HASHED(o->op) )         // hash bit not set => easy!
+      if ( !BL_ISAUG(o->cl) && !BL_HASHED(o->op) ) // easy!
         return call(o,val);            // forward event message to subscriber
 
         // hashed opcode! (hash bit set) => need to duplicate object with
         // de-hashed opcode before forwarding
 
-      BL_ob oo = {o->cl,BL_CLEAR(o->op),o->id,o->data};
+      BL_ob oo = {BL_CLR(o->cl),BL_CLEAR(o->op),o->id,o->data};
       return call(&oo,val);            // forward with de-hashed opcode
     }
     return 0;
@@ -198,13 +198,13 @@
         provision = val;
         bl_log_color(attention,provision);
         LOG(2,BL_M"node %sprovision",val?"":"un");
-        return bl_out(o,val,output);
+        return bl_out(o,val,out);
 
       case BL_ID(_SET,ATT_):          // attention state changed
         attention = val;
         bl_log_color(attention,provision);
         LOG(2,BL_G"attention %s",val?"on":"off");
-        return bl_out(o,val,output);
+        return bl_out(o,val,out);
 
       case BL_ID(_SYS,TICK_):
       case BL_ID(_SYS,TOCK_):
@@ -222,7 +222,7 @@
     }
 
     LOGO(level,"@",o,val);
-    return bl_out(o,val,output);            // forward message to subscriber
+    return bl_out(o,val,out);            // forward message to subscriber
   }
 
 //==============================================================================
@@ -301,14 +301,14 @@
   }
 
 //==============================================================================
-// emit message to be handeled to output subscriber
-// - usage: bl_emit(o,cl,op,val,output)  // post [cl:op o->id,val] to output
+// emit message to be handeled to <out> subscriber
+// - usage: bl_emit(o,cl,op,val,out)  // post [cl:op o->id,val] to <out>
 //==============================================================================
 
-  int bl_emit(BL_ob *o, BL_cl cl, BL_op op, int val, BL_fct output)
+  int bl_emit(BL_ob *o, BL_cl cl, BL_op op, int val, BL_fct out)
   {
     BL_ob oo = {cl,op,o->id,o->data};
-    return bl_out(&oo,val,output);
+    return bl_out(&oo,val,out);
   }
 
 //==============================================================================
@@ -445,26 +445,20 @@
   }
 
 //==============================================================================
-// public module interface
+// BLUCCINO public module interface
 //==============================================================================
 //
-// BLUCCINO Interfaces:
-//   SYS Interface: [] = SYS(INIT,TICK,TOCK,WHEN)
+// (!) := (<parent>); (O) := (<out>); (#) := (BL_HW)
 //
-//                         +----------------------+
-//                         |       BLUCCINO       |
-//                         +----------------------+
-//                  INIT ->|         SYS:         |
-//                  TICK ->|                      |
-//                  TOCK ->|                      |
-//                  WHEN ->|                      |
-//                         +----------------------+
-//
-//  Input Messages:
-//    - [SYS:INIT <cb>]                // init module, provide output callback
-//    - [SYS:TICK @id,cnt]             // tick module
-//    - [SYS:TOCK @id,cnt]             // tock module
-//    - [SYS:WHEN <cb>]                // provide output callback
+//                  +--------------------+
+//                  |      BLUCCINO      |
+//                  +--------------------+
+//                  |        SYS:        | SYS interface
+// (!)->     INIT ->|       <out>        | init module, store <out> callback
+// (!)->     TICK ->|      @id,cnt       |
+// (!)->     TOCK ->|      @id,cnt       |
+// (!)->      OUT ->|       <out>        | set <out> callback
+//                  +--------------------+
 //
 //==============================================================================
 
@@ -473,7 +467,7 @@
     switch (bl_id(o))
     {
       case BL_ID(_SYS,INIT_):
-        output = o->data;
+        out = o->data;
 
           // we need to initialize everything what is downstairs (on driver
           // level). All stuff downstairs has to send messages through the
@@ -485,8 +479,8 @@
       case BL_ID(_SYS,TOCK_):
         return bl_down(o,val);         // forward to BL_CORE module
 
-      case BL_ID(_SYS,WHEN_):
-        output = o->data;
+      case BL_ID(_SYS,OUT_):
+        out = o->data;
         return 0;
 
       default:

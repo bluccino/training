@@ -35,23 +35,17 @@
 // public module interface
 //==============================================================================
 //
-// BLUCCINO Interfaces:
-//   SYS Interface: [] = SYS(INIT,TICK,TOCK,WHEN)
+// (!) := (<parent>); (O) := (<out>); (#) := (BL_HW)
 //
-//                         +----------------------+
-//                         |       BLUCCINO       |
-//                         +----------------------+
-//                  INIT ->|         SYS:         |
-//                  TICK ->|                      |
-//                  TOCK ->|                      |
-//                  WHEN ->|                      |
-//                         +----------------------+
-//
-//  Input Messages:
-//    - [SYS:INIT <cb>]                // init module, provide output callback
-//    - [SYS:TICK @id,cnt]             // tick module
-//    - [SYS:TOCK @id,cnt]             // tock module
-//    - [SYS:WHEN <cb>]                // provide output callback
+//                  +--------------------+
+//                  |      BLUCCINO      |
+//                  +--------------------+
+//                  |        SYS:        | SYS interface
+// (!)->     INIT ->|       <out>        | init module, store <out> callback
+// (!)->     TICK ->|      @id,cnt       |
+// (!)->     TOCK ->|      @id,cnt       |
+// (!)->      OUT ->|       <out>        | set <out> callback
+//                  +--------------------+
 //
 //==============================================================================
 

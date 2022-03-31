@@ -1,46 +1,39 @@
 //==============================================================================
-// bl_hwled.h
-// basic LED functions
-//
-// Created by Hugo Pristauz on 2022-Feb-18
-// Copyright © 2022 Bluccino. All rights reserved.
-//==============================================================================
-// LED interface:
-// - LED messages [LED:SET @id onoff] control the onoff state of one of the four
-// - LEDs @1..@4. LED @0 is the status LED which will be remapped to LED @1
+// led.h
 //==============================================================================
 
-#ifndef __BL_HWLED_H__
-#define __BL_HWLED_H__
+#ifndef __LED_H__
+#define __LED_H__
 
 //==============================================================================
 // public module interface
 //==============================================================================
 //
-// (!) := (<parent>);
+// (A) := (APP);
+//
 //                  +--------------------+
 //                  |        LED         |
 //                  +--------------------+
 //                  |        SYS:        | SYS interface
-// (!)->     INIT ->|       <out>        | init module, ignore <out> callback
+// (A)->     INIT ->|       <out>        | init module, ignore <out> callback
 //                  +--------------------+
 //                  |        LED:        | LED interface
-// (!)->      SET ->|      @id,onoff     | set LED's onoff state
-// (!)->   TOGGLE ->|        @id         | toggle LED's onoff state
+// (A)->      SET ->|      @1,onoff      | set LED's onoff state
 //                  +--------------------+
 //
 //==============================================================================
 
-  int bl_hwled(BL_ob *o, int val);       // HW core module interface
+  int led(BL_ob *o, int val);          // public module interface
 
 //==============================================================================
-// syntactic sugar: LED moduler init
-// - usage: bl_hwled_init(cb)
+// syntactic sugar: set LED's on/off state (only one LED)
+// - usage: led_set(led,onoff)         // (LED)<-[LED:SET onoff]
 //==============================================================================
 
-  static inline int bl_hwled_init(BL_fct cb)
+  static inline int led_set(BL_oval module, bool onoff)
   {
-    return bl_init(bl_hwled,cb);
+    BL_ob oo = {BL_AUG(_LED),SET_,1,NULL};
+    return module(&oo,onoff);          // post (<module>)<-[LED:SET onoff]
   }
 
-#endif // __BL_HWLED_H__
+#endif // __LED_H__

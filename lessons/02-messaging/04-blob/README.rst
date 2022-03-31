@@ -1,5 +1,5 @@
 ================================================================================
-03-blob - basic Bluccino messaging with Bluccino objects (stage 3)
+04-blob - basic Bluccino messaging with Bluccino objects (stage 3)
 ================================================================================
 
 App Description

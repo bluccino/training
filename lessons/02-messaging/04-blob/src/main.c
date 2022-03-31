@@ -28,23 +28,24 @@
 //
 //==============================================================================
 
+  #define BL_CL_TEXT {"VOID","SYS","LIGHT"}
+  #define BL_OP_TEXT {"VOID","INIT","CTRL"}
+
+  typedef enum BL_cl                   // class tag
+          {
+            _VOID = 0x7FFF,            // invalid message class (a big number!)
+            _SYS = 1,                  // system
+            _LIGHT,
+          } BL_cl;
+
+  typedef enum BL_op
+          {
+            VOID_ = 0x7FFF,            // invalid opcode (a big number)
+            INIT_ = 1,                 // init function
+            CTRL_,
+          };
+
   #include "bluccino.h"                // access Bluccino stuff
-
-    // let's consider an event message [LIGHT:CTRL] for "light-control"
-
-  #define LIGHT   1234                 // some fantasy number
-  #define CTRL    5678                 // another fantasy number
-
-//==============================================================================
-// utility functions
-//==============================================================================
-
-  #define ID(cl,ob)    (((cl) << 16) | (op))
-
-  static int id(BL_obj *o)
-  {
-    return ID(o->cl,o->op);
-  }
 
 //==============================================================================
 // public APP module interface
@@ -64,9 +65,9 @@
   {
     BL_txt room = bl_data(o);          // access data
 
-    switch(id(o))
+    switch(bl_id(o))
     {
-      case ID(LIGHT,CTRL):             // dispatch message [LIGHT:CTRL]
+      case BL_ID(_LIGHT,CTRL_):        // dispatch message [LIGHT:CTRL]
         bl_log(1,"[LIGHT:CTRL] message received :-)");
         bl_log(1,"%s light @%d %s",room, o->id, val?"on":"off");
         return 0;                      // OK
@@ -83,7 +84,7 @@
 
   static inline int light_ctrl(BL_oval module, int id, bool onoff, BL_txt room)
   {
-    BL_ob oo = {LIGHT,CTRL,id,room};
+    BL_ob oo = {_LIGHT,CTRL_,id,room};
     return module(&oo,onoff);         // (MODULE)<-[LIGHT:CTRL @id,onoff,<room>]
   }
 

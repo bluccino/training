@@ -147,25 +147,33 @@
 // public module interface
 //==============================================================================
 //
-// (!) := (<parent>);
-//                  +--------------------+
-//                  |        LED         |
-//                  +--------------------+
-//                  |        SYS:        | SYS interface
-// (!)->     INIT ->|       <out>        | init module, ignore <out> callback
-//                  +--------------------+
-//                  |        LED:        | LED interface
-// (!)->      SET ->|      @id,onoff     | set LED's onoff state
-// (!)->   TOGGLE ->|        @id         | toggle LED's onoff state
-//                  +--------------------+
+// BL_HWLED Interfaces:
+//   SYS Interface:  [] = SYS(INIT)
+//   LED Interface:  [] = LED(SET,TOGGLE)
+//
+//                             +-------------+
+//                             |  BL_HWLED   |
+//                             +-------------+
+//                      INIT ->|    SYS:     |
+//                             +-------------+
+//                       SET ->|    LED:     |
+//                    TOGGLE ->|             |
+//                             +-------------+
+//  Input Messages:
+//    - [SYS:INIT <cb>]                // init module, provide output callback
+//    - [LED:SET @id onoff]            // set LED(@id) on/off, (id: 0..4)
+//    - [LED:TOGGLE @id]               // toggle LED(@id), (id: 0..4)
 //
 //==============================================================================
 
-  int bl_hwled(BL_ob *o, int val)      // public module interface
+  int bl_hwled(BL_ob *o, int val)        // HW core module interface
   {
+    static BL_fct output = NULL;       // to store output callback
+
     switch (bl_id(o))
     {
       case BL_ID(_SYS,INIT_):          // [SYS:INIT <cb>]
+        output = o->data;              // store output callback
       	return init(o,val);            // delegate to init() worker
 
       case BL_ID(_LED,SET_):           // [LED:set]
