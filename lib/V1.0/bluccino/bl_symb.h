@@ -66,7 +66,7 @@
 
   #ifndef BL_OP_TEXT
 
-    #define BL_OP_TEXT {"VOID","INIT","WHEN","USE","TOC","READY","BUSY", \
+    #define BL_OP_TEXT {"VOID","INIT","OUT","WHEN","USE","TOC","READY","BUSY", \
                         "PING","PONG","PRV","ATT","DUE","SET","LET", \
                         "GET","STS","TRIG","TICK","TOCK","CMD","VAL","LEVEL", \
                         "ONOFF","COUNT","TOGGLE","INC","DEC","PAY", "ADV", \
@@ -77,6 +77,7 @@
             {
               VOID_ = 0x7FFF,          // invalid opcode (a big number)
               INIT_ = 1,               // init function
+              OUT_,                    // set <out> callback
               WHEN_,                   // provide module handling callback
               USE_,                    // can module be used
               TOC_,                    // tic/toc object

@@ -7,11 +7,11 @@
 //==============================================================================
 // BUTTON interface
 // - button presses notify with [BUTTON:PRESS @id 1] with @id = 1..4
-// - button releases notify with [BUTTON:RELESE @id 1] with @id = 1..4
+// - button releases notify with [BUTTON:RELEASE @id 0] with @id = 1..4
 //
 // SWITCH interface
 // - each button (1..4) is assigned with a logical switch which is toggled
-//   on [BUTTON:PRESS @id,val] events
+//   on [BUTTON:PRESS @id,sts] events
 // - each change of the logical switch state is notified by a
 //   [SWITCH:SET @id,onoff] event message
 //==============================================================================

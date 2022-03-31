@@ -174,6 +174,9 @@
     if ( !bl_dbg(lev) )
      return;
 
+    BL_txt aug = BL_ISAUG(o->cl) ? "#" : "";
+    BL_cl cl = BL_CLR(o->cl);
+
     BL_txt hash = BL_HASHED(o->op) ? "#" : "";
     BL_op op = BL_CLEAR(o->op);
 
@@ -181,10 +184,10 @@
     msg = (msg[0] == '@') ? msg+1 : msg;
 
     #if CFG_PRETTY_LOGGING             // pretty text for class tag & opcode
-      bl_prt("%s%s [%s:%s%s @%d,%d]\n"BL_0, col,msg,
-             cltext(o->cl),hash,optext(op),o->id,value);
+      bl_prt("%s%s [%s%s:%s%s @%d,%d]\n"BL_0, col,msg,
+             aug,cltext(cl), hash,optext(op), o->id,value);
     #else
-      bl_prt("%s%s [%d:%s%d @%d,%d]\n"BL_0,col,msg,
-             o->cl,hash,op,o->id,value);
+      bl_prt("%s%s [%s%d:%s%d @%d,%d]\n"BL_0,col,msg,
+             aug,cl, hash,op, o->id,value);
     #endif
   }
