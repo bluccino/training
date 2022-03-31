@@ -15,6 +15,7 @@
 
   static int set(BL_ob *o, int val)
   {
+    bl_log(4,"turn LED %s", val?"on":"off");
     gpio_pin_set(led_dev, DT_GPIO_PIN(LED0_NODE, gpios),val!=0);
     return 0;
   }
@@ -52,17 +53,17 @@
 //
 //==============================================================================
 
-  int led(BL_ob *o, int val)           // public module interface
+  int led(BL_ob *o, int val)            // public module interface
   {
     switch (bl_id(o))
     {
-      case BL_ID(_SYS,INIT_):          // [SYS:INIT <cb>]
-      	return init(o,val);            // delegate to init() worker
+      case BL_ID(_SYS,INIT_):           // [SYS:INIT <cb>]
+      	return init(o,val);             // delegate to init() worker
 
-      case BL_ID(_LED,SET_):           // [LED:set onoff]
-	return set(o,val);             // delegate to set() worker
+      case BL_ID(_LED,SET_):            // [LED:set onoff]
+	      return set(o,val);              // delegate to set() worker
 
       default:
-	return -1;                     // bad input
+	      return -1;                      // bad input
     }
   }

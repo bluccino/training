@@ -36,11 +36,10 @@
     static bool onoff = 0;             // LED onoff state
     static BL_oval L = led;            // (L) output, goes to LED
 
- bl_logo(1,BL_R "app:",o,val);
     switch(bl_id(o))
     {
       case BL_ID(_SYS,INIT_):          // [SYS:INIT <out>], ignore <out>
-			  bl_log(2,BL_C "init app",o,val);
+	bl_log(2,BL_C "init app");
         bl_init(button,app);           // init BUTTON, output goes to app
         bl_init(led,NULL);             // init LED, output goes to nowhere
         return 0;                      // OK
@@ -53,7 +52,7 @@
         // private message interface
 
       case _BL_ID(_LED,SET_):          // [#LED:SET toggle]
-			  bl_logo(1,BL_M "app:",o,val);  // log event message
+	bl_logo(1,BL_M "app:",o,val);  // log event message
         return bl_out(o,val,L);        // post message (L)<-[LED:SET toggle]
 
       default:

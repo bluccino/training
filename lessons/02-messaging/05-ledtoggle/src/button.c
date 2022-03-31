@@ -82,7 +82,7 @@
 
   static int init(BL_ob *o, int val)
   {
-    LOG(3,BL_B "button init (BL_ONEBUT)");
+    LOG(3,BL_B "button init (1 button)");
 
     k_work_init(&work, worker);
 
@@ -115,7 +115,7 @@
   {
     static BL_fct O = NULL;            // to store output callback
 
-    switch (bl_id(o))
+    switch (bl_id(o))                  // message ID? ([cl:op])
     {
       case BL_ID(_SYS,INIT_):          // [SYS:INIT <cb>]
         O = o->data;                   // store output callback
