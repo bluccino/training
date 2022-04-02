@@ -266,6 +266,10 @@ struct bt_mesh_model *mod_srv_sw[] = {
 		return 0;
 	}
 
+//==============================================================================
+// GOOLET server message handler
+//==============================================================================
+
 static int gen_onoff_set_unack(struct bt_mesh_model *model,
 			       struct bt_mesh_msg_ctx *ctx,
 			       struct net_buf_simple *buf)
@@ -275,19 +279,20 @@ static int gen_onoff_set_unack(struct bt_mesh_model *model,
 	int err;
 
 	p->current = net_buf_simple_pull_u8(buf);                           //@@@4.8
-
+/*
 	if (bl_dbg(4))
   	printk(BL_Y"addr 0x%02x state 0x%02x\n"BL_0,
 	       bt_mesh_model_elem(model)->addr, p->current);                //@@@4.8
-
+*/
 
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 //   - dont directly set LED                                          //@@@4.6
 //	gpio_pin_set(p->led_device, p->led_gpio_pin,
 //		     p->current);
   int id = p->led_gpio_pin - 16;
-  BL_ob oo = {_GOOSRV,LET_,id,NULL};
-  bl_core(&oo,p->current);                                            //@@@4.9
+	LOG(4,BL_R "rcv [GOOSRV:LET @%d,%d]",id,p->current);
+
+  _bl_msg(bl_wl,_GOOSRV,STS_, id,NULL,p->current);
 //<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 	/*
@@ -316,18 +321,25 @@ static int gen_onoff_set_unack(struct bt_mesh_model *model,
 	return 0;
 }
 
+//==============================================================================
+// GOOSET server message handler
+//==============================================================================
+
 static int gen_onoff_set(struct bt_mesh_model *model,
 			 struct bt_mesh_msg_ctx *ctx,
 			 struct net_buf_simple *buf)
 {
-	if (bl_dbg(4))
-	   printk(BL_Y"gen_onoff_set\n"BL_0);
+	LOG(4,BL_R "rcv [GOOSRV:SET @id,onoff]");
 
-	(void)gen_onoff_set_unack(model, ctx, buf);
-	(void)gen_onoff_get(model, ctx, buf);
+	gen_onoff_set_unack(model, ctx, buf);
+	gen_onoff_get(model, ctx, buf);
 
 	return 0;
 }
+
+//==============================================================================
+// GOOSTS server message handler
+//==============================================================================
 
 static int gen_onoff_status(struct bt_mesh_model *model,
 			    struct bt_mesh_msg_ctx *ctx,
@@ -358,7 +370,7 @@ static int output_string(const char *str)
 
 static void prov_complete(uint16_t net_idx, uint16_t addr)
 {
-	LOG(4,BL_Y "provisioning complete (net:0x%04x, addr:0x%04x", net_idx, addr);
+	LOG(4,BL_Y "provisioning complete (net:0x%04x, addr:0x%04x)", net_idx, addr);
 	primary_addr = addr;
 	primary_net_idx = net_idx;
 
@@ -497,7 +509,10 @@ static void bt_ready(int err)
     if (pub_cli->addr == BT_MESH_ADDR_UNASSIGNED)
             return;
 
-    LOG(4,BL_Y"publish to 0x%04x onoff 0x%04x idx 0x%04x",
+    BL_txt op = (pub_op == BT_MESH_MODEL_OP_GEN_ONOFF_SET) ? "SET" : "LET";
+    LOG(4,BL_R "pub [GOOCLI:%s @%d,%d]", op, pub_id,pub_val);
+
+    LOG(5,BL_Y"publish to 0x%04x onoff 0x%04x idx 0x%04x",
                pub_cli->addr, pub_val, idx);
     bt_mesh_model_msg_init(pub_cli->msg,pub_op);
     net_buf_simple_add_u8(pub_cli->msg, pub_val);
@@ -598,7 +613,7 @@ static void bt_ready(int err)
 
   int bl_wl(BL_ob *o, int val)         // public interface
   {
-    static BL_oval out = bl_core;      // out goes to BL_CORE by default
+    static BL_oval out = bl_up;        // out goes to BL_UP by default
 
     switch (bl_id(o))                  // dispatch message ID
     {
@@ -617,6 +632,7 @@ static void bt_ready(int err)
         return pub(o,val);             // pub [GOOCLI:LET/SET/GET] message
 
       case _BL_ID(_GOOSRV,STS_):       // [#GOOSRV:STS @id,sts] GOO status
+//      LOGO(3,BL_M "(#)",o,val);
         return bl_out(o,val,out);      // publish [GOOSRV:STS] upward
 
       default:
