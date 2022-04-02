@@ -244,6 +244,9 @@
       case _LED:
         return bl_hwled(o,val);
 
+      case _BUTTON:
+        return bl_hwbut(o,val);
+
       default:
         return -1;                     // not supported by default
     }

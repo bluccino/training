@@ -12,30 +12,30 @@
 //==============================================================================
 // enable masks for button events
 // - usage:
-//     bl_cfg(bl_hw,BL_BUTTON_PRESS)   // enable [BUTTON:PRESS]
-//     bl_cfg(bl_hw,BL_BUTTON_RELEASE) // enable [BUTTON:RELEASE]
-//     bl_cfg(bl_hw,BL_BUTTON_EDGE)    // enable [BUTTON:PRESS],[BUTTON:RELEASE]
-//     bl_cfg(bl_hw,BL_BUTTON_SWITCH)  // enable [BUTTON:SWITCH]
-//     bl_cfg(bl_hw,BL_BUTTON_CLICK)   // enable [BUTTON:CLICK]
-//     bl_cfg(bl_hw,BL_BUTTON_HOLD)    // enable [BUTTON:HOLD]
-//     bl_cfg(bl_hw,BL_BUTTON_ALL)     // enable all [BUTTON:] events
-//     bl_cfg(bl_hw,BL_BUTTON_NONE)    // disable all [BUTTON:] events
+//     bl_cfg(bl_hw,BL_PRESS)          // enable [BUTTON:PRESS]
+//     bl_cfg(bl_hw,BL_RELEASE)        // enable [BUTTON:RELEASE]
+//     bl_cfg(bl_hw,BL_EDGE)           // enable [BUTTON:PRESS],[BUTTON:RELEASE]
+//     bl_cfg(bl_hw,BL_SWITCH)         // enable [BUTTON:SWITCH]
+//     bl_cfg(bl_hw,BL_CLICK)          // enable [BUTTON:CLICK]
+//     bl_cfg(bl_hw,BL_HOLD)           // enable [BUTTON:HOLD]
 //
-//     bl_cfg(bl_hw,BL_BUTTON_PRESS|BL_BUTTON_RELEASE) // press/release events
-//     bl_cfg(bl_hw,BL_BUTTON_EDGE)                    // same as above
-//     bl_cfg(bl_hw,BL_BUTTON_CLICK|BL_BUTTON_HOLD)    // click/hold events
-//     bl_cfg(bl_hw,BL_BUTTON_MULTI)                   // same as above
+//     bl_cfg(bl_hw,0xffff)            // enable all [BUTTON:] events
+//     bl_cfg(bl_hw,0x0000)            // disable all [BUTTON:] events
+//     bl_cfg(bl_hw,BL_PRESS|BL_RELEASE) // press/release events
+//     bl_cfg(bl_hw,BL_EDGE)           // same as above
+//     bl_cfg(bl_hw,BL_CLICK|BL_HOLD)  // click/hold events
+//     bl_cfg(bl_hw,BL_MULTI)          // same as above
 //==============================================================================
 
-  #define BL_BUTTON_PRESS   0x0001  // mask for [BUTTON:PRESS] events
-  #define BL_BUTTON_RELEASE 0x0002  // mask for [BUTTON:RELEASE] events
-  #define BL_BUTTON_EDGE    0x0003  // mask for [BUTTON:PRESS],[BUTTON:RELEASE]
-  #define BL_BUTTON_SWITCH  0x0004  // mask for [BUTTON:SWITCH] events
-  #define BL_BUTTON_CLICK   0x0008  // mask for [BUTTON:CLICK] events
-  #define BL_BUTTON_HOLD    0x0010  // mask for [BUTTON:HOLD] events
-  #define BL_BUTTON_MULTI   0x0018  // mask for [BUTTON:CLICK],[BUTTON:HOLD]
-  #define BL_BUTTON_ALL     0xFFFF  // mask for all [BUTTON:] events
-  #define BL_BUTTON_NONE    0x0000  // mask for no [BUTTON:] events
+  #define BL_PRESS   0x0001  // mask for [BUTTON:PRESS] events
+  #define BL_RELEASE 0x0002  // mask for [BUTTON:RELEASE] events
+  #define BL_EDGE    0x0003  // mask for [BUTTON:PRESS],[BUTTON:RELEASE]
+  #define BL_SWITCH  0x0004  // mask for [BUTTON:SWITCH] events
+  #define BL_CLICK   0x0008  // mask for [BUTTON:CLICK] events
+  #define BL_HOLD    0x0010  // mask for [BUTTON:HOLD] events
+  #define BL_MULTI   0x0018  // mask for [BUTTON:CLICK],[BUTTON:HOLD]
+  #define BL_ALL     0xFFFF  // mask for all [BUTTON:] events
+  #define BL_NONE    0x0000  // mask for no [BUTTON:] events
 
 //==============================================================================
 // public module interface
@@ -46,10 +46,14 @@
 //                  +--------------------+
 //                  |       BL_HW        |
 //                  +--------------------+
-//                  |        SYS:        | SYS: interface
+//                  |        SYS:        | SYS input interface
 // (v)->     INIT ->|       <out>        | init module, store <out> callback
 // (v)->     TICK ->|       @id,cnt      | tick the module
 // (!)->      CFG ->|        mask        | config module
+//                  |        SYS:        | SYS output interface
+// (L,B)<-   INIT <-|       <out>        | init module, store <out> callback
+// (L,B)->   TICK <-|       @id,cnt      | tick the module
+// (B)<-      CFG <-|        mask        | config module
 //                  +--------------------+
 //                  |        LED:        | LED: input interface
 // (v)->      SET ->|      @id,onoff     | set LED @id on/off (i=0..4)
@@ -63,11 +67,13 @@
 // (^)<-  RELEASE <-|        @id,ms      | button release after elapsed ms-time
 // (^)<-    CLICK <-|       @id,cnt      | button @id clicked (cnt: nmb. clicks)
 // (^)<-     HOLD <-|       @id,time     | button @id held (time: hold time)
+// (B)<-      CFG <-|        mask        | config button event mask
 //                  |       BUTTON:      | BUTTON input interface
 // (B)->    PRESS ->|        @id,1       | button @id pressed (rising edge)
 // (B)->  RELEASE ->|        @id,ms      | button release after elapsed ms-time
 // (B)->    CLICK ->|       @id,cnt      | button @id clicked (cnt: nmb. clicks)
 // (B)->     HOLD ->|       @id,time     | button @id held (time: hold time)
+// (v)->      CFG ->|        mask        | config button event mask
 //                  +--------------------+
 //                  |       SWITCH:      | SWITCH: output interface
 // (^)<-      STS <-|       @id,sts      | on/off status update of switch @id

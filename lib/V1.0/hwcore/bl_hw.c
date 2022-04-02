@@ -84,9 +84,20 @@
 //        |              |              |              |              |
 //        |  [LED:SET]   |              |              |              |
 //        o------------->|              |              |              |
-//        |   @id,onoff  |              |  [SYS:TOCK]  |              |
+//        |   @id,onoff  |              | [LED:ONOFF]  |              |
 //        |              o---------------------------->|              |
-//        |              |              |   @id,onoff  |              |
+//        |              |              |  @id,onoff   |              |
+//
+// Message Flow Diagram: Button Configuration
+//
+//     BL_DOWN         BL_HW        BL_HWBUT       BL_HWLED         BL_UP
+//       (v)            (#)            (B)            (L)            (^)
+//        |              |              |              |              |
+//        | [BUTTON:CFG] |              |              |              |
+//        o------------->|              |              |              |
+//        |     flags    | [BUTTON:CFG] |              |              |
+//        |              o------------->|              |              |
+//        |              |    flags     |              |              |
 //
 // Message Flow Diagram: Button Click (Button Release within Grace Time)
 //
@@ -97,6 +108,7 @@
 //      |                |        | press button  |        |                |
 //      |                |        | time[@id] = 0 |        |                |
 //      |                |        +-------v-------+        |                |
+//      |                |                |                |                |
 //      |                | [BUTTON:PRESS] |                |                |
 //      |                |<---------------o                |                |
 //      |                |      @id,0     |                | [BUTTON:PRESS] |
@@ -234,11 +246,13 @@
 // (^)<-  RELEASE <-|        @id,ms      | button release after elapsed ms-time
 // (^)<-    CLICK <-|       @id,cnt      | button @id clicked (cnt: nmb. clicks)
 // (^)<-     HOLD <-|       @id,time     | button @id held (time: hold time)
+// (B)<-      CFG <-|        mask        | config button event mask
 //                  |       BUTTON:      | BUTTON input interface
 // (B)->    PRESS ->|        @id,1       | button @id pressed (rising edge)
 // (B)->  RELEASE ->|        @id,ms      | button release after elapsed ms-time
 // (B)->    CLICK ->|       @id,cnt      | button @id clicked (cnt: nmb. clicks)
 // (B)->     HOLD ->|       @id,time     | button @id held (time: hold time)
+// (v)->      CFG ->|        mask        | config button event mask
 //                  +--------------------+
 //                  |       SWITCH:      | SWITCH: output interface
 // (^)<-      STS <-|       @id,sts      | on/off status update of switch @id
@@ -268,9 +282,6 @@
       case BL_ID(_SYS,TICK_):          // [SYS:TICK @id,cnt]
         return bl_hwbut(o,val);        // tick BL_HWBUT module
 
-      case BL_ID(_SYS,CFG_):           // [SYS:CFG flags]
-        return bl_hwbut(o,val);        // config BL_HWBUT module
-
       case BL_ID(_LED,SET_):           // [LED:set @id,val]
       case BL_ID(_LED,TOGGLE_):        // [LED:toggle @id]
         return bl_out(o,val,led);      // forward to LED driver module
@@ -281,6 +292,9 @@
       case BL_ID(_BUTTON,HOLD_):       // [BUTTON:HOLD @id,time]
       case BL_ID(_SWITCH,STS_):        // [SWITCH:STS @id]
         return bl_out(o,val,out);      // output message
+
+      case BL_ID(_BUTTON,CFG_):        // [BUTTON:CFG flags]
+        return bl_hwbut(o,val);        // config BL_HWBUT module
 
       default:
         return -1;                     // bad input

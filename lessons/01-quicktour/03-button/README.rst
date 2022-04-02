@@ -57,14 +57,14 @@ Exercise 2
 
 Exercise 3
 - add the statement
-   bl_cfg(bl_down,BL_BUTTON_EDGE);
+   bl_cfg(bl_down,_BUTTON,BL_EDGE);
 	at the end of function main()
 - which kind of changes do you recognize?
 - what could be the meaning of adding this statement?
 
 Exercise 4
 - similarily to exercise3) add (instead) the statement
-   bl_cfg(bl_down,BL_BUTTON_PRESS);
+   bl_cfg(bl_down,_BUTTON,BL_SWITCH);
 	at the end of function main()
 - which kind of changes do you recognize?
 - what could be the meaning of adding this statement?

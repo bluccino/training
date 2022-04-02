@@ -35,7 +35,7 @@
 // Get button configuration from the devicetree sw0 alias. This is mandatory.
 //==============================================================================
 
-  static BL_word mask = BL_BUTTON_ALL; // all events are enabled
+  static BL_word mask = 0xFFFF;        // all button events enabled
   static int id = 0;                   // button ID
   static GP_ctx context[N];            // button context
 
@@ -102,10 +102,10 @@
 
     switch (bl_id(o))
     {
-      case _BL_ID(_BUTTON,PRESS_):     // [BUTTON:#PRESS]
+      case BL_ID(_BUTTON,PRESS_):     // [BUTTON:#PRESS]
       {
         time[id] = now;                // store button press time stamp
-				if (mask & BL_BUTTON_CLICK)
+				if (mask & BL_CLICK)
 				{
           LOG(4,BL_B "button click (begin)");
 				  _bl_msg(bl_hwbut,_BUTTON,CLICK_, id,NULL,0);
@@ -113,13 +113,13 @@
         return 0;
       }
 
-      case _BL_ID(_BUTTON,RELEASE_):   // [#BUTTON:RELEASE]
+      case BL_ID(_BUTTON,RELEASE_):   // [#BUTTON:RELEASE]
         val = (now >= time[id] + ms);  // grace time exceeded? (return value)
 
         if (val)                       // grace time exceeded?
         {
           val = 0;                     // return value = 0
-          if (mask & BL_BUTTON_HOLD)
+          if (mask & BL_HOLD)
 					{
             BL_ms dt = now - time[id]; // hold time
             LOG(4,BL_B "button hold event");
@@ -129,7 +129,7 @@
         else                           // within grace time!
         {
           val = 0;                     // return value = 0
-          if (mask & BL_BUTTON_CLICK)
+          if (mask & BL_CLICK)
           {
             int count = 1;             // 1 click
             LOG(4,BL_B "button clicked %d times",count);
@@ -164,21 +164,24 @@
 
     if (val)                           // [BUTTON:PRESS 0] event
 		{
-      if (mask & BL_BUTTON_PRESS)
+      if (mask & BL_PRESS)
         _bl_msg(bl_hwbut,_BUTTON,PRESS_, id,NULL,0);
 
-			toggle[idx] = !toggle[idx];
+      bl_msg(click,_BUTTON,PRESS_, id,NULL,0);
+      toggle[idx] = !toggle[idx];
 
-      if (mask & BL_BUTTON_SWITCH)
+      if (mask & BL_SWITCH)
         _bl_msg(bl_hwbut,_SWITCH,STS_, id,NULL,toggle[idx]);
     }
     else                               // [BUTTON:RELEASE ms] event
     {
       int dt = (int)(bl_ms() - time[id]);
-      if (mask & BL_BUTTON_RELEASE)
+      if (mask & BL_RELEASE)
         _bl_msg(bl_hwbut,_BUTTON,RELEASE_, id,NULL,dt);
+
+      bl_msg(click,_BUTTON,RELEASE_, id,NULL,dt);
     }
-  }
+ }
 
   K_WORK_DEFINE(work, workhorse);      // assign work with workhorse
 
@@ -263,7 +266,7 @@
         if ( held >= ms && !hold[id] )
         {
           hold[id] = true;             // button @id entered HOLD state
-					if (mask & BL_BUTTON_HOLD)
+					if (mask & BL_HOLD)
 					{
             LOG(4,BL_Y "button hold (begin)");
             _bl_msg(bl_hwbut,_BUTTON,HOLD_, id,NULL,0);
@@ -302,13 +305,13 @@
 //                  |        SYS:        | SYS interface
 // (!)->     INIT ->|       <out>        | init module, ignore <out> callback
 // (!)->     TICK ->|       @id,cnt      | tick module
-// (!)->      CFG ->|        mask        | config module
 //                  +--------------------+
 //                  |       BUTTON:      | BUTTON interface
 // (^)<-    PRESS <-|        @id,0       | button press at time 0
 // (^)<-  RELEASE <-|        @id,ms      | button release after elapsed ms-time
 // (^)<-    CLICK <-|        @id,n       | number of button clicks
 // (^)<-     HOLD <-|       @id,ms       | button hold event at ms-time
+// (!)->      CFG ->|        mask        | config button event mask
 //                  +--------------------+
 //                  |       SWITCH:      | SWITCH interface
 // (^)<-      STS <-|       @id,sts      | emit status of toggle switch event
@@ -328,9 +331,9 @@
 //
 //==============================================================================
 
-  int bl_hwbut(BL_ob *o, int val)     // BUTTON core module interface
+  int bl_hwbut(BL_ob *o, int val)         // BUTTON core module interface
   {
-    static BL_oval output = NULL;       // to store output callback
+    static BL_oval output = bl_up;        // to store output callback
 
     switch (bl_id(o))
     {
@@ -341,18 +344,21 @@
       case BL_ID(_SYS,TICK_):             // [SYS:TICK @id,cnt]
       	return tick(o,val);               // delegate to tick() worker
 
-      case BL_ID(_SYS,CFG_):              // [SYS:CFG mask] configure evt. mask
+      case BL_ID(_BUTTON,CFG_):           // [BUTTON:CFG mask] config event mask
 			  LOG(4,"config button mask(%08x)",val);
 			  mask = (BL_word)val;              // store event mask
       	return 0;                         // OK
 
+        // internal interfaces
+
       case _BL_ID(_BUTTON,PRESS_):        // [#BUTTON:PRESS @id,0]
       case _BL_ID(_BUTTON,RELEASE_):      // [#BUTTON:RELEASE @id,time]
-        click(o,val);                     // forward to CLICK module
         return bl_out(o,val,output);      // post to output subscriber
 
       case _BL_ID(_BUTTON,CLICK_):        // [#BUTTON:CLICK @id,n]
       case _BL_ID(_BUTTON,HOLD_):         // [#BUTTON:HOLD @id,ms]
+        return bl_out(o,val,output);      // post to output subscriber
+
       case _BL_ID(_SWITCH,STS_):          // [#SWITCH:STS @id,sts]
         return bl_out(o,val,output);      // post to output subscriber
 

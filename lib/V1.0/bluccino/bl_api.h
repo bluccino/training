@@ -250,9 +250,9 @@
 // - usage: bl_cfg(module,mask)  // (<module>) <- [SYS:CFG mask]
 //==============================================================================
 
-  static inline int bl_cfg(BL_oval module, BL_word mask)
+  static inline int bl_cfg(BL_oval module, BL_cl cl, BL_word mask)
   {
-    return bl_msg(module,_SYS,CFG_, 0,NULL,(int)mask);
+    return bl_msg(module,cl,CFG_, 0,NULL,(int)mask);
   }
 
 //==============================================================================

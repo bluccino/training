@@ -31,13 +31,13 @@
 //                  |        SYS:        | SYS interface
 // (!)->     INIT ->|       <out>        | init module, ignore <out> callback
 // (!)->     TICK ->|       @id,cnt      | tick module
-// (!)->      CFG ->|        mask        | config module
 //                  +--------------------+
 //                  |       BUTTON:      | BUTTON interface
 // (^)<-    PRESS <-|        @id,0       | button press at time 0
 // (^)<-  RELEASE <-|        @id,ms      | button release after elapsed ms-time
 // (^)<-    CLICK <-|        @id,n       | number of button clicks
 // (^)<-     HOLD <-|       @id,ms       | button hold event at ms-time
+// (!)->      CFG ->|        mask        | config button event mask
 //                  +--------------------+
 //                  |       SWITCH:      | SWITCH interface
 // (^)<-      STS <-|       @id,sts      | emit status of toggle switch event
