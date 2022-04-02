@@ -50,9 +50,16 @@
 //       (v)            (#)            (B)            (L)            (^)
 //        |              |              |              |              |
 //        |  [SYS:INIT]  |              |              |              |
-//        o------------->|  [SYS:INIT]  |              |              |
-//        |              o------------->|  [SYS:INIT]  |              |
+//        o------------->#===========================================>|
+//        |   <BL_UP>    |              |              |              |
+//        |              |  [SYS:INIT]  |              |              |
+//        |              o------------->|              |              |
+//        |              |   <BL_HW>    |              |              |
+//        |              |<=============#              |              |
+//        |              |              |  [SYS:INIT]  |              |
 //        |              o---------------------------->|              |
+//        |              |              |   <BL_HW>    |              |
+//        |              |<============================#              |
 //        |              |              |              |              |
 //
 // Message Flow Diagram: Ticking
@@ -271,7 +278,7 @@
     {
       case BL_ID(_SYS,INIT_):          // [SYS:INIT <cb>]
       {
-        LOG(3,BL_C "initialising HW core ...");
+        LOG(3,BL_C "init HW core ...");
 /*******************
         out = o->data;                 // store <out> callback
 *****************/
@@ -292,7 +299,6 @@
       case BL_ID(_BUTTON,CLICK_):      // [BUTTON:CLICK @id,edge]
       case BL_ID(_BUTTON,HOLD_):       // [BUTTON:HOLD @id,time]
       case BL_ID(_SWITCH,STS_):        // [SWITCH:STS @id]
-LOGO(3,BL_M"(#):",o,val);
         return bl_out(o,val,out);      // output message
 
       case BL_ID(_BUTTON,CFG_):        // [BUTTON:CFG flags]

@@ -27,24 +27,74 @@
 
     #include "bl_api.h"
     #include "bl_log.h"
-    #include "bl_hw.h"
 
   #endif
 
 //==============================================================================
-// public module interface
+// input a message to Bluccino API
+//==============================================================================
+// (*) := (<any>); (^) := (BL_UP); (#) := (BL_HW); (v) := (BL_DOWN);
+// (I) := (BL_IN); (O) := (<when>)
+//
+//                  +--------------------+
+//                  |        BL_IN       | Bluccino message input
+//                  +--------------------+
+//                  |        SYS:        | SYS input interface
+// (!)->     INIT ->|       <out>        | init module, store <out> callback
+// (!)->     TICK ->|      @id,cnt       | tick module
+// (!)->     TOCK ->|      @id,cnt       | tock module
+//                  +--------------------+
+//                  |        SYS:        | SYS input interface
+// (v)<-     INIT <-|       <out>        | init module, store <out> callback
+// (v)<-     TICK <-|      @id,cnt       | tick module
+// (v)<-     TOCK <-|      @id,cnt       | tock module
+//                  +--------------------+
+//                  |        SET:        | SET interface
+// (O)<-      ATT <-|        sts         | notiy attention status
+// (O)<-      PRV <-|        sts         | notiy provision status
+//                  +--------------------+
+//                  |        GET:        | GET interface
+// (*)->      ATT ->|        sts         | get attention status
+// (*)->      PRV ->|        sts         | get provision status
+//                  +--------------------+
+//                  |        LED:        | LED output interface
+// (v)<-      SET <-|     @id,onoff      | turn LED @id on/off
+// (v)<-   TOGGLE <-|        @id         | toggle LED @id
+//                  +--------------------+
+//                  |        LED:        | LED input interface
+// (*)->      SET ->|     @id,onoff      | turn LED @id on/off
+// (*)->   TOGGLE <-|        @id         | toggle LED @id
+//                  +--------------------+
+//                  |        SCAN:       | SCAN output interface
+// (O)<-      ADV <-|      <BL_adv>      | forward advertising data
+//                  +--------------------+
+//                  |        SCAN:       | SCAN input interface
+// (^)->      ADV ->|      <BL_adv>      | forward advertising data
+//                  +--------------------+
+//
+//==============================================================================
+
+  int bl_in(BL_ob *o, int val);        // public interface
+
+//==============================================================================
+// BLUCCINO public module interface
 //==============================================================================
 //
-// (!) := (<parent>); (O) := (<out>); (#) := (BL_HW)
+// (!) := (<parent>); (v) := (BL_DOWN); (I) := (BL_IN);
 //
 //                  +--------------------+
 //                  |      BLUCCINO      |
 //                  +--------------------+
-//                  |        SYS:        | SYS interface
+//                  |        SYS:        | SYS input interface
 // (!)->     INIT ->|       <out>        | init module, store <out> callback
-// (!)->     TICK ->|      @id,cnt       |
-// (!)->     TOCK ->|      @id,cnt       |
+// (!)->     TICK ->|      @id,cnt       | tick module
+// (!)->     TOCK ->|      @id,cnt       | tock module
 // (!)->      OUT ->|       <out>        | set <out> callback
+//                  +--------------------+
+//                  |        SYS:        | SYS output interface
+// (v,I)<-   INIT <-|       <out>        | init module, store <out> callback
+// (v)<-     TICK <-|      @id,cnt       | tick module
+// (!)<-     TOCK <-|      @id,cnt       | tock module
 //                  +--------------------+
 //
 //==============================================================================

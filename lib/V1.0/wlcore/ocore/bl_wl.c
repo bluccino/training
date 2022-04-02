@@ -358,8 +358,7 @@ static int output_string(const char *str)
 
 static void prov_complete(uint16_t net_idx, uint16_t addr)
 {
-	printk("provisioning complete for net_idx 0x%04x addr 0x%04x\n",
-	       net_idx, addr);
+	LOG(4,BL_Y "provisioning complete (net:0x%04x, addr:0x%04x", net_idx, addr);
 	primary_addr = addr;
 	primary_net_idx = net_idx;
 
@@ -423,33 +422,34 @@ static void bt_ready(int err)
 {
 	struct bt_le_oob oob;
 
-	if (err) {
-		printk("Bluetooth init failed (err %d)\n", err);
+	if (err)
+	{
+		bl_err(err,"init Bluetoothfailed");
 		return;
 	}
 
-	printk("Bluetooth initialized\n");
+	LOG(3,"init Bluetooth complete");
 
 	err = bt_mesh_init(&prov, &comp);
-	if (err) {
-		printk("Initializing mesh failed (err %d)\n", err);
+	if (err)
+	{
+	  bl_err(err,"init mesh failed");
 		return;
 	}
 
-	if (IS_ENABLED(CONFIG_SETTINGS)) {
+	if (IS_ENABLED(CONFIG_SETTINGS))
 		settings_load();
-	}
 
-	/* Use identity address as device UUID */
-	if (bt_le_oob_get_local(BT_ID_DEFAULT, &oob)) {
-		printk("Identity Address unavailable\n");
-	} else {
+	  // Use identity address as device UUID
+
+	if (bt_le_oob_get_local(BT_ID_DEFAULT, &oob))
+		bl_err(-1,"identity address unavailable");
+	else
 		memcpy(dev_uuid, oob.addr.a.val, 6);
-	}
 
 	bt_mesh_prov_enable(BT_MESH_PROV_GATT | BT_MESH_PROV_ADV);
 
-	printk("Mesh initialized\n");
+	LOG(3,BL_C "init mesh complete");
 }
 
 //==============================================================================
@@ -509,10 +509,10 @@ static void bt_ready(int err)
   K_WORK_DEFINE(pub_work, pub_worker);      // assign work with workhorse
 
 //==============================================================================
-// publish GOOSET message
+// worker: publish GOO message
 //==============================================================================
 
-  static int pub(BL_ob *o,int val)  // here's how we hook in ...
+  static int pub(BL_ob *o,int val)   // here's how we hook in ...
   {
     // id = 1..4, since it adresses elements 1..4
     // button indices are 0..3, thus swnum = o->id - 1
@@ -544,21 +544,19 @@ static void bt_ready(int err)
   }
 
 //==============================================================================
-// init ocore module
+// worker: init module
 //==============================================================================
 
   static int init(BL_ob *o, int val)
   {
-    LOG(2,BL_B"init Bluccino core");
+    LOG(3,BL_C "init WL core ...");
 
   	k_work_init(&pub_work, pub_worker);
-
-    bl_init(bl_hw,bl_core);            // init HW core, output goes here
 
       // init Bluetooth subsystem
 
     int err = bt_enable(bt_ready);
-    bl_err(err,"Bluetooth init failed");
+    bl_err(err,"init Bluetooth failed");
 
     return err;
   }
@@ -606,7 +604,7 @@ static void bt_ready(int err)
     {
       case BL_ID(_SYS,INIT_):          // [SYS:INIT <out>]
         out = o->data;                 // store output callback
-        return init(o,val);            // forward to init()
+        return init(o,val);            // delegate to init() worker
 
       case _BL_ID(_SET,PRV_):          // [#SET:PRV val]  (provision)
       case _BL_ID(_SET,ATT_):          // [#SET:ATT val]  (attention)

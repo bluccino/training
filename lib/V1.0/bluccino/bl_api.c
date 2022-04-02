@@ -59,17 +59,9 @@
   #define LOG0(lvl,col,o,val)     LOGO_API(lvl,col,o,val)
 
 //==============================================================================
-// provision & attention state
-//==============================================================================
-
-  static bool provision = 0;
-  static bool attention = 0;
-
-//==============================================================================
 // notification and driver callbacks
 //==============================================================================
 
-  static BL_oval out = NULL;            // <out> callback
   static BL_oval test = NULL;           // test callback
 
 //==============================================================================
@@ -185,47 +177,6 @@
   }
 
 //==============================================================================
-// input a message to Bluccino API
-//==============================================================================
-
-  __weak int bl_in(BL_ob *o, int val)
-  {
-    int level = 2;                          // default verbose level
-
-    switch (bl_id(o))                           // dispatch event
-    {
-      case BL_ID(_SET,PRV_):            // provision state changed
-        provision = val;
-        bl_log_color(attention,provision);
-        LOG(2,BL_M"node %sprovision",val?"":"un");
-        return bl_out(o,val,out);
-
-      case BL_ID(_SET,ATT_):          // attention state changed
-        attention = val;
-        bl_log_color(attention,provision);
-        LOG(2,BL_G"attention %s",val?"on":"off");
-        return bl_out(o,val,out);
-
-      case BL_ID(_SYS,TICK_):
-      case BL_ID(_SYS,TOCK_):
-      case BL_ID(_SCAN,ADV_):
-        level = 5;
-        break;
-
-      case BL_ID(_LED,SET_):
-      case BL_ID(_LED,TOGGLE_):
-        LOGO(level,"@",o,val);
-        return bl_down(o,val);
-
-      default:
-        break;
-    }
-
-    LOGO(level,"@",o,val);
-    return bl_out(o,val,out);            // forward message to subscriber
-  }
-
-//==============================================================================
 // message downward posting to lower level / driver layer (default/__weak)
 // - bl_down() is defined as weak and can be overloaded
 // - by default all messages posted to BL_DOWN are forwarded to BL_CORE
@@ -255,83 +206,6 @@
   }
 
 //==============================================================================
-// post general message [CL:OP @id,<data>,val] to module
-// - usage: bl_msg(module,cl,op,id,data,val)
-//==============================================================================
-
-  int bl_msg(BL_oval module, BL_cl cl, BL_op op, int id, void* data, int val)
-  {
-    BL_ob oo = {cl,op,id,data};
-    return module(&oo,val);            // post message to module interface
-  }
-
-//==============================================================================
-// post general augmented message [CL:OP @id,<data>,val] to module
-// - usage: _bl_msg(module,cl,op,id,data,val)
-//==============================================================================
-
-  int _bl_msg(BL_oval module, BL_cl cl, BL_op op, int id, void* data, int val)
-  {
-    BL_ob oo = {BL_AUG(cl),op,id,data};// augmented class tag
-    return module(&oo,val);            // post message to module interface
-  }
-
-//==============================================================================
-// post system message to module
-// - usage: bl_sys(module,op,cb,val)   // post [SYS:op @0,<cb>,val] to module
-//==============================================================================
-
-  int bl_sys(BL_oval module, BL_op op, BL_oval cb, int val)
-  {
-    BL_ob oo = {_SYS,op,0,cb};
-    return module(&oo,val);            // post message to module interface
-  }
-
-//==============================================================================
-// emit message to be handeled to <out> subscriber
-// - usage: bl_emit(o,cl,op,val,out)  // post [cl:op o->id,val] to <out>
-//==============================================================================
-
-  int bl_emit(BL_ob *o, BL_cl cl, BL_op op, int val, BL_oval out)
-  {
-    BL_ob oo = {cl,op,o->id,o->data};
-    return bl_out(&oo,val,out);
-  }
-
-//==============================================================================
-// post message (with main parameters to SYS interface of given module)
-// - usage: bl_post(module,opcode,id,val)  // class=_SYS, data=NULL
-//==============================================================================
-
-  int bl_post(BL_oval module, BL_op op, int id, int val)
-  {
-    BL_ob oo = {_SYS,op,id,NULL};
-    return module(&oo,val);            // post message to module interface
-  }
-
-//==============================================================================
-// forward a received message to an interface of a given module
-// - usage: bl_fwd(module,cl,o,val)    // only interface class to be changed
-//==============================================================================
-
-  int bl_fwd(BL_oval module, BL_cl cl, BL_ob *o, int val)
-  {
-    BL_ob oo = {cl,o->op,o->id,o->data};
-    return module(&oo,val);            // forward message to module interface
-  }
-
-//==============================================================================
-// subscribe to message output
-// - usage: bl_when(module,cb)         // class=_SYS, val=0, data=NULL
-//==============================================================================
-
-  int bl_when(BL_oval module, BL_oval cb)
-  {
-    BL_ob oo = {_SYS,WHEN_,0,cb};
-    return module(&oo,0);              // post [SYS:WHEN <cb>] to module
-  }
-
-//==============================================================================
 // setup initializing, ticking and tocking for a test module
 // - usage: bl_test(module)            // controlled by bl_run()
 //==============================================================================
@@ -340,37 +214,6 @@
   {
     test = module;
     return 0;                          // OK
-  }
-
-//==============================================================================
-// Blucino init                             // init Blucino system
-// usage:  bl_init(NULL,when,verbose)       // init Bluccino
-//         bl_init(bl_gear,when_gear,0)     // init submodule
-//==============================================================================
-
-  int bl_init(BL_oval module,BL_oval cb)
-  {
-    return bl_sys(module,INIT_,cb,0);     // init module
-  }
-
-//==============================================================================
-// Bluccino tick: send [SYS:TICK count] message to given module
-// - usage: bl_tick(module,count)           // ticking a given module
-//==============================================================================
-
-  int bl_tick(BL_oval module, int id, int cnt)
-  {
-    return bl_post(module,TICK_,id,cnt);  // post [SYS:TICK cnt] message
-  }
-
-//==============================================================================
-// Bluccino tock: send [SYS:TOCK count] message to given module
-// - usage: bl_tock(module,count)           // tocking a given module
-//==============================================================================
-
-  int bl_tock(BL_oval module, int id, int cnt)
-  {
-    return bl_post(module,TOCK_,id,cnt);  // post [SYS:TOCK cnt] message
   }
 
 //==============================================================================
@@ -428,49 +271,5 @@
 
       bl_sleep(tick_ms);               // sleep for one tick period
       tick_pace.time += tick_ms;
-    }
-  }
-
-//==============================================================================
-// BLUCCINO public module interface
-//==============================================================================
-//
-// (!) := (<parent>); (O) := (<out>); (#) := (BL_HW)
-//
-//                  +--------------------+
-//                  |      BLUCCINO      |
-//                  +--------------------+
-//                  |        SYS:        | SYS interface
-// (!)->     INIT ->|       <out>        | init module, store <out> callback
-// (!)->     TICK ->|      @id,cnt       |
-// (!)->     TOCK ->|      @id,cnt       |
-// (!)->      OUT ->|       <out>        | set <out> callback
-//                  +--------------------+
-//
-//==============================================================================
-
-  int bluccino(BL_ob *o, int val)
-  {
-    switch (bl_id(o))
-    {
-      case BL_ID(_SYS,INIT_):
-        out = o->data;
-
-          // we need to initialize everything what is downstairs (on driver
-          // level). All stuff downstairs has to send messages through the
-          // upward gear
-
-        return bl_init(bl_down,bl_up); // forward to BL_DOWN gear, output=>BL_UP
-
-      case BL_ID(_SYS,TICK_):
-      case BL_ID(_SYS,TOCK_):
-        return bl_down(o,val);         // forward to BL_CORE module
-
-      case BL_ID(_SYS,OUT_):
-        out = o->data;
-        return 0;
-
-      default:
-        return -1;                     // bad command
     }
   }
