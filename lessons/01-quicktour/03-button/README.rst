@@ -54,29 +54,3 @@ Exercise 2
   3 LEDs for RGB display (@2:red, @3:green, @4:blue)
 - in this modified app a button click should toggle the status LED, while
   a button hold (long press) should toggle all 3 RGB LEDs at the same time
-
-Exercise 3
-- add the statement
-   bl_cfg(bl_down,_BUTTON,BL_EDGE);
-	at the end of function main()
-- which kind of changes do you recognize?
-- what could be the meaning of adding this statement?
-
-Exercise 4
-- similarily to exercise3) add (instead) the statement
-   bl_cfg(bl_down,_BUTTON,BL_SWITCH);
-	at the end of function main()
-- which kind of changes do you recognize?
-- what could be the meaning of adding this statement?
-
-Exercise 5
-- use the initial code of the sample as a basis
-- for LED control replace statement bl_led(1,-1) by bl_led(1,val)
-- does the app still show the same behavior?
-- explain why the behavior is the same, or is different?
-
-Exercise 6
-- start with the modified code of exercise 5 and make changes in order to
-	dispatch on message [SWITCH:STS] instead of [BUTTON:PRESS]
-- does the app now show the (correct) initial behavior?
-- explain why the behavior is now correct, or is still incorrect?

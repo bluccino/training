@@ -129,5 +129,6 @@
   void main(void)
   {
     bl_hello(2,"06-ledtoggle (click button to cycle to next LED to be toggled)");
-    bl_engine(app,10,100);             // run APP with 10/000ms ticks/tocks
+    bl_cfg(bl_down,_BUTTON,BL_PRESS);  // configure only [BUTTON:PRESS] events 
+    bl_engine(app,10,100);             // run APP with 10/100ms ticks/tocks
   }
