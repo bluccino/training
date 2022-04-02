@@ -8,6 +8,7 @@
 #include "bl_log.h"
 #include "bl_type.h"
 #include "bl_symb.h"
+#include "bl_vers.h"
 
   extern bool bl_attention;            // attention mode
   extern bool bl_provisioned;          // provisioned mode
@@ -214,6 +215,8 @@
   static inline void bl_hello(int verbose, BL_txt msg)
   {
     bl_verbose(verbose);               // set verbose level
+		bl_prt("*** Blucino v%s\n",BL_VERSION);
+
     if (bl_dbg(0))                     // always - start print with time stamp
       bl_prt(BL_R "%s\n" BL_0,msg);    // print hello message in red
   }
