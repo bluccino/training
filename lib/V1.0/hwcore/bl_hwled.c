@@ -18,8 +18,6 @@
 
   #define LOG                     LOG_LED
   #define LOGO(lvl,col,o,val)     LOGO_LED(lvl,col"led:",o,val)
-  #define LOG0(lvl,col,o,val)     LOGO_LED(lvl,col,o,val)
-  #define ERR 1,BL_R
 
 //==============================================================================
 // defines
@@ -98,7 +96,7 @@
     val = (led_onoff[o->id-1] == 0);   // new LED value
     int ok = led_set(o,val);           // toggle LED state
 
-    LOGO(4,"@",o,val);                 // log changed LED level
+    LOGO(4,BL_Y,o,val);                // log changed LED level
     return ok;
   }
 

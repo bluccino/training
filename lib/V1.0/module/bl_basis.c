@@ -71,7 +71,7 @@
 
   static int startup(BL_ob *o, int val)     // public module interface
   {
-    BL_fct output = NULL;                   // output callback
+    BL_oval output = NULL;                   // output callback
     static volatile int count = 0;          // reset counter
     static int8_t map[4] = {-1,3,4,2};      // LED @id map: [-,GREEN,BLUE,RED]
 
@@ -297,7 +297,7 @@
 
   int bl_basis(BL_ob *o, int val)
   {
-    BL_fct output = NULL;              // to store output callback
+    BL_oval output = NULL;              // to store output callback
 
     switch (bl_id(o))                  // dispatch message ID
     {

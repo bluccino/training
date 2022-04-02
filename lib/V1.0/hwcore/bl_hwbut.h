@@ -23,40 +23,28 @@
 // public module interface
 //==============================================================================
 //
-// BL_HWBUT Interfaces:
-//   SYS Interface:     [] = SYS(INIT)
-//   BUTTON Interface:  [PRESS,RELEASE] = BUTTON(PRESS,RELEASE)
-//   SWITCH Interface:  [STS] = SWITCH(STS)
-//   SET Interface:     [] = SET(MS)
+// (!) := (<parent>);  (#) := BL_HWBUT;  (^) := (BL_UP);  (v) := (BL_DOWN);
 //
-//                             +-------------+
-//                             |  BL_HWBUT   |
-//                             +-------------+
-//                      INIT ->|    SYS:     |
-//                      TICK ->|             |
-//                             +-------------+
-//                    #PRESS ->|   BUTTON:   |-> PRESS
-//                  #RELEASE ->|             |-> RELEASE
-//                    #CLICK ->|             |-> CLICK
-//                     #HOLD ->|             |-> HOLD
-//                             +-------------+
-//                       STS ->|   SWITCH:   |-> STS
-//                             +-------------+
-//                        MS ->|    SET:     |
-//                             +-------------+
-//  Input Messages:
-//   - [SYS:INIT <cb>]              init module, provide output callback
-//   - [SYS:TICK @id,cnt]           tick module (for click/long detection)
-//   - [BUTTON:PRESS @id,active]    forward button press event to output
-//   - [BUTTON:RELEASE @id,active]  forward button release event to output
-//   - [SWITCH:STS @id,onoff]       forward switch status update to output
-//   - [SET:MS ms]                  set click grace time (default: 350 ms)
-//
-//  Output Messages:
-//   - [BUTTON:PRESS @id 1]         output a button press event
-//   - [BUTTON:RELEASE @id,time]    button release event received from driver
-//                                  note: time is PRESS->RELEASE elapsed time
-//   - [SWITCH:STS @id,onoff]       output switch status update
+//                  +--------------------+
+//                  |      BL_HWBUT      | module BL_HWBUT
+//                  +--------------------+
+//                  |        SYS:        | SYS interface
+// (!)->     INIT ->|       <out>        | init module, ignore <out> callback
+// (!)->     TICK ->|       @id,cnt      | tick module
+// (!)->      CFG ->|        mask        | config module
+//                  +--------------------+
+//                  |       BUTTON:      | BUTTON interface
+// (^)<-    PRESS <-|        @id,0       | button press at time 0
+// (^)<-  RELEASE <-|        @id,ms      | button release after elapsed ms-time
+// (^)<-    CLICK <-|        @id,n       | number of button clicks
+// (^)<-     HOLD <-|       @id,ms       | button hold event at ms-time
+//                  +--------------------+
+//                  |       SWITCH:      | SWITCH interface
+// (^)<-      STS <-|       @id,sts      | emit status of toggle switch event
+//                  +--------------------+
+//                  |        SET:        | SET interface
+// (v)->       MS ->|         ms         | set grace time for click/hold events
+//                  +--------------------+
 //
 //==============================================================================
 
@@ -67,7 +55,7 @@
 // - usage: bc_hwbut_init(cb)
 //==============================================================================
 
-  static inline int bl_hwbut_init(BL_fct cb)
+  static inline int bl_hwbut_init(BL_oval cb)
   {
     return bl_init(bl_hwbut,cb);
   }

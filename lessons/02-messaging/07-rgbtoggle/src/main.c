@@ -1,5 +1,5 @@
 //==============================================================================
-// main.c for 05-ledtoggle (simple message flow)
+// main.c for 07-rgbtoggle (simple message flow)
 //==============================================================================
 
   #include "main.h"                    // must be included before "bluccino.h"
@@ -39,23 +39,20 @@
     switch(bl_id(o))
     {
       case BL_ID(_SYS,INIT_):          // [SYS:INIT <out>], ignore <out>
-	      bl_log(2,BL_C "init app");
-
-        bl_init(button,NULL);          // init BUTTON, output goes to app
+	bl_log(2,BL_C "init app");
+        bl_init(button,app);           // init BUTTON, output goes to app
         bl_init(led,NULL);             // init LED, output goes to nowhere
         return 0;                      // OK
 
       case BL_ID(_BUTTON,PRESS_):      // [SYS:INIT <out>], ignore <out>
 			  bl_logo(1,BL_M "app:",o,val);  // log event message
         onoff = !onoff;                // toggle LED onoff state
-
-   		  static BL_ob oo = {_LED,SET_,0,NULL};
-        return app(&oo,onoff);         // post message (A)<-[LED:SET onoff]
+        return led_set(app,onoff);     // post message (APP)<-[LED:SET onoff]
 
         // private message interface
 
       case _BL_ID(_LED,SET_):          // [#LED:SET toggle]
-	      bl_logo(1,BL_M "app:",o,val);  // log event message
+	bl_logo(1,BL_M "app:",o,val);  // log event message
         return bl_out(o,val,L);        // post message (L)<-[LED:SET toggle]
 
       default:

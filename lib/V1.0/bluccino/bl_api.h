@@ -91,7 +91,7 @@
 // event message emission, posting and notification
 //==============================================================================
 
-  int bl_out(BL_ob *o, int value, BL_fct call);
+  int bl_out(BL_ob *o, int value, BL_oval call);
   int bl_in(BL_ob *o, int value);
 
 //==============================================================================
@@ -108,49 +108,56 @@
 // - usage: bl_msg(module,cl,op,id,data,val)
 //==============================================================================
 
-  int bl_msg(BL_fct module, BL_cl cl, BL_op op, int id, void* data, int val);
+  int bl_msg(BL_oval module, BL_cl cl, BL_op op, int id, void* data, int val);
+
+//==============================================================================
+// post general augmented message [CL:OP @id,<data>,val] to module
+// - usage: _bl_msg(module,cl,op,id,data,val)
+//==============================================================================
+
+  int _bl_msg(BL_oval module, BL_cl cl, BL_op op, int id, void* data, int val);
 
 //==============================================================================
 // post message (with main parameters to POST interface ofa given module)
 // - usage: bl_post(module,opcode,id,val) // class=_SYS, data=NULL
 //==============================================================================
 
-  int bl_post(BL_fct module, BL_op op, int id, int val);
+  int bl_post(BL_oval module, BL_op op, int id, int val);
 
 //==============================================================================
 // forward a received message to an interface of a given module
 // - usage: bl_fwd(module,cl,o,val)    // only interface class to be changed
 //==============================================================================
 
-  int bl_fwd(BL_fct module, BL_cl cl, BL_ob *o, int val);
+  int bl_fwd(BL_oval module, BL_cl cl, BL_ob *o, int val);
 
 //==============================================================================
 // post system message to module
 // - usage: bl_sys(module,op,cb,val)   // post [SYS:op @0,<cb>,val] to module
 //==============================================================================
 
-  int bl_sys(BL_fct module, BL_op op, BL_fct cb, int val);
+  int bl_sys(BL_oval module, BL_op op, BL_oval cb, int val);
 
 //==============================================================================
 // emit message to be handeled to output subscriber
 // - usage: bl_emit(o,cl,op,val,output)  // post [cl:op o->id,val] to output
 //==============================================================================
 
-  int bl_emit(BL_ob *o, BL_cl cl, BL_op op, int val, BL_fct output);
+  int bl_emit(BL_ob *o, BL_cl cl, BL_op op, int val, BL_oval output);
 
 //==============================================================================
 // subscribe to a module's message output
 // - usage: bl_sub(module,cb)          // class=_SYS, id=0, val=0
 //==============================================================================
 
-  int bl_when(BL_fct module, BL_fct cb);
+  int bl_when(BL_oval module, BL_oval cb);
 
 //==============================================================================
 // get module property
 // - usage: val = bl_get(module,op)    // use opcodes for property names
 //==============================================================================
 
-  static inline int bl_get(BL_fct module, BL_op op)
+  static inline int bl_get(BL_oval module, BL_op op)
   {
     BL_ob oo = {_GET,op,0,NULL};
     return module(&oo,0);              // post to test module via upward gear
@@ -161,7 +168,7 @@
 // - usage: val = bl_set(module,op,val) // use opcodes for property names
 //==============================================================================
 
-  static inline int bl_set(BL_fct module, BL_op op, int val)
+  static inline int bl_set(BL_oval module, BL_op op, int val)
   {
     BL_ob oo = {_SET,op,0,NULL};
     return module(&oo,val);            // post to test module via upward gear
@@ -172,7 +179,7 @@
 // - usage: bl_ping(module,"hello!")
 //==============================================================================
 
-  static inline BL_txt bl_ping(BL_fct module, BL_txt msg)
+  static inline BL_txt bl_ping(BL_oval module, BL_txt msg)
   {
     BL_ob oo = {_SYS,PING_,0,msg};
     module(&oo,0);                     // send [SYS:PING <msg>] to MODULE
@@ -196,8 +203,8 @@
 // -        bl_tock(module,id,cnt)     // post [SYS:TOCK @id,cnt] to a module
 //==============================================================================
 
-  int bl_tick(BL_fct module, int id, int cnt);  // ticking a module
-  int bl_tock(BL_fct module, int id, int cnt);  // tocking a module
+  int bl_tick(BL_oval module, int id, int cnt);  // ticking a module
+  int bl_tock(BL_oval module, int id, int cnt);  // tocking a module
 
 //==============================================================================
 // bl_hello (syntactic sugar to set verbose level and print a hello message)
@@ -226,28 +233,38 @@
 // - usage: bl_test(module)            // controlled by bl_run()
 //==============================================================================
 
-  int bl_test(BL_fct module);
+  int bl_test(BL_oval module);
 
 //==============================================================================
 // bl_init (syntactic sugar to initialize a given module)
 // - usage: bl_init(module,cb)  // post [SYS:INIT <cb>] to a module
 //==============================================================================
 
-  int bl_init(BL_fct module,BL_fct cb);
+  int bl_init(BL_oval module,BL_oval cb);
+
+//==============================================================================
+// bl_cfg (syntactic sugar to config a given module)
+// - usage: bl_cfg(module,mask)  // (<module>) <- [SYS:CFG mask]
+//==============================================================================
+
+  static inline int bl_cfg(BL_oval module, BL_word mask)
+  {
+    return bl_msg(module,_SYS,CFG_, 0,NULL,(int)mask);
+  }
 
 //==============================================================================
 // run app with given tick/tock periods and provided when-callback
 // - usage: bl_run(app,10,100,when)   // run app with 10/1000 tick/tock periods
 //==============================================================================
 
-  void bl_run(BL_fct app, int tick_ms, int tock_ms, BL_fct when);
+  void bl_run(BL_oval app, int tick_ms, int tock_ms, BL_oval when);
 
 //==============================================================================
 // syntactic sugar: run app where app()and when() function are the same
 // - usage: bl_engine(app,10,100)   // run app with 10/1000 tick/tock periods
 //==============================================================================
 
-  static inline void bl_engine(BL_fct app, int tick_ms, int tock_ms)
+  static inline void bl_engine(BL_oval app, int tick_ms, int tock_ms)
   {
     bl_run(app, tick_ms,tock_ms, app); // callbacks are the same
   }

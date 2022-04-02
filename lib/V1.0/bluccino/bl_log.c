@@ -16,7 +16,7 @@
 #endif
 
   static BL_txt color = "";            // text color for time header
-  static int debug = 1;                // debug level
+  static int debug = 4;                // debug level
 
 //==============================================================================
 // RTT log driver

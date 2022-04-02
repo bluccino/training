@@ -369,7 +369,7 @@ K_TIMER_DEFINE(reset_counter_timer, reset_counter_timer_handler, NULL);
 
   int bl_core(BL_ob *o, int val)
   {
-    static BL_fct out = NULL;
+    static BL_oval out = NULL;
 
     switch (bl_id(o))
     {

@@ -67,7 +67,7 @@
   #ifndef BL_OP_TEXT
 
     #define BL_OP_TEXT {"VOID","INIT","OUT","WHEN","USE","TOC","READY","BUSY", \
-                        "PING","PONG","PRV","ATT","DUE","SET","LET", \
+                        "CFG","PING","PONG","PRV","ATT","DUE","SET","LET", \
                         "GET","STS","TRIG","TICK","TOCK","CMD","VAL","LEVEL", \
                         "ONOFF","COUNT","TOGGLE","INC","DEC","PAY", "ADV", \
                         "BEACON","SEND","PRESS","RELEASE","CLICK","HOLD","MS", \
@@ -81,39 +81,37 @@
               WHEN_,                   // provide module handling callback
               USE_,                    // can module be used
               TOC_,                    // tic/toc object
-
               READY_,                  // ready state
               BUSY_,                   // busy state
+
+							CFG_,                    // configure
               PING_,                   // ping a module
               PONG_,                   // pong response
               PRV_,                    // provisioning state changed
               ATT_,                    // attention state change
               DUE_,                    // timer is due
-
               SET_,                    // acknowledged set operation
               LET_,                    // unacknowledged
+
               GET_,                    // ask for status
               STS_,                    // send status
-
               TRIG_,                   // generic trigger signal
               TICK_,                   // timer ticks
               TOCK_,                   // timer tocks
               CMD_,                    // generic command
               VAL_,                    // generic value
               LEVEL_,                  // generic level
+
               ONOFF_,                  // generic onoff command
               COUNT_,                  // counter
               TOGGLE_,                 // toggle state
-
               INC_,                    // increment
               DEC_,                    // decrement
-
               PAY_,                    // generic payload
               ADV_,                    // LLL advertising reports
+
               BEACON_,                 // LLL beacon packet reports
-
               SEND_,                   // send a message
-
               PRESS_,                  // button press
               RELEASE_,                // button release
               CLICK_,                  // button click
@@ -142,6 +140,5 @@
     // define "OVAL" function interface and callback type
 
   typedef int (*BL_oval)(BL_ob *o, int value);
-  typedef BL_oval BL_fct;              // alias to be compatible to legacy stuff
 
 #endif // __BL_SYMB_H__

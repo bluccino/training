@@ -120,7 +120,7 @@
 
   int bl_onebut(BL_ob *o, int val)     // BUTTON core module interface
   {
-    static BL_fct O = NULL;            // to store output callback
+    static BL_oval O = NULL;            // to store output callback
 
     switch (bl_id(o))
     {

@@ -659,7 +659,7 @@ static void bt_ready(int err)
 
   int bl_core(BL_ob *o, int val)
   {
-    static BL_fct out = NULL;
+    static BL_oval out = NULL;
 
     switch (BL_ID(o->cl,o->op))
     {

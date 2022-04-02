@@ -69,8 +69,8 @@
 // notification and driver callbacks
 //==============================================================================
 
-  static BL_fct out = NULL;            // <out> callback
-  static BL_fct test = NULL;           // test callback
+  static BL_oval out = NULL;            // <out> callback
+  static BL_oval test = NULL;           // test callback
 
 //==============================================================================
 // us/ms clock
@@ -168,7 +168,7 @@
 // - any hashed opcode has to be de-hashed (clear hash bit of opcode)
 //==============================================================================
 
-  __weak int bl_out(BL_ob *o, int val, BL_fct call)
+  __weak int bl_out(BL_ob *o, int val, BL_oval call)
   {
     if (call)                          // is an app callback provided?
     {
@@ -283,9 +283,20 @@
 // - usage: bl_msg(module,cl,op,id,data,val)
 //==============================================================================
 
-  int bl_msg(BL_fct module, BL_cl cl, BL_op op, int id, void* data, int val)
+  int bl_msg(BL_oval module, BL_cl cl, BL_op op, int id, void* data, int val)
   {
     BL_ob oo = {cl,op,id,data};
+    return module(&oo,val);            // post message to module interface
+  }
+
+//==============================================================================
+// post general augmented message [CL:OP @id,<data>,val] to module
+// - usage: _bl_msg(module,cl,op,id,data,val)
+//==============================================================================
+
+  int _bl_msg(BL_oval module, BL_cl cl, BL_op op, int id, void* data, int val)
+  {
+    BL_ob oo = {BL_AUG(cl),op,id,data};// augmented class tag
     return module(&oo,val);            // post message to module interface
   }
 
@@ -294,7 +305,7 @@
 // - usage: bl_sys(module,op,cb,val)   // post [SYS:op @0,<cb>,val] to module
 //==============================================================================
 
-  int bl_sys(BL_fct module, BL_op op, BL_fct cb, int val)
+  int bl_sys(BL_oval module, BL_op op, BL_oval cb, int val)
   {
     BL_ob oo = {_SYS,op,0,cb};
     return module(&oo,val);            // post message to module interface
@@ -305,7 +316,7 @@
 // - usage: bl_emit(o,cl,op,val,out)  // post [cl:op o->id,val] to <out>
 //==============================================================================
 
-  int bl_emit(BL_ob *o, BL_cl cl, BL_op op, int val, BL_fct out)
+  int bl_emit(BL_ob *o, BL_cl cl, BL_op op, int val, BL_oval out)
   {
     BL_ob oo = {cl,op,o->id,o->data};
     return bl_out(&oo,val,out);
@@ -316,7 +327,7 @@
 // - usage: bl_post(module,opcode,id,val)  // class=_SYS, data=NULL
 //==============================================================================
 
-  int bl_post(BL_fct module, BL_op op, int id, int val)
+  int bl_post(BL_oval module, BL_op op, int id, int val)
   {
     BL_ob oo = {_SYS,op,id,NULL};
     return module(&oo,val);            // post message to module interface
@@ -327,7 +338,7 @@
 // - usage: bl_fwd(module,cl,o,val)    // only interface class to be changed
 //==============================================================================
 
-  int bl_fwd(BL_fct module, BL_cl cl, BL_ob *o, int val)
+  int bl_fwd(BL_oval module, BL_cl cl, BL_ob *o, int val)
   {
     BL_ob oo = {cl,o->op,o->id,o->data};
     return module(&oo,val);            // forward message to module interface
@@ -338,7 +349,7 @@
 // - usage: bl_when(module,cb)         // class=_SYS, val=0, data=NULL
 //==============================================================================
 
-  int bl_when(BL_fct module, BL_fct cb)
+  int bl_when(BL_oval module, BL_oval cb)
   {
     BL_ob oo = {_SYS,WHEN_,0,cb};
     return module(&oo,0);              // post [SYS:WHEN <cb>] to module
@@ -349,7 +360,7 @@
 // - usage: bl_test(module)            // controlled by bl_run()
 //==============================================================================
 
-  int bl_test(BL_fct module)
+  int bl_test(BL_oval module)
   {
     test = module;
     return 0;                          // OK
@@ -361,7 +372,7 @@
 //         bl_init(bl_gear,when_gear,0)     // init submodule
 //==============================================================================
 
-  int bl_init(BL_fct module,BL_fct cb)
+  int bl_init(BL_oval module,BL_oval cb)
   {
     return bl_sys(module,INIT_,cb,0);     // init module
   }
@@ -371,7 +382,7 @@
 // - usage: bl_tick(module,count)           // ticking a given module
 //==============================================================================
 
-  int bl_tick(BL_fct module, int id, int cnt)
+  int bl_tick(BL_oval module, int id, int cnt)
   {
     return bl_post(module,TICK_,id,cnt);  // post [SYS:TICK cnt] message
   }
@@ -381,7 +392,7 @@
 // - usage: bl_tock(module,count)           // tocking a given module
 //==============================================================================
 
-  int bl_tock(BL_fct module, int id, int cnt)
+  int bl_tock(BL_oval module, int id, int cnt)
   {
     return bl_post(module,TOCK_,id,cnt);  // post [SYS:TOCK cnt] message
   }
@@ -391,7 +402,7 @@
 // - usage: bl_run(app,10,100,when)   // run app with 10/1000 tick/tock periods
 //==============================================================================
 
-  void bl_run(BL_fct app, int tick_ms, int tock_ms, BL_fct when)
+  void bl_run(BL_oval app, int tick_ms, int tock_ms, BL_oval when)
   {
     BL_pace tick_pace = {tick_ms,0};
     BL_pace tock_pace = {tock_ms,0};

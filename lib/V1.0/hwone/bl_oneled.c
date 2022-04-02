@@ -168,7 +168,7 @@
 
   int bl_hwled(BL_ob *o, int val)        // HW core module interface
   {
-    static BL_fct output = NULL;       // to store output callback
+    static BL_oval output = NULL;       // to store output callback
 
     switch (bl_id(o))
     {

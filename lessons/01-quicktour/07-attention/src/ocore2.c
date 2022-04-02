@@ -741,7 +741,7 @@ void main(void)
 
   int bl_core(BL_ob *o, int val)         // public interface
   {
-    static BL_fct output = NULL;
+    static BL_oval output = NULL;
 
     switch (bl_id(o))
     {

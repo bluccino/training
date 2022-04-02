@@ -6,6 +6,12 @@
 // Copyright © 2022 Bluccino. All rights reserved.
 //==============================================================================
 //
+// Module Hierarchie
+//
+// +- BL_HW
+//    +- BL_HWLED
+//    +- BL_HWBUT
+//
 // interaction of BL_HW (HW core) with BL_HWBUT, BL_HWLED (drivers)
 // (H) := (BL_HW); (B) := (BL_HWBUT); (L) := (BL_HWLED)
 //
@@ -37,63 +43,215 @@
 //                  +--------------------+
 //
 //==============================================================================
+//
+// Message Flow Diagram: Initializing
+//
+//     BL_DOWN         BL_HW        BL_HWBUT       BL_HWLED         BL_UP
+//       (v)            (#)            (B)            (L)            (^)
+//        |              |              |              |              |
+//        |  [SYS:INIT]  |              |              |              |
+//        o------------->|  [SYS:INIT]  |              |              |
+//        |              o------------->|  [SYS:INIT]  |              |
+//        |              o---------------------------->|              |
+//        |              |              |              |              |
+//
+// Message Flow Diagram: Ticking
+//
+//     BL_DOWN         BL_HW        BL_HWBUT       BL_HWLED         BL_UP
+//       (v)            (#)            (B)            (L)            (^)
+//        |              |              |              |              |
+//        |  [SYS:TICK]  |              |              |              |
+//        o------------->|  [SYS:TICK]  |              |              |
+//        |              o------------->|  [SYS:TICK]  |              |
+//        |              o---------------------------->|              |
+//        |              |              |              |              |
+//
+// Message Flow Diagram: Tocking
+//
+//     BL_DOWN         BL_HW        BL_HWBUT       BL_HWLED         BL_UP
+//       (v)            (#)            (B)            (L)            (^)
+//        |              |              |              |              |
+//        |  [SYS:TOCK]  |              |              |              |
+//        o------------->|  [SYS:TOCK]  |              |              |
+//        |              o------------->|  [SYS:TOCK]  |              |
+//        |              o---------------------------->|              |
+//        |              |              |              |              |
+//
+// Message Flow Diagram: Setting LED ON/OFF State
+//
+//     BL_DOWN         BL_HW        BL_HWBUT       BL_HWLED         BL_UP
+//       (v)            (#)            (B)            (L)            (^)
+//        |              |              |              |              |
+//        |  [LED:SET]   |              |              |              |
+//        o------------->|              |              |              |
+//        |   @id,onoff  |              |  [SYS:TOCK]  |              |
+//        |              o---------------------------->|              |
+//        |              |              |   @id,onoff  |              |
+//
+// Message Flow Diagram: Button Click (Button Release within Grace Time)
+//
+//   BL_DOWN           BL_HW          BL_HWBUT         BL_HWLED           BL_UP
+//     (v)              (#)              (B)              (L)              (^)
+//      |                |                |                |                |
+//      |                |        +-------v-------+        |                |
+//      |                |        | press button  |        |                |
+//      |                |        | time[@id] = 0 |        |                |
+//      |                |        +-------v-------+        |                |
+//      |                | [BUTTON:PRESS] |                |                |
+//      |                |<---------------o                |                |
+//      |                |      @id,0     |                | [BUTTON:PRESS] |
+//      |                o------------------------------------------------->|
+//      |                | [BUTTON:CLICK] |                |     @id,0      |
+//      |                |<---------------o                |                |
+//      |                |      @id,0     |                | [BUTTON:CLICK] |
+//      |                o------------------------------------------------->|
+//      |                |                |                |     @id,0      |
+//      |                |        +-------v--------+       |                |
+//      |                |        | onoff = !onoff |       |                |
+//      |                |        | (toggle switch)|       |                |
+//      |                |        +-------v--------+       |                |
+//      |                |                |                |                |
+//      :                :                :                :                :
+//      |                |                |                |                |
+//      |                |                - now < grace    |                |
+//      |                |        +-------v--------+       |                |
+//      |                |        | release button |       |                |
+//      |                |        |ms=now-time[@id]|       |                |
+//      |                |        +-------v--------+       |                |
+//      |                |[BUTTON:RELEASE]|                |                |
+//      |                |<---------------o                |                |
+//      |                |      @id,ms    |                |[BUTTON:RELEASE]|
+//      |                o------------------------------------------------->|
+//      |                |                |                |                |
+//      |                |       +--------v--------+       |                |
+//      |                |       | ms < grace time |       |                |
+//      |                |       | we had 1 click  |       |                |
+//      |                |       |     cnt = 1     |       |                |
+//      |                |       +--------v--------+       |                |
+//      |                | [BUTTON:CLICK] |                |     @id,ms     |
+//      |                |<---------------o                |                |
+//      |                |     @id,cnt    |                | [BUTTON:CLICK] |
+//      |                o------------------------------------------------->|
+//      |                |                |                |    @id,cnt     |
+//      |                |                |                |                |
+//
+// Message Flow Diagram: Button Hold (Button Release Exceeds Grace Time)
+//
+//   BL_DOWN           BL_HW          BL_HWBUT         BL_HWLED           BL_UP
+//     (v)              (#)              (B)              (L)              (^)
+//      |                |                |                |                |
+//      |                |        +-------v-------+        |                |
+//      |                |        | press button  |        |                |
+//      |                |        | time[@id] = 0 |        |                |
+//      |                |        +-------v-------+        |                |
+//      |                | [BUTTON:PRESS] |                |                |
+//      |                |<---------------o                |                |
+//      |                |      @id,0     |                | [BUTTON:PRESS] |
+//      |                o------------------------------------------------->|
+//      |                | [BUTTON:CLICK] |                |     @id,0      |
+//      |                |<---------------o                |                |
+//      |                |      @id,0     |                | [BUTTON:CLICK] |
+//      |                o------------------------------------------------->|
+//      |                |                |                |     @id,0      |
+//      |                |        +-------v--------+       |                |
+//      |                |        | onoff = !onoff |       |                |
+//      |                |        | (toggle switch)|       |                |
+//      |                |        +-------v--------+       |                |
+//      |                |                |                |                |
+//      :                :                :                :                :
+//      |                |                |                |                |
+//      |                |                - now == grace   |                |
+//      |                | [BUTTON:HOLD]  |                |                |
+//      |                |<---------------o                |                |
+//      |                |     @id,0      |                | [BUTTON:HOLD]  |
+//      |                o------------------------------------------------->|
+//      |                |                |                |     @id,0      |
+//      |                |        +-------v--------+       |                |
+//      |                |        | release button |       |                |
+//      |                |        |ms=now-time[@id]|       |                |
+//      |                |        +-------v--------+       |                |
+//      |                |                |                |                |
+//      |                |[BUTTON:RELEASE]|                |                |
+//      |                |<---------------o                |                |
+//      |                |      @id,ms    |                |[BUTTON:RELEASE]|
+//      |                o------------------------------------------------->|
+//      |                |                |                |                |
+//      |                | [BUTTON:HOLD]  |                |     @id,ms     |
+//      |                |<---------------o                |                |
+//      |                |     @id,ms     |                | [BUTTON:HOLD]  |
+//      |                o------------------------------------------------->|
+//      |                |                |                |     @id,0      |
+//      |                |                |                |                |
+//
+//==============================================================================
 
   #define init  init_button
   #include "bl_hwbut.c"                // button core driver
-
+  #undef init
   #undef LOG
   #undef LOGO
-  #undef LOG0
-  #undef init
 
   #define init  init_led
   #include "bl_hwled.c"                // LED core driver
+  #undef init
+  #undef LOG
+  #undef LOGO
+
+//==============================================================================
+// CORE level logging shorthands
+//==============================================================================
+
+  #define LOG                     LOG_CORE
+  #define LOGO(lvl,col,o,val)     LOGO_CORE(lvl,col"bl_hw:",o,val)
 
 //==============================================================================
 // public module interface
 //==============================================================================
 //
-// (B) := (BL_HWBUT);  (L) := (BL_HWLED)
+// (B) := (BL_HWBUT);  (L) := (BL_HWLED);  (v) := (BL_DOWN);  (^) := (BL_UP)
+//
 //                  +--------------------+
 //                  |       BL_HW        |
 //                  +--------------------+
-//                  |        SYS:        | SYS: interface
+//                  |        SYS:        | SYS input interface
 // (v)->     INIT ->|       <out>        | init module, store <out> callback
 // (v)->     TICK ->|       @id,cnt      | tick the module
+// (!)->      CFG ->|        mask        | config module
+//                  |        SYS:        | SYS output interface
+// (L,B)<-   INIT <-|       <out>        | init module, store <out> callback
+// (L,B)->   TICK <-|       @id,cnt      | tick the module
+// (B)<-      CFG <-|        mask        | config module
 //                  +--------------------+
 //                  |        LED:        | LED: input interface
 // (v)->      SET ->|      @id,onoff     | set LED @id on/off (i=0..4)
 // (v)->   TOGGLE ->|                    | toggle LED @id (i=0..4)
-//                  +--------------------+
-//                  |       BUTTON:      | BUTTON: output interface
-// (^)<-    PRESS <-|        @id,1       | button @id pressed (rising edge)
-// (^)<-  RELEASE <-|        @id,0       | button @id released (falling edge)
-// (^)<-    CLICK <-|       @id,cnt      | button @id clicked (cnt: nmb. clicks)
-// (^)<-     HOLD <-|       @id,time     | button @id held (time: hold time)
-//                  +--------------------+
-//                  |       SWITCH:      | SWITCH: output interface
-// (^)<-      STS <-|      @id,onoff     | on/off status update of switch @id
-//                  +====================+
 //                  |        LED:        | LED: output interface
 // (L)<-      SET <-|      @id,onoff     | set LED @id on/off (i=0..4)
 // (L)<-   TOGGLE <-|                    | toggle LED @id (i=0..4)
 //                  +--------------------+
-//                  |       BUTTON:      | BUTTON: input interface
+//                  |       BUTTON:      | BUTTON output interface
+// (^)<-    PRESS <-|        @id,0       | button @id pressed (rising edge)
+// (^)<-  RELEASE <-|        @id,ms      | button release after elapsed ms-time
+// (^)<-    CLICK <-|       @id,cnt      | button @id clicked (cnt: nmb. clicks)
+// (^)<-     HOLD <-|       @id,time     | button @id held (time: hold time)
+//                  |       BUTTON:      | BUTTON input interface
 // (B)->    PRESS ->|        @id,1       | button @id pressed (rising edge)
-// (B)->  RELEASE ->|        @id,0       | button @id released (falling edge)
+// (B)->  RELEASE ->|        @id,ms      | button release after elapsed ms-time
 // (B)->    CLICK ->|       @id,cnt      | button @id clicked (cnt: nmb. clicks)
 // (B)->     HOLD ->|       @id,time     | button @id held (time: hold time)
 //                  +--------------------+
+//                  |       SWITCH:      | SWITCH: output interface
+// (^)<-      STS <-|       @id,sts      | on/off status update of switch @id
 //                  |       SWITCH:      | SWITCH: input interface
-// (B)->      STS ->|      @id,onoff     | on/off status update of switch @id
+// (B)->      STS ->|       @id,sts      | on/off status update of switch @id
 //                  +--------------------+
 //
 //==============================================================================
 
   int bl_hw(BL_ob *o, int val)         // HW core module interface
   {
-    static BL_fct out = NULL;          // to store <out> callback
-    static BL_fct led = bl_hwled;      // <led> callback to go to BL_HWLED
+    static BL_oval out = bl_up;        // <out> messages go to BL_UP by default
+    static BL_oval led = bl_hwled;     // <led> callback to go to BL_HWLED
 
     switch (bl_id(o))
     {
@@ -109,6 +267,9 @@
 
       case BL_ID(_SYS,TICK_):          // [SYS:TICK @id,cnt]
         return bl_hwbut(o,val);        // tick BL_HWBUT module
+
+      case BL_ID(_SYS,CFG_):           // [SYS:CFG flags]
+        return bl_hwbut(o,val);        // config BL_HWBUT module
 
       case BL_ID(_LED,SET_):           // [LED:set @id,val]
       case BL_ID(_LED,TOGGLE_):        // [LED:toggle @id]

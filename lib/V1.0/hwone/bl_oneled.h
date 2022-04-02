@@ -43,7 +43,7 @@
 // - usage: bl_hwled_init(cb)
 //==============================================================================
 
-  static inline int bl_hwled_init(BL_fct cb)
+  static inline int bl_hwled_init(BL_oval cb)
   {
     return bl_init(bl_hwled,cb);
   }
