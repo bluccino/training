@@ -11,16 +11,17 @@ find_package(Zephyr REQUIRED HINTS $ENV{ZEPHYR_BASE})
 
   project(02-swicli)
 
-  set (LIB ../../../lib/V0.6)
+  set (LIB ../../../lib/V1.0)
   set (BLU ${LIB}/bluccino)
   set (HWC ${LIB}/hwcore)
+  set (WLC ${LIB}/wlcore/ocore)
   set (SRC src)
 
-  include_directories(${SRC} ${BLU} ${HWC})
+  include_directories(${SRC} ${BLU} ${HWC} ${WLC})
 
   target_sources(app PRIVATE
                ${SRC}/main.c
-               ${SRC}/ocore5.c
+               ${WLC}/bl_wl.c
                ${HWC}/bl_hw.c
                ${BLU}/bluccino.c
               )

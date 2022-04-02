@@ -226,33 +226,6 @@
   }
 
 //==============================================================================
-// dummy interface for core module public interface (default/__weak)
-//==============================================================================
-
-  __weak int bl_hwbut(BL_ob *o, int val) { return -1; }
-  __weak int bl_hwled(BL_ob *o, int val) { return -1; }
-
-  __weak int bl_core(BL_ob *o, int val)
-  {
-    switch (o->cl)
-    {
-      case _SYS:
-        bl_hwbut(o,val);
-        bl_hwled(o,val);
-        return 0;                      // OK
-
-      case _LED:
-        return bl_hwled(o,val);
-
-      case _BUTTON:
-        return bl_hwbut(o,val);
-
-      default:
-        return -1;                     // not supported by default
-    }
-  }
-
-//==============================================================================
 // message downward posting to lower level / driver layer (default/__weak)
 // - bl_down() is defined as weak and can be overloaded
 // - by default all messages posted to BL_DOWN are forwarded to BL_CORE

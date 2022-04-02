@@ -3413,15 +3413,15 @@ struct bt_mesh_model s0_models[] = {
 // public module interface
 //==============================================================================
 //
-// (C) := (BL_CORE)
+// (W) := (BL_WL)
 //                  +--------------------+
 //                  |     BL_DEVCOMP     |
 //                  +--------------------+
 //                  |        SYS:        | SYS: interface
-// (C)->     INIT ->|       <out>        | init module, store <out> callback
+// (W)->     INIT ->|       <out>        | init module, store <out> callback
 //                  +--------------------+
 //                  |       GOOSRV:      | GOOSRV: interface (generic onoff srv)
-// (C)<-      STS <-|   @id,<data>,val   | status [GOOSRV:STS @id,<data>,val]
+// (W)<-      STS <-|   @id,<data>,val   | status [GOOSRV:STS @id,<data>,val]
 //                  +--------------------+
 //
 //==============================================================================

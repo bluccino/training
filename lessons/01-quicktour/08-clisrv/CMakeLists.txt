@@ -18,9 +18,8 @@
   set (SRC src)
 
   set (MAIN ${SRC})
-  set (CORE ${SRC}/core)
 
-  include_directories(${SRC} ${BLU} ${HWC} ${MAIN} ${CORE})
+  include_directories(${SRC} ${BLU} ${HWC} ${MAIN})
 
 #===============================================================================
 # source files

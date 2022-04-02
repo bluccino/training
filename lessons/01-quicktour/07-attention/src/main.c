@@ -31,6 +31,7 @@
 
       case BL_ID(_SET,ATT_):
         attention = val;               // store a copy updated attention state
+				bl_led(0,val);                 // switch status LED on/off
         return 0;
 
       case BL_ID(_SET,PRV_):

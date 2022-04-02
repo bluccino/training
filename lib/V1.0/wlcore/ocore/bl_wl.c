@@ -1,64 +1,22 @@
 //==============================================================================
-// ocore5.c - onoff-app based mesh/HW core, version 4                 //@@@1.1
-//==============================================================================
-//
-// OCORE Versions 1 (ocore1)
-//   - filename and heading changed                                     @@@1.1
-//   - #include "bccore.h" added                                        @@@1.2
-//   - rename main() to bl_core_init()                                  @@@1.3
-//   - add a dummy bl_core_loop() function                              @@@1.4
-//
-// OCORE Versions 2 (ocore2)
-//   - include "bluccino.h"                                             @@@2.1
-//   - provide bl_core_set() function to change state                   @@@2.2
-//
-// OCORE Versions 3 (ocore3)
-//   - add link_open in provisioning table                              @@@3.1
-//   - add link_close in provisioning table                             @@@3.2
-//   - provisioning link open/close callbacks                           @@@3.3
-//   - notify blapi.c in prov_complete                                  @@@3.4
-//   - notify blapi.c in prov_reset                                     @@@3.5
-//   - include <stdlib.h>                                               @@@3.6
-//   - use bl_log() for logging                                         @@@3.7
-//   - #include "bllog.h" added                                         @@@3.8
-//
-// OCORE Versions 4 (ocore4)
-//   - lower BUTTON_DEBOUNCE_DELAY_MS from 250 to 120ms                 @@@4.1
-//	 - lower sw.button_timer interval from 1.0 to 0.6s                  @@@4.2
-//   - define button_work, provide code for button_worker               @@@4.3
-//   - in button_timer submit a 'button_work'                           @@@4.4
-//   - assign (init) button_work with button_worker                     @@@4.5
-//   - dont directly set LED                                            @@@4.6
-//   - provide basis function to set LED                                @@@4.7
-//   - change name 'onoff_state' to 'p'                                 @@@4.8
-//   - invoke receive callback                                          @@@4.9
-//
+// bl_wl.c - onoff-app based Bluetooth mesh wireless core
 //==============================================================================
 
-	#include <sys/printk.h>
-	#include <settings/settings.h>
-	#include <sys/byteorder.h>
-	#include <device.h>
-	#include <drivers/gpio.h>
-	#include <bluetooth/bluetooth.h>
-	#include <bluetooth/conn.h>
-	#include <bluetooth/l2cap.h>
-	#include <bluetooth/hci.h>
-	#include <bluetooth/mesh.h>
-	#include <stdio.h>
-	#include <stdlib.h>
+//include <sys/printk.h>
+  #include <settings/settings.h>
+  #include <sys/byteorder.h>
+  #include <bluetooth/bluetooth.h>
+  #include <bluetooth/conn.h>
+  #include <bluetooth/l2cap.h>
+  #include <bluetooth/hci.h>
+  #include <bluetooth/mesh.h>
+  #include <stdio.h>
+  #include <stdlib.h>
 
-	#include "bluccino.h"
-	#include "bl_hw.h"
-/*
-  #define _PRESS_    BL_HASH(PRESS_)   // hashed symbol #PRESS
-  #define _RELEASE_  BL_HASH(RELEASE_) // hashed symbol #RELEASE
-  #define _CLICK_    BL_HASH(CLICK_)   // hashed symbol #CLICK
-  #define _HOLD_     BL_HASH(HOLD_)    // hashed symbol #HOLD
-*/
-  #define _STS_      BL_HASH(STS_)     // hashed symbol #STS
-  #define _PRV_      BL_HASH(PRV_)     // hashed symbol #PRV
-  #define _ATT_      BL_HASH(ATT_)     // hashed symbol #ATT
+  #include "bluccino.h"
+  #include "bl_gpio.h"                 // GPIO shorthands
+  #include "bl_hw.h"                   // hardware core
+  #include "bl_wl.h"                   // wireless core
 
 //==============================================================================
 // CORE level logging shorthands
@@ -423,17 +381,15 @@ static uint8_t dev_uuid[16] = { 0xdd, 0xdd };
 // provisioning link open/close callbacks                             //@@@3.3
 //==============================================================================
 
-static void link_open(bt_mesh_prov_bearer_t bearer)
-{
-	BL_ob oo = {_SET, _ATT_, 0, NULL};
-	bl_core(&oo,1);
-}
+  static void link_open(bt_mesh_prov_bearer_t bearer)
+  {
+    _bl_msg(bl_wl,_SET,ATT_, 0,NULL,1);
+  }
 
-static void link_close(bt_mesh_prov_bearer_t bearer)
-{
-	BL_ob oo = {_SET,_ATT_, 0, NULL};
-	bl_core(&oo,0);
-}
+  static void link_close(bt_mesh_prov_bearer_t bearer)
+  {
+    _bl_msg(bl_wl,_SET,ATT_, 0,NULL,0);
+  }
 
 //==============================================================================
 // provisioning table
@@ -611,79 +567,61 @@ static void bt_ready(int err)
 // public module interface
 //==============================================================================
 //
-//  (H) := (BL_HW)
-//                   +--------------------+
-//                   |      BL_CORE       |
-//                   +--------------------+
-//                   |        SYS:        |  SYS interface
-//  (v)->     INIT ->|       <out>        |  init module, store <out> callback
-//  (v)->     TICK ->|      @id,cnt       |  tick module
-//  (v)->     TOCK ->|      @id,cnt       |  tock module
-//                   +--------------------+
-//                   |       BUTTON:      |
-//  (H)->    PRESS ->|       @id,1        |  button @id press (rising edge)
-//  (H)->  RELEASE ->|       @id,0        |  button @id release (falling edge)
-//  (H)->    CLICK ->|       @id,cnt      |  button @id click (number clicks)
-//  (H)->     HOLD ->|       @id,time     |  button @id hold (hold time)
-//  (^)<-    PRESS <-|       @id,1        |  button @id press (rising edge)
-//  (^)<-  RELEASE <-|       @id,0        |  button @id release (falling edge)
-//  (^)<-    CLICK <-|       @id,cnt      |  button @id click (number clicks)
-//  (^)<-     HOLD <-|       @id,time     |  button @id hold (hold time)
-//                   +--------------------+
-//                   |      SWITCH:       |  SWITCH interface
-//  (H)->      STS ->|     @id,onoff      |  provide switch status for output
-//  (^)<-      STS <-|     @id,onoff      |  output switch status
-//                   +--------------------+
-//                   |        LED:        |  LED interface
-//  (v)->      SET ->|     @id,onoff      |  set LED on/off
-//  (v)->   TOGGLE ->|        @id         |  toggle LED
-//                   +--------------------+
-//                   |        SET:        |  SET interface
-//  (#)->     #PRV ->|       enable       |  node provisioned
-//  (#)->     #ATT ->|       enable       |  attention mode enable/disable
-//  (^)<-      PRV <-|       enable       |  node provisioned
-//  (^)<-      ATT <-|       enable       |  attention mode enable/disable
-//                   +--------------------+
-//                   |      GOOSRV:       |  GOOSRV interface
-//  (#)->      STS ->|     @id,onoff      |  provide generic on/off status
-//  (^)<-      SET <-|     @id,onoff      |  output generic on/off status
-//                   +--------------------+
-//                   |      GOOCLI:       |  GOOSRV interface
-//  (#)->      SET ->|     @id,onoff      |  provide ack'ed generic on/off SET
-//  (#)->      LET ->|     @id,onoff      |  provide unack'ed generic on/off SET
-//  (^)<-      SET <-|     @id,onoff      |  output ack'ed generic on/off SET
-//  (^)<-      LET <-|     @id,onoff      |  output unack'ed generic on/off SET
-//                   +--------------------+
+//  (H) := (BL_HW);  (v) := (BL_DOWN);  (^) := (BL_UP)
+//
+//                  +--------------------+
+//                  |        BL_WL       |  wireless core module
+//                  +--------------------+
+//                  |        SYS:        |  SYS interface
+// (v)->     INIT ->|       <out>        |  init module, store <out> callback
+//                  +--------------------+
+//                  |        SET:        |  SET interface
+// (^)<-      PRV <-|       enable       |  node provisioned
+// (^)<-      ATT <-|       enable       |  attention mode enable/disable
+//                  +--------------------+
+//                  |      GOOSRV:       |  GOOSRV interface
+// (^)<-      STS <-| @id,onoff,<BL_goo> |  output generic on/off status
+//                  +--------------------+
+//                  |      GOOCLI:       |  GOOSRV interface
+// (v)->      SET ->| @id,<BL_goo>,onoff |  punlish ack'ed generic on/off SET
+// (v)->      LET ->| @id,<BL_goo>,onoff |  publish unack'ed generic on/off SET
+// (v)->      GET ->|        @id         |  request GOO server status
+// (^)<-      STS <-|  @id,<BL_goo>,sts  |  notify  GOO server status
+//                  +====================+
+//                  |       #SET:        |  #SET private interface
+// (#)->      PRV ->|       enable       |  node provisioned
+// (#)->      ATT ->|       enable       |  attention mode enable/disable
+//                  +--------------------+
+//                  |     #GOOSRV:       |  #GOOSRV private interface
+// (#)->      STS ->|  @id,<BL_goo>,sts  |  provide GOO server status
+//                  +--------------------+
 //
 //==============================================================================
 
-  int bl_core(BL_ob *o, int val)
+  int bl_wl(BL_ob *o, int val)         // public interface
   {
-    static BL_oval out = NULL;
+    static BL_oval out = bl_core;      // out goes to BL_CORE by default
 
-    switch (BL_ID(o->cl,o->op))
+    switch (bl_id(o))                  // dispatch message ID
     {
-      case BL_ID(_SYS,INIT_):        // [SYS:INIT <out>]
-        out = o->data;               // store output callback
-        return init(o,val);          // forward to init()
+      case BL_ID(_SYS,INIT_):          // [SYS:INIT <out>]
+        out = o->data;                 // store output callback
+        return init(o,val);            // forward to init()
 
-      case BL_ID(_SYS,TICK_):        // [SYS:TICK @0,cnt]
-      case BL_ID(_SYS,TOCK_):        // [SYS:TICK @0,cnt]
-        return bl_hw(o,val);         // tick/tock HW core
-
-      case BL_ID(_SET,_PRV_):        // [SET:PRV val]  (provision)
-      case BL_ID(_SET,_ATT_):        // [SET:ATT val]  (attention)
+      case _BL_ID(_SET,PRV_):          // [#SET:PRV val]  (provision)
+      case _BL_ID(_SET,ATT_):          // [#SET:ATT val]  (attention)
         LOGO(3,"",o,val);
-        return bl_out(o,val,out);    // output to subscriber
+        return bl_out(o,val,out);      // output to subscriber
 
-      case BL_ID(_GOOCLI,LET_):      // [GOOCLI:LET] publish unack'ed GOO msg
-      case BL_ID(_GOOCLI,SET_):      // [GOOCLI:SET] publish ack'ed GOO msg
-        return pub(o,val);           // publish [GOOCLI:LET] or [GOOCLI:SET] msg
+      case BL_ID(_GOOCLI,LET_):        // pub [GOOCLI:LET @id,<BL_goo>,onoff]
+      case BL_ID(_GOOCLI,SET_):        // pub [GOOCLI:SET @id,<BL_goo>,onoff]
+      case BL_ID(_GOOCLI,GET_):        // pub [GOOCLI:STS @id]
+        return pub(o,val);             // pub [GOOCLI:LET/SET/GET] message
 
-      case BL_ID(_GOOSRV,_STS_):     // [GOOSRV:STS @id,sts] GOO status ->upward
-        return bl_out(o,val,out);    // publish [GOOSRV:STS] upward
+      case _BL_ID(_GOOSRV,STS_):       // [#GOOSRV:STS @id,sts] GOO status
+        return bl_out(o,val,out);      // publish [GOOSRV:STS] upward
 
       default:
-        return -1;                   // bad input
+        return -1;                     // bad input
     }
   }

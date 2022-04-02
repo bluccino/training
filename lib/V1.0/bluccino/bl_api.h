@@ -215,7 +215,7 @@
   static inline void bl_hello(int verbose, BL_txt msg)
   {
     bl_verbose(verbose);               // set verbose level
-		bl_prt("*** Blucino v%s\n",BL_VERSION);
+		bl_prt("*** Bluccino v%s\n",BL_VERSION);
 
     if (bl_dbg(0))                     // always - start print with time stamp
       bl_prt(BL_R "%s\n" BL_0,msg);    // print hello message in red

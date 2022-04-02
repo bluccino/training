@@ -1,53 +1,29 @@
 //==============================================================================
-// bl_hw.c
-// Bluccino HW core supporting basic functions for button & LED
+// bl_core.h
+// Bluccino default core, supporting hardware (HW) and wireless (WL) core
 //
-// Created by Hugo Pristauz on 2022-Feb-18
-// Copyright © 2022 Bluccino. All rights reserved.
+// Created by Hugo Pristauz on 2022-Apr-02
+// Copyright © 2022 Bluenetics. All rights reserved.
 //==============================================================================
 //
 // Module Hierarchie
 //
-// +- BL_HW
-//    +- BL_HWLED
-//    +- BL_HWBUT
+// +- BL_CORE
+//    +- BL_HW (hardware core)
+//    |  +- BL_HWLED
+//    |  +- BL_HWBUT
+//    +- BL_WL (wireless core)
+//       +- BL_COMP (mesh device composition)
+//       +- BL_NVM  (non volatile memory)
 //
-// interaction of BL_HW (HW core) with BL_HWBUT, BL_HWLED (drivers)
-// (H) := (BL_HW); (B) := (BL_HWBUT); (L) := (BL_HWLED)
-//
-//       (^) (v)    +--------------------+
-//        |   |     |       BL_HW        | HW core
-//        |   |     +--------------------+
-//        |  (v)===>|        SYS:        | SYS: interface
-//        |  (v)===>|        LED:        | LED: input interface
-//       (^)<=======|       BUTTON:      | BUTTON: output interface
-//       (^)<=======|       SWITCH:      | SWITCH: output interface
-//                  +- - - - - - - - - - +
-//  (L)<============|        LED:        | LED: output interface
-//   | (H)=========>|       BUTTON:      | BUTTON: input interface
-//   |  ^(H)=======>|       SWITCH:      | SWITCH: input interface
-//   |  | ^         +--------------------+
-//   |  | |
-//   |  | |  (v)    +--------------------+
-//   |  | |   |     |     BL_HWBUT       | button driver
-//   |  | |   |     +--------------------+
-//   |  | |  (v)===>|        SYS:        | SYS: interface
-//   |  |(H)<=======|       SWITCH:      | LED: output interface
-//   | (H)<=========|       BUTTON:      | BUTTON: output interface
-//   |              +--------------------+
-//   |       (v)    +--------------------+
-//   |        |     |     BL_HWLED       | LED driver
-//   |        |     +--------------------+
-//   v       (v)===>|        SYS:        | SYS: interface
-//  (L)============>|        LED:        | LED: input interface
-//                  +--------------------+
-//
+//==============================================================================
+// System Message Flow Diagrams
 //==============================================================================
 //
 // Message Flow Diagram: Initializing
 //
-//     BL_DOWN         BL_HW        BL_HWBUT       BL_HWLED         BL_UP
-//       (v)            (#)            (B)            (L)            (^)
+//     BL_DOWN        BL_CORE         BL_HW          BL_WL          BL_UP
+//       (v)            (#)            (H)            (W)            (^)
 //        |              |              |              |              |
 //        |  [SYS:INIT]  |              |              |              |
 //        o------------->|  [SYS:INIT]  |              |              |
@@ -57,8 +33,8 @@
 //
 // Message Flow Diagram: Ticking
 //
-//     BL_DOWN         BL_HW        BL_HWBUT       BL_HWLED         BL_UP
-//       (v)            (#)            (B)            (L)            (^)
+//     BL_DOWN        BL_CORE         BL_HW          BL_WL          BL_UP
+//       (v)            (#)            (H)            (W)            (^)
 //        |              |              |              |              |
 //        |  [SYS:TICK]  |              |              |              |
 //        o------------->|  [SYS:TICK]  |              |              |
@@ -77,32 +53,38 @@
 //        |              o---------------------------->|              |
 //        |              |              |              |              |
 //
+//==============================================================================
+// Hardware Core Message Flow Diagrams
+//==============================================================================
+//
 // Message Flow Diagram: Setting LED ON/OFF State
 //
-//     BL_DOWN         BL_HW        BL_HWBUT       BL_HWLED         BL_UP
-//       (v)            (#)            (B)            (L)            (^)
+//     BL_DOWN        BL_CORE         BL_HW          BL_WL          BL_UP
+//       (v)            (#)            (H)            (W)            (^)
 //        |              |              |              |              |
 //        |  [LED:SET]   |              |              |              |
 //        o------------->|              |              |              |
-//        |   @id,onoff  |              | [LED:ONOFF]  |              |
-//        |              o---------------------------->|              |
-//        |              |              |  @id,onoff   |              |
+//        |   @id,onoff  | [LED:ONOFF]  |              |              |
+//        |              o------------->|              |              |
+//        |              |  @id,onoff   |              |              |
+//        |              |              |              |              |
 //
 // Message Flow Diagram: Button Configuration
 //
-//     BL_DOWN         BL_HW        BL_HWBUT       BL_HWLED         BL_UP
-//       (v)            (#)            (B)            (L)            (^)
+//     BL_DOWN        BL_CORE         BL_HW          BL_WL          BL_UP
+//       (v)            (#)            (H)            (W)            (^)
 //        |              |              |              |              |
 //        | [BUTTON:CFG] |              |              |              |
 //        o------------->|              |              |              |
 //        |     flags    | [BUTTON:CFG] |              |              |
 //        |              o------------->|              |              |
 //        |              |    flags     |              |              |
+//        |              |              |              |              |
 //
 // Message Flow Diagram: Button Click (Button Release within Grace Time)
 //
-//   BL_DOWN           BL_HW          BL_HWBUT         BL_HWLED           BL_UP
-//     (v)              (#)              (B)              (L)              (^)
+//   BL_DOWN          BL_CORE           BL_HW            BL_WL            BL_UP
+//     (v)              (#)              (H)              (W)              (^)
 //      |                |                |                |                |
 //      |                |        +-------v-------+        |                |
 //      |                |        | press button  |        |                |
@@ -149,8 +131,8 @@
 //
 // Message Flow Diagram: Button Hold (Button Release Exceeds Grace Time)
 //
-//   BL_DOWN           BL_HW          BL_HWBUT         BL_HWLED           BL_UP
-//     (v)              (#)              (B)              (L)              (^)
+//   BL_DOWN          BL_CORE           BL_HW            BL_WL            BL_UP
+//     (v)              (#)              (H)              (W)              (^)
 //      |                |                |                |                |
 //      |                |        +-------v-------+        |                |
 //      |                |        | press button  |        |                |
@@ -196,18 +178,20 @@
 //      |                |                |                |                |
 //
 //==============================================================================
-
-  #define init  init_button
-  #include "bl_hwbut.c"                // button core driver
-  #undef init
-  #undef LOG
-  #undef LOGO
-
-  #define init  init_led
-  #include "bl_hwled.c"                // LED core driver
-  #undef init
-  #undef LOG
-  #undef LOGO
+// Wireless Core Message Flow Diagrams
+//==============================================================================
+//
+// Message Flow Diagram: Attention State on/off
+//
+//   BL_DOWN          BL_CORE           BL_HW            BL_WL            BL_UP
+//     (v)              (#)              (H)              (W)              (^)
+//      |                |                |                |                |
+//      |                | []             |                |                |
+//      |                |<--------------------------------o                |
+//      |                |                |                |                |
+//      |                |                |                |                |
+//      |                |                |                |                |
+//      |                |                |                |                |
 
 //==============================================================================
 // CORE level logging shorthands
@@ -223,7 +207,7 @@
 // (B) := (BL_HWBUT);  (L) := (BL_HWLED);  (v) := (BL_DOWN);  (^) := (BL_UP)
 //
 //                  +--------------------+
-//                  |       BL_HW        |
+//                  |      BL_CORE       |
 //                  +--------------------+
 //                  |        SYS:        | SYS input interface
 // (v)->     INIT ->|       <out>        | init module, store <out> callback
@@ -261,44 +245,65 @@
 //                  +--------------------+
 //
 //==============================================================================
+// dummy interface for core module public interface (default/__weak)
+//==============================================================================
 
-  int bl_hw(BL_ob *o, int val)         // HW core module interface
-  {
-    static BL_oval out = bl_up;        // <out> messages go to BL_UP by default
-    static BL_oval led = bl_hwled;     // <led> callback to go to BL_HWLED
+#ifndef __BL_CORE_H__
+#define __BL_CORE_H__
 
-    switch (bl_id(o))
-    {
-      case BL_ID(_SYS,INIT_):          // [SYS:INIT <cb>]
-      {
-        LOG(3,BL_C "initialising HW core ...");
-/*******************
-        out = o->data;                 // store <out> callback
-*****************/
-        bl_init(bl_hwbut,bl_hw);       // init BL_HWBUT module, output goes here
-        bl_init(bl_hwled,bl_hw);       // init BL_HWLED module, output goes here
-      	return 0;                      // OK
-      }
+//==============================================================================
+// public module interface
+//==============================================================================
+//
+// (H) := (BL_HW);  (W) := (BL_WL);  (v) := (BL_DOWN);  (^) := (BL_UP)
+//
+//                  +--------------------+
+//                  |      BL_CORE       |
+//                  +--------------------+
+// (v)->          ->|        SYS:        | SYS (system) input interface
+// (H,W)<-        <-|        SYS:        | SYS (system) output interface
+//                  +--------------------+
+// (v)->          ->|        LED:        | LED input interface
+// (H)<-          <-|        LED:        | LED output interface
+//                  +--------------------+
+// (^)->          ->|       BUTTON:      | BUTTON input interface
+// (H)<-          <-|       BUTTON:      | BUTTON output interface
+//                  +--------------------+
+// (^)<-          <-|       SWITCH:      | SWITCH interface (output only)
+//                  +--------------------+
+// (v)->          ->|       RESET:       | RESET input interface (to reset node)
+// (W)<-          <-|       RESET:       | RESET output interface (to reset node)
+//                  +--------------------+
+// (v)->          ->|        NVM:        | NVM input ifc. (non volatile memory)
+// (W)<-          <-|        NVM:        | NVM output ifc. (non volatile memory)
+//                  +--------------------+
+// (v)->          ->|       CFGCLI:      | CFGCLI interface (config client)
+// (W)<-          <-|       CFGCLI:      | CFGCLI interface (config client)
+//                  +--------------------+
+// (W)->          ->|       CFGSRV:      | CFGSRV interface (config server)
+// (^)<-          <-|       CFGSRV:      | CFGSRV interface (config server)
+//                  +--------------------+
+// (v)->          ->|       HEACLI:      | HEACLI interface (health client)
+// (W)<-          <-|       HEACLI:      | HEACLI interface (health client)
+//                  +--------------------+
+// (W)->          ->|       HEASRV:      | HEASRV interface (health server)
+// (^)<-          <-|       HEASRV:      | HEASRV interface (health server)
+//                  +--------------------+
+// (v)->          ->|       GOOCLI:      | GOOCLI interface (generic on/off cli)
+// (W)<-          <-|       GOOCLI:      | GOOCLI interface (generic on/off cli)
+//                  +--------------------+
+// (W)->          ->|       GOOSRV:      | GOOSRV interface (generic on/off srv)
+// (^)<-          <-|       GOOSRV:      | GOOSRV interface (generic on/off srv)
+//                  +--------------------+
+// (W)<-          <-|       GLVCLI:      | GLVCLI interface (generic level cli)
+// (v)->          ->|       GLVCLI:      | GLVCLI interface (generic level cli)
+//                  +--------------------+
+// (^)<-          <-|       GLVSRV:      | GLVSRV interface (generic level srv)
+// (W)->          ->|       GLVSRV:      | GLVSRV interface (generic level srv)
+//                  +--------------------+
+//
+//==============================================================================
 
-      case BL_ID(_SYS,TICK_):          // [SYS:TICK @id,cnt]
-        return bl_hwbut(o,val);        // tick BL_HWBUT module
+  weak int bl_core(BL_ob *o, int val); // public module interface
 
-      case BL_ID(_LED,SET_):           // [LED:set @id,val]
-      case BL_ID(_LED,TOGGLE_):        // [LED:toggle @id]
-        return bl_out(o,val,led);      // forward to LED driver module
-
-      case BL_ID(_BUTTON,PRESS_):      // [BUTTON:PRESS @id,val]
-      case BL_ID(_BUTTON,RELEASE_):    // [BUTTON:RELEASE @id,val]
-      case BL_ID(_BUTTON,CLICK_):      // [BUTTON:CLICK @id,edge]
-      case BL_ID(_BUTTON,HOLD_):       // [BUTTON:HOLD @id,time]
-      case BL_ID(_SWITCH,STS_):        // [SWITCH:STS @id]
-LOGO(3,BL_M"(#):",o,val);
-        return bl_out(o,val,out);      // output message
-
-      case BL_ID(_BUTTON,CFG_):        // [BUTTON:CFG flags]
-        return bl_hwbut(o,val);        // config BL_HWBUT module
-
-      default:
-        return -1;                     // bad input
-    }
-  }
+#endif // __BL_CORE_H__

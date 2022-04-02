@@ -102,7 +102,7 @@
 
     switch (bl_id(o))
     {
-      case BL_ID(_BUTTON,PRESS_):     // [BUTTON:#PRESS]
+      case _BL_ID(_BUTTON,PRESS_):     // [#BUTTON:PRESS]
       {
         time[id] = now;                // store button press time stamp
 				if (mask & BL_CLICK)
@@ -113,7 +113,7 @@
         return 0;
       }
 
-      case BL_ID(_BUTTON,RELEASE_):   // [#BUTTON:RELEASE]
+      case _BL_ID(_BUTTON,RELEASE_):   // [#BUTTON:RELEASE]
         val = (now >= time[id] + ms);  // grace time exceeded? (return value)
 
         if (val)                       // grace time exceeded?
@@ -167,9 +167,8 @@
       if (mask & BL_PRESS)
         _bl_msg(bl_hwbut,_BUTTON,PRESS_, id,NULL,0);
 
-      bl_msg(click,_BUTTON,PRESS_, id,NULL,0);
+      _bl_msg(click,_BUTTON,PRESS_, id,NULL,0);
       toggle[idx] = !toggle[idx];
-
       if (mask & BL_SWITCH)
         _bl_msg(bl_hwbut,_SWITCH,STS_, id,NULL,toggle[idx]);
     }
@@ -179,7 +178,7 @@
       if (mask & BL_RELEASE)
         _bl_msg(bl_hwbut,_BUTTON,RELEASE_, id,NULL,dt);
 
-      bl_msg(click,_BUTTON,RELEASE_, id,NULL,dt);
+      _bl_msg(click,_BUTTON,RELEASE_, id,NULL,dt);
     }
  }
 
@@ -333,12 +332,12 @@
 
   int bl_hwbut(BL_ob *o, int val)         // BUTTON core module interface
   {
-    static BL_oval output = bl_up;        // to store output callback
+    static BL_oval out = bl_up;           // to store output callback
 
     switch (bl_id(o))
     {
       case BL_ID(_SYS,INIT_):             // [SYS:INIT <cb>]
-        output = o->data;                 // store output callback
+        out = o->data;                    // store output callback
       	return init(o,val);               // delegate to init() worker
 
       case BL_ID(_SYS,TICK_):             // [SYS:TICK @id,cnt]
@@ -353,14 +352,14 @@
 
       case _BL_ID(_BUTTON,PRESS_):        // [#BUTTON:PRESS @id,0]
       case _BL_ID(_BUTTON,RELEASE_):      // [#BUTTON:RELEASE @id,time]
-        return bl_out(o,val,output);      // post to output subscriber
+        return bl_out(o,val,out);         // post to output subscriber
 
       case _BL_ID(_BUTTON,CLICK_):        // [#BUTTON:CLICK @id,n]
       case _BL_ID(_BUTTON,HOLD_):         // [#BUTTON:HOLD @id,ms]
-        return bl_out(o,val,output);      // post to output subscriber
+        return bl_out(o,val,out);         // post to output subscriber
 
       case _BL_ID(_SWITCH,STS_):          // [#SWITCH:STS @id,sts]
-        return bl_out(o,val,output);      // post to output subscriber
+        return bl_out(o,val,out);         // post to output subscriber
 
       default:
 	      return -1;                        // bad input

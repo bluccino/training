@@ -8,3 +8,4 @@
 
   #include "bl_api.c"                  // Bluccino API stuff
   #include "bl_log.c"                  // Bluccino logging stuff
+  #include "bl_core.c"                 // Bluccino default core (weak functions)
