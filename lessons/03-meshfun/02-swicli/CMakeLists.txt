@@ -13,7 +13,7 @@ find_package(Zephyr REQUIRED HINTS $ENV{ZEPHYR_BASE})
 
   set (LIB ../../../lib/V1.0)
   set (BLU ${LIB}/bluccino)
-  set (HWC ${LIB}/hwcore)
+  set (HWC ${LIB}/hwcore/hwtiny)
   set (WLC ${LIB}/wlcore/ocore)
   set (SRC src)
 

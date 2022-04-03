@@ -20,11 +20,8 @@
   {
     BL_ob cli = {_GOOCLI,LET_,o->id,NULL};  // generic on/off client object
 
-    if (bl_is(o,_SYS,TOCK_) && val%5==0)
-		  bl_log(1,"tock");
-
     if (bl_is(o,_SWITCH,STS_))         // switch status update
-			bl_down(&cli,val);               // send generic on/off SET message
+      bl_down(&cli,val);               // send generic on/off SET message
     return 0;                          // OK
   }
 
