@@ -50,11 +50,27 @@
 
   #define CFG_LOG_API             1    // Bluccino API logging
   #define CFG_LOG_APP             1    // app logging
-  #define CFG_LOG_BASIS           1    // basis logging
+  #define CFG_LOG_HOUSE           1    // house keep logging
   #define CFG_LOG_CORE            1    // core logging
   #define CFG_LOG_LLL             1    // LLL logging
   #define CFG_LOG_MAIN            1    // main logging
   #define CFG_LOG_NVM             1    // NVM logging
+
+//==============================================================================
+// HOUSE Logging
+//==============================================================================
+
+#ifndef CFG_LOG_HOUSE
+    #define CFG_LOG_HOUSE    1           // HOUSE logging is by default on
+#endif
+
+#if (CFG_LOG_HOUSE)
+    #define LOG_HOUSE(l,f,...)    BL_LOG(CFG_LOG_HOUSE-1+l,f,##__VA_ARGS__)
+    #define LOGO_HOUSE(l,f,o,v)   bl_logo(CFG_LOG_HOUSE-1+l,f,o,v)
+#else
+    #define LOG_HOUSE(l,f,...)    {}     // empty
+    #define LOGO_HOUSE(l,f,o,v)   {}     // empty
+#endif
 
 //==============================================================================
 // end of logging.h

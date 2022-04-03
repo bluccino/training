@@ -19,6 +19,10 @@ find_package(Zephyr REQUIRED HINTS $ENV{ZEPHYR_BASE})
 
   include_directories(${SRC} ${BLU} ${HWC} ${WLC})
 
+#===============================================================================
+# source files
+#===============================================================================
+
   target_sources(app PRIVATE
                ${SRC}/main.c           # main program
                ${WLC}/bl_wl.c          # wireless core

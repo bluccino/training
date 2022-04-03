@@ -1,16 +1,20 @@
 //==============================================================================
-// bl_api.c - bluccino API layer
+// bl_time.c
+// Time related Bluccino stuff
+//
+// Created by Hugo Pristauz on 2022-Apr-03
+// Copyright © 2022 Bluenetics. All rights reserved.
 //==============================================================================
 
   #include "bluccino.h"
 
 //==============================================================================
-// API level logging shorthands
+// TIME level logging shorthands
 //==============================================================================
 
-  #define LOG                     LOG_API
-  #define LOGO(lvl,col,o,val)     LOGO_API(lvl,col"api:",o,val)
-  #define LOG0(lvl,col,o,val)     LOGO_API(lvl,col,o,val)
+  #define LOG                     LOG_TIME
+  #define LOGO(lvl,col,o,val)     LOGO_TIME(lvl,col"api:",o,val)
+  #define LOG0(lvl,col,o,val)     LOGO_TIME(lvl,col,o,val)
 
 //==============================================================================
 // us/ms clock

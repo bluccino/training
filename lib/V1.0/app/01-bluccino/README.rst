@@ -14,7 +14,7 @@ Goals:
 + reorganization of file structure for cores
 + seperation of bl_run() and bl_engine() into bl_run.c/.h module
 + separation of bl_up() and bl_down() into bl_gear.c/.h module
-- renaming bl_api.c to bl_time.c, split bl_api.h into bl_time.h and bl_msg.h
++ renaming bl_api.c to bl_time.c, split bl_api.h into bl_time.h and bl_msg.h
 - test all training lecture sample programs
 ================================================================================
 
@@ -25,3 +25,5 @@ Changelog History
 + reorganization of file structure for cores
 + seperation of bl_run() and bl_engine() into bl_run.c/.h module
 + separation of bl_up() and bl_down() into bl_gear.c/.h module
++ renaming bl_api.c to bl_time.c, split bl_api.h into bl_time.h and bl_msg.h
+- test 03-meshfun/03-ledsrv in combi with 03-meshfun/02-swcli - works well :-)))

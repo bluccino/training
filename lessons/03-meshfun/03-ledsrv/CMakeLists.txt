@@ -11,16 +11,21 @@ find_package(Zephyr REQUIRED HINTS $ENV{ZEPHYR_BASE})
 
   project(03-ledsrv)
 
-  set (LIB ../../../lib/V0.6)
+  set (LIB ../../../lib/V1.0)
   set (BLU ${LIB}/bluccino)
-  set (HWC ${LIB}/hwcore)
+  set (HWC ${LIB}/core/hwcore/hwtiny)
+  set (WLC ${LIB}/core/wlcore/wlmono)
   set (SRC src)
 
   include_directories(${SRC} ${BLU} ${HWC})
 
+#===============================================================================
+# source files
+#===============================================================================
+
   target_sources(app PRIVATE
-               ${SRC}/main.c
-               ${SRC}/ocore5.c
-               ${HWC}/bl_hw.c
-               ${BLU}/bluccino.c
+               ${SRC}/main.c           # main program
+               ${WLC}/bl_wl.c          # wireless core
+               ${HWC}/bl_hw.c          # hardware core
+               ${BLU}/bluccino.c       # work bench
               )

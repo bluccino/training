@@ -55,8 +55,9 @@
 //==============================================================================
 
   #include "bluccino.h"
-  #include "bl_basis.h"
+  #include "bl_house.h"
   #include "bl_core.h"
+  #include "bl_hw.h"
 
 //==============================================================================
 // MAIN level logging shorthands
@@ -76,7 +77,7 @@
   #define T_BLINK   1000                    // 1000 ms RGB blink period
 
   static volatile int id = 0;               // THE LED id
-  static int starts = 0;                    // counts system starts
+//  static int starts = 0;                    // counts system starts
 
 //==============================================================================
 // helper: attention blinker (let green status LED @0 attention blinking)
@@ -90,8 +91,8 @@
     if (id <= 1 || !bl_due(&due,T_BLINK))   // no blinking if @id:off or not due
       return 0;                             // bye if LED off or not due
 
-    if ( bl_get(bl_basis,ATT_) ||           // no blinking in attention mode
-         bl_get(bl_basis,BUSY_))            // no blinking during startup
+    if ( bl_get(bl_house,ATT_) ||           // no blinking in attention mode
+         bl_get(bl_house,BUSY_))            // no blinking during startup
       return 0;                             // bye if attention state
 
     static bool toggle;
@@ -136,11 +137,11 @@
     switch (bl_id(o))
     {
       case BL_ID(_SYS,INIT_):          // [SYS:INIT <cb>]
-        return bl_init(bl_basis,bl_down);  // init BL_BASIS, output goes down
+        return bl_init(bl_house,bl_down);  // init BL_BASIS, output goes down
 
       case BL_ID(_SYS,TICK_):          // [SYS:TICK @id,cnt]
         blink(o,val);                  // tick blinker
-        bl_basis(o,val);               // tick BL_BASIS module
+        bl_house(o,val);               // tick BL_BASIS module
         return 0;                      // OK
 
       case BL_ID(_SYS,TOCK_):          // [SYS:TOCK @id,cnt]
@@ -150,7 +151,7 @@
 
       case BL_ID(_SWITCH,STS_):        // button press to cause LED on off
         LOGO(1,"@",o,val);
-        if ( bl_get(bl_basis,PRV_))    // only if provisioned
+        if ( bl_get(bl_house,PRV_))    // only if provisioned
         {
           BL_ob oo = {_GOOCLI,SET_,1,NULL};
           bl_down(&oo,val);            // post via generic on/off client
@@ -164,7 +165,7 @@
         if (o->id == 1)
           bl_led(id,val);              // switch LED @id
         return 0;                      // OK
-
+/*
       case BL_ID(_NVM,READY_):         // [GOOSRV:STS] status update
         LOGO(1,BL_M,o,val);
         starts = bl_recall(0);         // recall system starts from NVM @0
@@ -172,9 +173,9 @@
         bl_store(0,++starts);          // store back incremented value at NVM @0
         LOG(1,BL_M "system start #%d",starts);
         return 0;
-
+*/
       default:
-        return bl_basis(o,val);        // else forward event to BL_BASE module
+        return bl_house(o,val);        // else forward event to BL_HOUSE module
     }
   }
 

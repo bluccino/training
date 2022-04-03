@@ -1,13 +1,14 @@
 //==============================================================================
-// bl_basis.c
-// basis functions of a mesh node (startup, provision, attention)
+// bl_house.c
+// mesh node house keeping (startup, provision, attention)
 //
 // Created by Hugo Pristauz on 2022-Feb-21
 // Copyright © 2022 Bluenetics. All rights reserved.
 //==============================================================================
 
   #include "bluccino.h"
-  #include "bl_basis.h"
+  #include "bl_house.h"
+  #include "bl_hw.h"
 
   #define T_TICK      10               // 10 ms ticks
   #define T_ATT      750               // 750 ms attention blink period
@@ -15,15 +16,13 @@
   #define T_UNP      350               // 350 ms unprovisioned blink period
   #define T_STARTUP 5000               // 5000 ms startup reset interval
 
-  #define _INC_     BL_HASH(INC_)      // hashed INC_ opcode
-
 //==============================================================================
-// MAIN level logging shorthands
+// HOUSE level logging shorthands
 //==============================================================================
 
-  #define LOG                     LOG_BASIS
-  #define LOGO(lvl,col,o,val)     LOGO_BASIS(lvl,col"bl_basis:",o,val)
-  #define LOG0(lvl,col,o,val)     LOGO_BASIS(lvl,col,o,val)
+  #define LOG                     LOG_HOUSE
+  #define LOGO(lvl,col,o,val)     LOGO_HOUSE(lvl,col"bl_house:",o,val)
+  #define LOG0(lvl,col,o,val)     LOGO_HOUSE(lvl,col,o,val)
 
 //==============================================================================
 // locals
@@ -83,8 +82,7 @@
 
           // increment reset counter, start TS = 7000 ms due timer
 
-        BL_ob oo = {_RESET,_INC_,0,NULL};
-        startup(&oo,0);                     // post [HDL:#INC] to startup ifc
+        _bl_msg(startup,_RESET,INC_, 0,NULL,0);
 
         if (count <= 3)                     // <= 3 times resetted?
           return bl_led(map[count],1);      // indicate by turn on LED @count+1
@@ -107,7 +105,7 @@
         }
         return 0;                           // OK
 
-      case BL_ID(_RESET,_INC_):             // [RESET:#INC] entry point
+      case _BL_ID(_RESET,INC_):             // [#RESET:INC] entry point
         count = bl_out(o,T_STARTUP,bl_down);// startup reset interval
         return 0;                           // OK
 
@@ -130,8 +128,7 @@
 
         if (count > 0)                      // if we are still in startup phase
         {
-          BL_ob oo = {_RESET,_INC_,0,NULL}; // [RESET:#INC]
-          startup(&oo,0);                   // post [RESET:#INC] to STARTUP mod.
+          _bl_msg(startup,_RESET,INC_, 0,NULL,0);
         }
         return 0;                           // OK
 
@@ -146,14 +143,14 @@
 //                  +--------------------+
 //                  |      ATTENTION     |
 //                  +--------------------+
-//                  |        SYS:        | SYS: interface
+//                  |        SYS:        | SYS interface
 // (#)->     INIT ->|       <out>        | init module, store <out> callback
 // (#)->     TICK ->|       @id,cnt      | tick the module
 //                  +--------------------+
-//                  |        GET:        | GET:interface
+//                  |        GET:        | GET interface
 // (#)->      ATT ->|        sts         | get attention status
 //                  +--------------------+
-//                  |        SET:        | SET: interface
+//                  |        MESH:       | MESH interface
 // (#)->      ATT ->|        sts         | receive & store attention status
 //                  +--------------------+
 //
@@ -182,7 +179,7 @@
           return 0;                         // neither attention state nor due
         return bl_led(0,-1);                // toggle status LED @0
 
-      case BL_ID(_SET,ATT_):
+      case BL_ID(_MESH,ATT_):
         state = val;                        // store attention state
         bl_led(0,0);                        // turn status LED off
         bl_led(id,0);                       // turn current LED off
@@ -202,19 +199,19 @@
 //                  +--------------------+
 //                  |     PROVISION      |
 //                  +--------------------+
-//                  |        SYS:        | SYS: interface
+//                  |        SYS:        | SYS interface
 // (A)->     INIT ->|       <out>        | init module, store <out> callback
 // (A)->     TICK ->|       @id,cnt      | tick the module
 //                  +--------------------+
-//                  |        GET:        | GET:interface
+//                  |        GET:        | GET interface
 // (A)->      PRV ->|        sts         | get provision status
 // (A)->      ATT ->|        sts         | get attention status
 // (A)->     BUSY ->|        sts         | get busy status
 //                  +--------------------+
-//                  |        SET:        | SET: interface
+//                  |        MESH:       | MESH interface
 // (#)->      PRV ->|       onoff        | receive and store provision status
 //                  +--------------------+
-//                  |        GET:        | GET: interface
+//                  |        GET:        | GET interface
 // (#)->      PRV ->|       onoff        | retrieve provision status
 //                  +--------------------+
 //
@@ -248,8 +245,8 @@
           return bl_led(0,rem == 0);        // update status LED @1
       }
 
-      case BL_ID(_SET,PRV_):                // [SET:PRV val] change prov state
-        state = val;                        // store attention state
+      case BL_ID(_MESH,PRV_):               // [MESH:PRV stat] change prov state
+        state = val;                        // store provision state
         bl_led(0,0);                        // turn status LED @1 off
         bl_led(id,0);                       // turn current LED @id off
         return 0;
@@ -268,34 +265,34 @@
 //
 // (A) := (APP)
 //                  +--------------------+
-//                  |      BL_BASIS      |
+//                  |      BL_HOUSE      | mesh node house keeping
 //                  +--------------------+
-//                  |        SYS:        | SYS: interface
+//                  |        SYS:        | SYS interface
 // (A)->     INIT ->|       <out>        | init module, store <out> callback
 // (A)->     TICK ->|       @id,cnt      | tick the module
 //                  +--------------------+
-//                  |        GET:        | GET:interface
+//                  |        GET:        | GET interface
 // (A)->      PRV ->|        sts         | get provision status
 // (A)->      ATT ->|        sts         | get attention status
 // (A)->     BUSY ->|        sts         | get busy status
 //                  +--------------------+
-//                  |        SET:        | SET: interface
+//                  |        MESH:       | MESH interface
 // (A)->      PRV ->|       onoff        | receive provision status
 // (A)->      ATT ->|       onoff        | receive attention status
 //                  +--------------------+
-//                  |       BUTTON:      | BUTTON: interface
+//                  |       BUTTON:      | BUTTON interface
 // (A)->    PRESS ->|        @id,1       | receive button press messages
 //                  +--------------------+
-//                  |        LED:        | LED: interface
+//                  |        LED:        | LED interface
 // (v)<-      SET <-|     @id,onoff      |
 //                  +--------------------+
-//                  |       RESET:       | RESET: interface
+//                  |       RESET:       | RESET interface
 // (A)->      DUE ->|                    | reset counter is due
 //                  +--------------------+
 //
 //==============================================================================
 
-  int bl_basis(BL_ob *o, int val)
+  int bl_house(BL_ob *o, int val)
   {
     BL_oval output = NULL;              // to store output callback
 
@@ -314,20 +311,22 @@
         provision(o,val);              // forward to provision() worker
         return 0;                      // OK
 
-      case BL_ID(_SET,ATT_):           // set attention blinking on/off
-        return attention(o,val);       // change attention state
+      case BL_ID(_MESH,ATT_):          // [MESH,ATT sts] change attention state
+        return attention(o,val);       // set attention blinking on/off
 
-      case BL_ID(_SET,PRV_):           // [MESH:ATT state]
+      case BL_ID(_MESH,PRV_):          // [MESH:PRV sts]
         return provision(o,val);       // change provision state
 
-      case BL_ID(_GET,BUSY_):          // [MESH:ATT state]
-        return startup(o,val);         // change provision state
+      case BL_ID(_GET,BUSY_):          // busy = [GET:BUSY]
+        return startup(o,val);         // forward [GET:BUSY] to STARTUP
 
       case BL_ID(_BUTTON,PRESS_):      // button press to cause LED on off
         LOGO(1,"@",o,val);
         if ( !bl_get(provision,PRV_))  // if not provisioned
         {
-          bl_led(2,0); bl_led(3,0); bl_led(4,0);// turn off current LED
+          bl_led(2,0);                 // turn off LED @2
+					bl_led(3,0);                 // turn off LED @3
+					bl_led(4,0);                 // turn off LED @4
           id = (id==0) ? 2 : (id+1)%5; // update THE LED id (=> 0 or 2,3,4)
         }
         return startup(o,val);         // fwd [BUTTON:PRESS] to startup

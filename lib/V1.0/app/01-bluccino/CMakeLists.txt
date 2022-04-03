@@ -11,7 +11,7 @@
 
   project(01-bluccino)
 
-  set (LIB ../../../lib/V1.0)
+  set (LIB ../../../../lib/V1.0)
   set (BLU ${LIB}/bluccino)
   set (HWC ${LIB}/core/hwcore/hwtiny)
   set (WLC ${LIB}/core/wlcore/wlmono)
@@ -31,8 +31,8 @@ target_sources(app PRIVATE
 	       ${SRC}/main.c
 				 ${BLU}/bluccino.c
 	       ${HWC}/bl_hw.c
-	       ${WLC}/bl_mcore.c
-	       ${LMO}/bl_basis.c
+	       ${WLC}/bl_wl.c
+	       ${LMO}/bl_house.c
 	       )
 
 target_sources_ifdef(CONFIG_MCUMGR app PRIVATE ${CORE}/smp_svr.c)

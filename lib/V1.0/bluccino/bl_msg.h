@@ -1,9 +1,13 @@
 //==============================================================================
-// bl_api.h - bluccino API
+// bl_msg.h
+// Bluccino messaging
+//
+// Created by Hugo Pristauz on 2022-Apr-03
+// Copyright © 2022 Bluenetics. All rights reserved.
 //==============================================================================
 
-#ifndef __BL_API_H__
-#define __BL_API_H__
+#ifndef __BL_MSG_H__
+#define __BL_MSG_H__
 
 #include "bl_log.h"
 #include "bl_type.h"
@@ -17,7 +21,7 @@
 // mesh opcodes
 //==============================================================================
 
-  #define BL_GOOLET 0x8203
+// #define BL_GOOLET 0x8203
 
 //==============================================================================
 // syntactic sugar: compound message identifier
@@ -61,32 +65,6 @@
   bool bl_due(BL_ms *pdue, BL_ms ms);  // check if time if due & update
   void bl_sleep(BL_ms ms);             // deep sleep for given milliseconds
   void bl_halt(BL_txt msg, BL_ms ms);  // halt system
-
-//==============================================================================
-// tic/toc functions (elapsed time benchmarking)
-// - usage: bl_tic(o,10000);           // run 10000 loops
-// -        for (int i=0; i < o->id; i++)
-// -          { ... }  // do some work (e.g. call function with OVAL interface)
-// -        bl_toc(o,"OVAL call");
-//==============================================================================
-
-  static inline int bl_tic(BL_ob *o, int n)
-  {
-    BL_us now = bl_us();
-//bl_prt("now: %d us\n",(int)now);
-    o->data = (const void*)(int)now;
-    return (o->id = n);                // save number of loops in object's @id
-  }
-
-  static inline void bl_toc(BL_ob *o, BL_txt msg)
-  {
-    int now = (int)bl_us();
-    int begin = (int)o->data;
-    int elapsed = (100*(now - begin)) / o->id;    // devide by number of runs
-//bl_prt("begin: %d us, now: %d us\n",begin,now);
-    if (bl_dbg(1))
-      bl_prt("%s: %d.%02d us\n", msg, elapsed/100, elapsed%100);
-  }
 
 //==============================================================================
 // post general message [CL:OP @id,<data>,val] to module
@@ -221,4 +199,4 @@
     return bl_msg(module,cl,CFG_, 0,NULL,(int)mask);
   }
 
-#endif // __BL_API_H__
+#endif // __BL_MSG_H__
