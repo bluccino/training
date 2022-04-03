@@ -5,59 +5,18 @@
 // Created by Hugo Pristauz on 2022-Apr-02
 // Copyright © 2022 Bluenetics. All rights reserved.
 //==============================================================================
-//
-// Typical Hierarchy
-//
-// +- MAIN => bl_run(app,tick_ms,tock_ms,when)
-//     +- BLUCCINO      (Bluccino module)
-//     |   +- BL_IN     (input interface)
-//     |   +- BL_UP     (upstream gear)
-//     |   +- BL_DOWN   (downstream gear)
-//     |   +- BL_CORE   (core system)
-//     |       +- BL_HW (hardware core)
-//     |       +- BL_WL (wireless core)
-//     +- APP           (application)
-//
-// Message Flow Chart: Initializing
-//
-//  MAIN  BLUCCINO BL_DOWN BL_CORE BL_HW   BL_WL    BL_UP  BL_IN    APP     WHEN
-//   |       |       |       |       |       |       |       |       |       |
-//   |[SYS:INIT]     |       |       |       |       |       |       |       |
-//   o------>#==============================================================>|
-//   | <when>|       |       |       |       |       |       |       |       |
-//   |       |       |       |       |       |       |       |       |       |
-//   |       |   [SYS:INIT]  |       |       |       |       |       |       |
-//   |       o---------------------------------------------->#==============>|
-//   |       |    <when>     |       |       |       |       |       |       |
-//   |       |       |       |       |       |       |       |       |       |
-//   |       |       |   [SYS:INIT]  |       |       |       |       |       |
-//   |       o-------------------------------------->#======>|       |       |
-//   |       |       |   <bl_in>     |       |       |       |       |       |
-//   |       |       |       |       |       |       |       |       |       |
-//   |       |[SYS:INIT]     |       |       |       |       |       |       |
-//   |       o------>|       |       |       |       |       |       |       |
-//   |       |<bl_up>|       |       |       |       |       |       |       |
-//   |       |       |       |       |       |       |       |       |       |
-//   |       |       |[SYS:INIT]     |       |       |       |       |       |
-//   |       |       o------>#======================>|       |       |       |
-//   |       |       |  <*>  |       |       |       |       |       |       |
-//   |       |       |       |[SYS:INIT]     |       |       |       |       |
-//   |       |       |       o------>#==============>|       |       |       |
-//   |       |       |       |  <*>  |       |       |       |       |       |
-//   |       |       |       |       |       |       |       |       |       |
-//   |       |       |       |[SYS:INIT]     |       |       |       |       |
-//   |       |       |       o-------------->#======>|       |       |       |
-//   |       |       |       |  <*>  |       |       |       |       |       |
-//   |       |   [SYS:INIT]  |       |       |       |       |       |       |
-//   o-------------------------------------------------------------->|       |
-//   |       |    <when>     |       |       |       |       |       |       |
-//   |       |       |       |       |       |       |       |       |       |
-//
-//==============================================================================
 
   #include "bluccino.h"
   #include "bl_hw.h"                   // hardware core
   #include "bl_wl.h"                   // wireless core
+
+//==============================================================================
+// CORE level logging shorthands
+//==============================================================================
+
+  #define LOG                     LOG_CORE
+  #define LOGO(lvl,col,o,val)     LOGO_CORE(lvl,col"core:",o,val)
+  #define LOG0(lvl,col,o,val)     LOGO_CORE(lvl,col,o,val)
 
 //==============================================================================
 // hardware core (weak defaults - public module interface)
@@ -191,34 +150,54 @@
 // public module interface
 //==============================================================================
 //
-// (B) := (BL_HWBUT);  (L) := (BL_HWLED);  (v) := (BL_DOWN);  (^) := (BL_UP)
+// (H) := (BL_HW);  (W) := (BL_WL);  (v) := (BL_DOWN);  (^) := (BL_UP)
 //
 //                  +--------------------+
 //                  |      BL_CORE       |
 //                  +--------------------+
-//                  |        SYS:        | SYS (system) interface
+// (v)->          ->|        SYS:        | SYS (system) input interface
+// (H,W)<-        <-|        SYS:        | SYS (system) output interface
 //                  +--------------------+
-//                  |        LED:        | LED interface
+// (v)->          ->|        LED:        | LED input interface
+// (H)<-          <-|        LED:        | LED output interface
 //                  +--------------------+
-//                  |       BUTTON:      | BUTTON interface
+// (^)->          ->|       BUTTON:      | BUTTON input interface
+// (H)<-          <-|       BUTTON:      | BUTTON output interface
 //                  +--------------------+
-//                  |       SWITCH:      | SWITCH interface
+// (^)<-          <-|       SWITCH:      | SWITCH interface (output only)
 //                  +--------------------+
-//                  |       CFGCLI:      | CFGCLI interface (config client)
+// (^)<-          <-|        MESH:       | MESH output interface (to reset node)
+// (W)->          ->|        MESH:       | MESH input interface (to reset node)
 //                  +--------------------+
-//                  |       CFGSRV:      | CFGSRV interface (config server)
+// (v)->          ->|       RESET:       | RESET input interface (to reset node)
+// (W)<-          <-|       RESET:       | RESET output interface (to reset node)
 //                  +--------------------+
-//                  |       HEACLI:      | HEACLI interface (health client)
+// (v)->          ->|        NVM:        | NVM input ifc. (non volatile memory)
+// (W)<-          <-|        NVM:        | NVM output ifc. (non volatile memory)
 //                  +--------------------+
-//                  |       HEASRV:      | HEASRV interface (health server)
+// (v)->          ->|       CFGCLI:      | CFGCLI interface (config client)
+// (W)<-          <-|       CFGCLI:      | CFGCLI interface (config client)
 //                  +--------------------+
-//                  |       GOOCLI:      | GOOCLI interface (generic on/off cli)
+// (^)<-          <-|       CFGSRV:      | CFGSRV interface (config server)
+// (W)->          ->|       CFGSRV:      | CFGSRV interface (config server)
 //                  +--------------------+
-//                  |       GOOSRV:      | GOOSRV interface (generic on/off srv)
+// (v)->          ->|       HEACLI:      | HEACLI interface (health client)
+// (W)<-          <-|       HEACLI:      | HEACLI interface (health client)
 //                  +--------------------+
-//                  |       GLVCLI:      | GLVCLI interface (generic level cli)
+// (^)<-          <-|       HEASRV:      | HEASRV interface (health server)
+// (W)->          ->|       HEASRV:      | HEASRV interface (health server)
 //                  +--------------------+
-//                  |       GLVSRV:      | GLVSRV interface (generic level srv)
+// (v)->          ->|       GOOCLI:      | GOOCLI interface (generic on/off cli)
+// (W)<-          <-|       GOOCLI:      | GOOCLI interface (generic on/off cli)
+//                  +--------------------+
+// (^)<-          <-|       GOOSRV:      | GOOSRV interface (generic on/off srv)
+// (W)->          ->|       GOOSRV:      | GOOSRV interface (generic on/off srv)
+//                  +--------------------+
+// (W)<-          <-|       GLVCLI:      | GLVCLI interface (generic level cli)
+// (v)->          ->|       GLVCLI:      | GLVCLI interface (generic level cli)
+//                  +--------------------+
+// (^)<-          <-|       GLVSRV:      | GLVSRV interface (generic level srv)
+// (W)->          ->|       GLVSRV:      | GLVSRV interface (generic level srv)
 //                  +--------------------+
 //
 //==============================================================================

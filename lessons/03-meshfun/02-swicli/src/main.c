@@ -27,6 +27,7 @@
 
   void main(void)
   {
+
     bl_hello(4,"02-swicli");           // set verbose level, print hello message
     bl_engine(app,10,1000);            // run app with 10/1000ms ticks/tocks
   }

@@ -13,15 +13,15 @@ find_package(Zephyr REQUIRED HINTS $ENV{ZEPHYR_BASE})
 
   set (LIB ../../../lib/V1.0)
   set (BLU ${LIB}/bluccino)
-  set (HWC ${LIB}/hwcore/hwtiny)
-  set (WLC ${LIB}/wlcore/ocore)
+  set (HWC ${LIB}/core/hwcore/hwtiny)
+  set (WLC ${LIB}/core/wlcore/wlmono)
   set (SRC src)
 
   include_directories(${SRC} ${BLU} ${HWC} ${WLC})
 
   target_sources(app PRIVATE
-               ${SRC}/main.c
-               ${WLC}/bl_wl.c
-               ${HWC}/bl_hw.c
-               ${BLU}/bluccino.c
+               ${SRC}/main.c           # main program
+               ${WLC}/bl_wl.c          # wireless core
+               ${HWC}/bl_hw.c          # hardware core
+               ${BLU}/bluccino.c       # work bench
               )

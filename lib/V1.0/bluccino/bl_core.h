@@ -194,13 +194,6 @@
 //      |                |                |                |                |
 
 //==============================================================================
-// CORE level logging shorthands
-//==============================================================================
-
-  #define LOG                     LOG_CORE
-  #define LOGO(lvl,col,o,val)     LOGO_CORE(lvl,col"bl_hw:",o,val)
-
-//==============================================================================
 // public module interface
 //==============================================================================
 //
@@ -271,6 +264,9 @@
 //                  +--------------------+
 // (^)<-          <-|       SWITCH:      | SWITCH interface (output only)
 //                  +--------------------+
+// (^)<-          <-|        MESH:       | MESH output interface (to reset node)
+// (W)->          ->|        MESH:       | MESH input interface (to reset node)
+//                  +--------------------+
 // (v)->          ->|       RESET:       | RESET input interface (to reset node)
 // (W)<-          <-|       RESET:       | RESET output interface (to reset node)
 //                  +--------------------+
@@ -280,20 +276,20 @@
 // (v)->          ->|       CFGCLI:      | CFGCLI interface (config client)
 // (W)<-          <-|       CFGCLI:      | CFGCLI interface (config client)
 //                  +--------------------+
-// (W)->          ->|       CFGSRV:      | CFGSRV interface (config server)
 // (^)<-          <-|       CFGSRV:      | CFGSRV interface (config server)
+// (W)->          ->|       CFGSRV:      | CFGSRV interface (config server)
 //                  +--------------------+
 // (v)->          ->|       HEACLI:      | HEACLI interface (health client)
 // (W)<-          <-|       HEACLI:      | HEACLI interface (health client)
 //                  +--------------------+
-// (W)->          ->|       HEASRV:      | HEASRV interface (health server)
 // (^)<-          <-|       HEASRV:      | HEASRV interface (health server)
+// (W)->          ->|       HEASRV:      | HEASRV interface (health server)
 //                  +--------------------+
 // (v)->          ->|       GOOCLI:      | GOOCLI interface (generic on/off cli)
 // (W)<-          <-|       GOOCLI:      | GOOCLI interface (generic on/off cli)
 //                  +--------------------+
-// (W)->          ->|       GOOSRV:      | GOOSRV interface (generic on/off srv)
 // (^)<-          <-|       GOOSRV:      | GOOSRV interface (generic on/off srv)
+// (W)->          ->|       GOOSRV:      | GOOSRV interface (generic on/off srv)
 //                  +--------------------+
 // (W)<-          <-|       GLVCLI:      | GLVCLI interface (generic level cli)
 // (v)->          ->|       GLVCLI:      | GLVCLI interface (generic level cli)
@@ -304,6 +300,6 @@
 //
 //==============================================================================
 
-  weak int bl_core(BL_ob *o, int val); // public module interface
+  int bl_core(BL_ob *o, int val); // public module interface
 
 #endif // __BL_CORE_H__

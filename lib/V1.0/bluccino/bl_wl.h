@@ -22,7 +22,7 @@
 // (v)->     TICK ->|       @id,cnt      | tick the module
 // (v)->     TOCK ->|       @id,cnt      | tock the module
 //                  +--------------------+
-//                  |        SET:        | SET: public interface
+//                  |       MESH:        | MESH: public interface
 // (^)<-      PRV <-|       onoff        | provision on/off
 // (^)<-      ATT <-|       onoff        | attention on/off
 //                  +--------------------+

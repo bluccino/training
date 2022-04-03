@@ -123,6 +123,22 @@
 #endif
 
 //==============================================================================
+// GEAR Logging
+//==============================================================================
+
+#ifndef CFG_LOG_GEAR
+    #define CFG_LOG_GEAR    1           // GEAR logging is by default on
+#endif
+
+#if (CFG_LOG_GEAR)
+    #define LOG_GEAR(l,f,...)    BL_LOG(CFG_LOG_GEAR-1+l,f,##__VA_ARGS__)
+    #define LOGO_GEAR(l,f,o,v)   bl_logo(CFG_LOG_GEAR-1+l,f,o,v)
+#else
+    #define LOG_GEAR(l,f,...)    {}     // empty
+    #define LOGO_GEAR(l,f,o,v)   {}     // empty
+#endif
+
+//==============================================================================
 // GPIO Logging
 //==============================================================================
 

@@ -87,12 +87,12 @@
 
 //==============================================================================
 // syntactic sugar: HW core init
-// - usage: bl_hw_init(cb)
+// - usage: bl_hw_SYS_INIT(bl_hw,cb)
 //==============================================================================
 
-  static inline int bl_hw_init(BL_oval cb)
+  static inline int bl_hw_SYS_INIT(BL_oval module,BL_oval cb)
   {
-    return bl_init(bl_hw,cb);
+    return bl_init(module,cb);
   }
 
 //==============================================================================
@@ -107,25 +107,23 @@
   }
 
 //==============================================================================
-// syntactic sugar: set LED @id on/off
-// - usage: bl_led_set(bl_in,id,val)   // val 0:off, 1:on
+// syntactic sugar: set LED @id on/off,          // send augmented message
+// - usage: _bl_hw_LED_SET(bl_hw,id,val)         // val 0:off, 1:on
 //==============================================================================
 
-  static inline int bl_led_set(BL_oval module,int id, int val)
+  static inline int _bl_hw_LED_SET(BL_oval module,int id, int val)
   {
-    BL_ob oo = {_LED,BL_HASH(SET_),id,NULL};
-    return module(&oo,val);
+    return _bl_msg(module,_LED,SET_, id,NULL,val);
   }
 
 //==============================================================================
-// syntactic sugar: togggle LED @id (@id: 0..4)
-// - usage: bl_led_toggle(bl_in,id)
+// syntactic sugar: toggle LED @id (@id: 0..4),  // send augmented message
+// - usage: _bl_hw_LED_TOGGLE(bl_hw,id)          // (BL_HW)<-[#LED:TOGGLE @id]
 //==============================================================================
 
-  static inline int bl_led_toggle(BL_oval module, int id)
+  static inline int _bl_hw_LED_TOGGLE(BL_oval module, int id)
   {
-    BL_ob oo = {_LED,BL_HASH(TOGGLE_),id,NULL};
-    return bl_in(&oo,0);
+    return _bl_msg(module,_LED,TOGGLE_, id,NULL,0);
   }
 
 //==============================================================================

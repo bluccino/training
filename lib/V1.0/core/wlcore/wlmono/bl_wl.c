@@ -23,7 +23,7 @@
 //==============================================================================
 
   #define LOG                     LOG_CORE
-  #define LOGO(lvl,col,o,val)     LOGO_CORE(lvl,col"ocore4:",o,val)
+  #define LOGO(lvl,col,o,val)     LOGO_CORE(lvl,col"bl_wl:",o,val)
   #define LOG0(lvl,col,o,val)     LOGO_CORE(lvl,col,o,val)
 
 //==============================================================================
@@ -252,9 +252,8 @@ struct bt_mesh_model *mod_srv_sw[] = {
 		NET_BUF_SIMPLE_DEFINE(msg, 2 + 1 + 4);
 		struct onoff_state *onoff_state = model->user_data;
 
-	  if (bl_dbg(4))
-		  printk(BL_Y"addr 0x%04x onoff 0x%02x\n"BL_0,
-		       bt_mesh_model_elem(model)->addr, onoff_state->current);
+	  LOG(4,BL_Y "addr 0x%04x onoff 0x%02x",
+		      bt_mesh_model_elem(model)->addr, onoff_state->current);
 
 		bt_mesh_model_msg_init(&msg, BT_MESH_MODEL_OP_GEN_ONOFF_STATUS);
 		net_buf_simple_add_u8(&msg, onoff_state->current);
@@ -281,7 +280,7 @@ static int gen_onoff_set_unack(struct bt_mesh_model *model,
 	p->current = net_buf_simple_pull_u8(buf);                           //@@@4.8
 /*
 	if (bl_dbg(4))
-  	printk(BL_Y"addr 0x%02x state 0x%02x\n"BL_0,
+  	printk(BL_G"addr 0x%02x state 0x%02x\n"BL_0,
 	       bt_mesh_model_elem(model)->addr, p->current);                //@@@4.8
 */
 
@@ -290,7 +289,7 @@ static int gen_onoff_set_unack(struct bt_mesh_model *model,
 //	gpio_pin_set(p->led_device, p->led_gpio_pin,
 //		     p->current);
   int id = p->led_gpio_pin - 16;
-	LOG(4,BL_R "rcv [GOOSRV:LET @%d,%d]",id,p->current);
+	LOG(4,BL_G "rcv [GOOSRV:LET @%d,%d]",id,p->current);
 
   _bl_msg(bl_wl,_GOOSRV,STS_, id,NULL,p->current);
 //<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -304,18 +303,22 @@ static int gen_onoff_set_unack(struct bt_mesh_model *model,
 	 * Only publish if there is an assigned address
 	 */
 
-	if (p->previous != p->current &&                                    //@@@4.8
-	    model->pub->addr != BT_MESH_ADDR_UNASSIGNED) {
-		printk("publish last 0x%02x cur 0x%02x\n",
-		       p->previous, p->current);                                  //@@@4.8
+  bool provision = (model->pub->addr != BT_MESH_ADDR_UNASSIGNED);
+
+	if (p->previous != p->current && provision)                         //@@@4.8
+	{
+		BL_LOG(5,"publish last 0x%02x cur 0x%02x\n", p->previous, p->current);                                  //@@@4.8
 		p->previous = p->current;
-		bt_mesh_model_msg_init(msg,
-				       BT_MESH_MODEL_OP_GEN_ONOFF_STATUS);
+
+      // init publisher and add current onoff status
+
+		bt_mesh_model_msg_init(msg, BT_MESH_MODEL_OP_GEN_ONOFF_STATUS);
 		net_buf_simple_add_u8(msg, p->current);                           //@@@4.8
+
+		  // publish mesh message and report potential error
+
 		err = bt_mesh_model_publish(model);
-		if (err) {
-			printk("bt_mesh_model_publish err %d\n", err);
-		}
+		bl_err(err,"bt_mesh_model_publish");
 	}
 
 	return 0;
@@ -329,7 +332,7 @@ static int gen_onoff_set(struct bt_mesh_model *model,
 			 struct bt_mesh_msg_ctx *ctx,
 			 struct net_buf_simple *buf)
 {
-	LOG(4,BL_R "rcv [GOOSRV:SET @id,onoff]");
+	LOG(4,BL_G "rcv [GOOSRV:SET @id,onoff]");
 
 	gen_onoff_set_unack(model, ctx, buf);
 	gen_onoff_get(model, ctx, buf);
@@ -349,9 +352,8 @@ static int gen_onoff_status(struct bt_mesh_model *model,
 
 	state = net_buf_simple_pull_u8(buf);
 
-	if (bl_dbg(4))
-  	printk(BL_Y"Node 0x%04x OnOff status from 0x%04x with state 0x%02x\n"BL_0,
-	       bt_mesh_model_elem(model)->addr, ctx->addr, state);
+	LOG(4,BL_Y "node 0x%04x OnOff status from 0x%04x with state 0x%02x",
+	      bt_mesh_model_elem(model)->addr, ctx->addr, state);
 
 	return 0;
 }
@@ -374,16 +376,14 @@ static void prov_complete(uint16_t net_idx, uint16_t addr)
 	primary_addr = addr;
 	primary_net_idx = net_idx;
 
-	BL_ob oo = {_SET, PRV_, 0, NULL};                               //@@@3.4
-	bl_core(&oo,1);
+	_bl_msg(bl_wl,_MESH,PRV_, 0,NULL,1);  // (BL_WL)<-[#MESH:PRV 1]
 }
 
 static void prov_reset(void)
 {
 	bt_mesh_prov_enable(BT_MESH_PROV_ADV | BT_MESH_PROV_GATT);
 
-	BL_ob oo = {_SET, PRV_, 0, NULL};                               //@@@3.4
-	bl_core(&oo,0);
+	_bl_msg(bl_wl,_MESH,PRV_, 0,NULL,0);  // (BL_WL)<-[#MESH:PRV 0]
 }
 
 static uint8_t dev_uuid[16] = { 0xdd, 0xdd };
@@ -394,12 +394,12 @@ static uint8_t dev_uuid[16] = { 0xdd, 0xdd };
 
   static void link_open(bt_mesh_prov_bearer_t bearer)
   {
-    _bl_msg(bl_wl,_SET,ATT_, 0,NULL,1);
+  	_bl_msg(bl_wl,_MESH,ATT_, 0,NULL,1);  // (BL_WL)<-[#MESH:ATT 1]
   }
 
   static void link_close(bt_mesh_prov_bearer_t bearer)
   {
-    _bl_msg(bl_wl,_SET,ATT_, 0,NULL,0);
+  	_bl_msg(bl_wl,_MESH,ATT_, 0,NULL,0);  // (BL_WL)<-[#MESH:ATT 0]
   }
 
 //==============================================================================
@@ -510,13 +510,14 @@ static void bt_ready(int err)
             return;
 
     BL_txt op = (pub_op == BT_MESH_MODEL_OP_GEN_ONOFF_SET) ? "SET" : "LET";
-    LOG(4,BL_R "pub [GOOCLI:%s @%d,%d]", op, pub_id,pub_val);
+    LOG(4,BL_G "pub [GOOCLI:%s @%d,%d]", op, pub_id,pub_val);
 
-    LOG(5,BL_Y"publish to 0x%04x onoff 0x%04x idx 0x%04x",
+    LOG(5,"publish to 0x%04x onoff 0x%04x idx 0x%04x",
                pub_cli->addr, pub_val, idx);
     bt_mesh_model_msg_init(pub_cli->msg,pub_op);
     net_buf_simple_add_u8(pub_cli->msg, pub_val);
     net_buf_simple_add_u8(pub_cli->msg, trans_id++);
+
     int err = bt_mesh_model_publish(mod_cli);
     bl_err(err,"bt_mesh_model_publish");
   }
@@ -579,18 +580,32 @@ static void bt_ready(int err)
 //==============================================================================
 // public module interface
 //==============================================================================
+// public module interface
+//==============================================================================
 //
-//  (H) := (BL_HW);  (v) := (BL_DOWN);  (^) := (BL_UP)
-//
+// (v) := (BL_DOWN);  (^) := (BL_UP);  (#) := (BL_WL)
 //                  +--------------------+
-//                  |        BL_WL       |  wireless core module
+//                  |       BL_WL        | wireless core module
 //                  +--------------------+
-//                  |        SYS:        |  SYS interface
-// (v)->     INIT ->|       <out>        |  init module, store <out> callback
+//                  |        SYS:        | SYS: public interface
+// (v)->     INIT ->|       @id,cnt      | init module, store <out> callback
+// (v)->     TICK ->|       @id,cnt      | tick the module
+// (v)->     TOCK ->|       @id,cnt      | tock the module
 //                  +--------------------+
-//                  |        SET:        |  SET interface
-// (^)<-      PRV <-|       enable       |  node provisioned
-// (^)<-      ATT <-|       enable       |  attention mode enable/disable
+//                  |       MESH:        | MESH: public interface
+// (^)<-      PRV <-|       onoff        | provision on/off
+// (^)<-      ATT <-|       onoff        | attention on/off
+//                  +--------------------+
+//                  |       RESET:       | RESET: public interface
+// (v)->      INC ->|         ms         | inc reset counter & set due timer
+// (v)->      PRV ->|                    | unprovision node
+// (^)<-      DUE <-|                    | reset timer is due
+//                  +--------------------+
+//                  |        NVM:        | NVM: public interface
+// (v)->    STORE ->|      @id,val       | store value in NVM at location @id
+// (v)->   RECALL ->|        @id         | recall value in NVM at location @id
+// (v)->     SAVE ->|                    | save NVM cache to NVM
+// (^)<-    READY <-|       ready        | notification that NVM is now ready
 //                  +--------------------+
 //                  |      GOOSRV:       |  GOOSRV interface
 // (^)<-      STS <-| @id,onoff,<BL_goo> |  output generic on/off status
@@ -600,13 +615,6 @@ static void bt_ready(int err)
 // (v)->      LET ->| @id,<BL_goo>,onoff |  publish unack'ed generic on/off SET
 // (v)->      GET ->|        @id         |  request GOO server status
 // (^)<-      STS <-|  @id,<BL_goo>,sts  |  notify  GOO server status
-//                  +====================+
-//                  |       #SET:        |  #SET private interface
-// (#)->      PRV ->|       enable       |  node provisioned
-// (#)->      ATT ->|       enable       |  attention mode enable/disable
-//                  +--------------------+
-//                  |     #GOOSRV:       |  #GOOSRV private interface
-// (#)->      STS ->|  @id,<BL_goo>,sts  |  provide GOO server status
 //                  +--------------------+
 //
 //==============================================================================
@@ -621,9 +629,9 @@ static void bt_ready(int err)
         out = o->data;                 // store output callback
         return init(o,val);            // delegate to init() worker
 
-      case _BL_ID(_SET,PRV_):          // [#SET:PRV val]  (provision)
-      case _BL_ID(_SET,ATT_):          // [#SET:ATT val]  (attention)
-        LOGO(3,"",o,val);
+      case _BL_ID(_MESH,PRV_):         // [#SET:PRV val]  (provision)
+      case _BL_ID(_MESH,ATT_):         // [#SET:ATT val]  (attention)
+//      LOGO(3,BL_G,o,val);
         return bl_out(o,val,out);      // output to subscriber
 
       case BL_ID(_GOOCLI,LET_):        // pub [GOOCLI:LET @id,<BL_goo>,onoff]
