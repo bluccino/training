@@ -8,7 +8,7 @@
 #include <drivers/gpio.h>
 
 #include "ble_mesh.h"
-#include "device_composition.h"
+#include "bl_dcomp.h"
 #include "publisher.h"
 
 #include "bluccino.h"
@@ -52,7 +52,7 @@ LOG(4,"publish ...");
 				       BT_MESH_MODEL_OP_GEN_ONOFF_SET_UNACK);
 		net_buf_simple_add_u8(root_models[3].pub->msg, 0x01);
 		net_buf_simple_add_u8(root_models[3].pub->msg, tid++);
-LOG(4,BL_R"snd [GOOCLI:LET @1,1]");
+LOG(4,BL_G"snd [GOOCLI:LET @1,1]");
 		err = bt_mesh_model_publish(&root_models[3]);
 #elif defined(ONOFF_TT)
 		bt_mesh_model_msg_init(root_models[3].pub->msg,
@@ -81,7 +81,7 @@ LOG(4,BL_R"snd [GOOCLI:LET @1,1]");
 				       BT_MESH_MODEL_OP_GEN_ONOFF_SET_UNACK);
 		net_buf_simple_add_u8(root_models[3].pub->msg, 0x00);
 		net_buf_simple_add_u8(root_models[3].pub->msg, tid++);
-LOG(4,BL_R"snd [GOOCLI:LET @1,0]");
+LOG(4,BL_G"snd [GOOCLI:LET @1,0]");
 		err = bt_mesh_model_publish(&root_models[3]);
 #elif defined(ONOFF_TT)
 		bt_mesh_model_msg_init(root_models[3].pub->msg,
@@ -307,7 +307,7 @@ LOG(4,BL_R"snd [GOOCLI:LET @1,0]");
   {
     static BL_iid goocli[4] = {GONOFF_CLI0,GONOFF_CLI0,GONOFF_CLI0,GONOFF_CLI0};
 
-    LOG0(4,BL_R "pub",o,val);
+    LOG0(4,BL_G "pub:",o,val);
     bl_assert(o->id > 0 && o->id <= 4);
 
     BL_model *pmod = bl_model(goocli[o->id-1]);

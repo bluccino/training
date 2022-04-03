@@ -51,7 +51,7 @@
     nolog = nolog || (o->cl == _SYS);
 
     if ( !nolog )
-      LOGO(3,"down:",o,val);         // not suppressed messages are logged
+      LOG0(3,"down:",o,val);         // not suppressed messages are logged
 
     return bl_core(o,val);             // forward down to BL_CORE module
   }
@@ -67,7 +67,7 @@
   {
 		static BL_oval out = bl_in;        // outputs to BL_IN by default
 
-    LOGO(3,"up:",o,val);
+    LOG0(3,"up:",o,val);
 
 		switch (bl_id(o))
 		{
@@ -96,33 +96,71 @@
 // (!)->     INIT ->|       <out>        | init module, store <out> callback
 // (!)->     TICK ->|      @id,cnt       | tick module
 // (!)->     TOCK ->|      @id,cnt       | tock module
-//                  +--------------------+
+//                  |....................|
 //                  |        SYS:        | SYS input interface
 // (v)<-     INIT <-|       <out>        | init module, store <out> callback
 // (v)<-     TICK <-|      @id,cnt       | tick module
 // (v)<-     TOCK <-|      @id,cnt       | tock module
 //                  +--------------------+
-//                  |       MESH:        | MESH interface
+//                  |       MESH:        | MESH upper interface
 // (O)<-      ATT <-|        sts         | notiy attention status
 // (O)<-      PRV <-|        sts         | notiy provision status
+//                  |....................|
+//                  |       MESH:        | MESH lower interface
+// (^)->      ATT ->|        sts         | notiy attention status
+// (^)->      PRV ->|        sts         | notiy provision status
 //                  +--------------------+
-//                  |        GET:        | GET interface
+//                  |        GET:        | GET upper interface
 // (*)->      ATT ->|        sts         | get attention status
 // (*)->      PRV ->|        sts         | get provision status
+//                  |....................|
+//                  |        GET:        | GET lower interface
+// (v)<-      ATT <-|        sts         | get attention status
+// (v)<-      PRV <-|        sts         | get provision status
 //                  +--------------------+
-//                  |        LED:        | LED output interface
+//                  |        LED:        | LED upper interface
+// (*)->      SET ->|     @id,onoff      | turn LED @id on/off
+// (*)->   TOGGLE <-|        @id         | toggle LED @id
+//                  |....................|
+//                  |        LED:        | LED lower interface
 // (v)<-      SET <-|     @id,onoff      | turn LED @id on/off
 // (v)<-   TOGGLE <-|        @id         | toggle LED @id
 //                  +--------------------+
-//                  |        LED:        | LED input interface
-// (*)->      SET ->|     @id,onoff      | turn LED @id on/off
-// (*)->   TOGGLE <-|        @id         | toggle LED @id
-//                  +--------------------+
-//                  |        SCAN:       | SCAN output interface
+//                  |        SCAN:       | SCAN upper interface
 // (O)<-      ADV <-|      <BL_adv>      | forward advertising data
-//                  +--------------------+
-//                  |        SCAN:       | SCAN input interface
+//                  |....................|
+//                  |        SCAN:       | SCAN lower interface
 // (^)->      ADV ->|      <BL_adv>      | forward advertising data
+//                  +--------------------+
+//                  |        NVM:        | NVM: upper interface
+// (O)<-    READY <-|       ready        | notification that NVM is now ready
+// (*)->    STORE ->|      @id,val       | store value in NVM at location @id
+// (*)->   RECALL ->|        @id         | recall value in NVM at location @id
+// (*)->     SAVE ->|                    | save NVM cache to NVM
+//                  |....................|
+//                  |        NVM:        | NVM lower interface
+// (^)->    READY ->|       ready        | notification that NVM is now ready
+// (v)<-    STORE <-|      @id,val       | store value in NVM at location @id
+// (v)<-   RECALL <-|        @id         | recall value in NVM at location @id
+// (v)<-     SAVE <-|                    | save NVM cache to NVM
+//                  +--------------------+
+//                  |       GOOCLI:      | GOOCLI upper interface
+// (*)->      SET ->| @id,<BL_goo>,onoff | post generic on/off SET msg. via mesh
+// (*)->      LET ->| @id,<BL_goo>,onoff | post generic on/off LET msg. via mesh
+// (*)->      GET ->|        @id         | post generic on/off GET msg. via mesh
+// (O)<-      STS <-| @id,<BL_goo>,onoff | receive gen. on/off status from mesh
+//                  |....................|
+//                  |       GOOCLI:      | GOOCLI lower interface
+// (v)<-      SET <-| @id,<BL_goo>,onoff | post generic on/off SET msg. via mesh
+// (v)<-      LET <-| @id,<BL_goo>,onoff | post generic on/off LET msg. via mesh
+// (v)<-      GET <-|        @id         | post generic on/off GET msg. via mesh
+// (^)->      STS ->| @id,<BL_goo>,onoff | receive gen. on/off status from mesh
+//                  +--------------------+
+//                  |       GOOSRV:      | GOOSRV upper interface
+// (O)<-      STS <-| @id,<BL_goo>,onoff | receive gen. on/off status from mesh
+//                  |....................|
+//                  |       GOOSRV:      | GOOSRV lower interface
+// (^)->      STS ->| @id,<BL_goo>,onoff | receive gen. on/off status from mesh
 //                  +--------------------+
 //
 //==============================================================================
@@ -131,7 +169,8 @@
   {
 		bool attention = false;
 		bool provision = false;
-		static BL_oval out = NULL;
+		static BL_oval out = NULL;         // output a message
+		static BL_oval down = bl_down;     // down-post a message
     int level = 2;                     // default verbose level
 
     switch (bl_id(o))                  // dispatch event
@@ -154,7 +193,7 @@
       case BL_ID(_MESH,PRV_):          // provision state changed
         provision = val;
         bl_log_color(attention,provision);
-        LOG(2,BL_M"node %sprovision",val?"":"un");
+        LOG(2,BL_M"in: node %sprovision",val?"":"un");
         return bl_out(o,val,out);
 
       case BL_ID(_GET,ATT_):           // [GET:ATT]
@@ -169,8 +208,9 @@
 
       case BL_ID(_LED,SET_):           // [LED:SET @id,onoff]
       case BL_ID(_LED,TOGGLE_):        // [LED:TOGGLE @id]
-        LOGO(level,"@",o,val);
-        return bl_down(o,val);         // post LED stuff down
+			  if (o->id > 0)                 // @id > 0?
+          LOG0(level,"@in:",o,val);    // log only for @id = 1..4
+        return bl_out(o,val,down);     // post LED stuff down
 
       case BL_ID(_BUTTON,PRESS_):      // [BUTTON:PRESS @id,0]
       case BL_ID(_BUTTON,RELEASE_):    // [BUTTON:RELEASE @id,time]
@@ -179,10 +219,28 @@
       case BL_ID(_SWITCH,STS_):        // [SWITCH:STS @id,time]
         return bl_out(o,val,out);      // post BUTTON stuff without logging
 
+      case BL_ID(_NVM,READY_):         // (^)->[NVM:READY ready]->(O)
+        return bl_out(o,val,out);      // output message
+
+      case BL_ID(_NVM,STORE_):         // (*) ->[NVM:STORE  @id,val]-> (v)
+      case BL_ID(_NVM,RECALL_):        // (*) ->[NVM:RECALL @id,val]-> (v)
+      case BL_ID(_NVM,SAVE_):          // (*) ->[NVM:SAVE   @id,val]-> (v)
+        return bl_out(o,val,down);     // post message down
+
+      case BL_ID(_GOOCLI,SET_):        // (*)->[GOOCLI:SET @id,<BL_goo>,v]->(v)
+      case BL_ID(_GOOCLI,LET_):        // (*)->[GOOCLI:LET @id,<BL_goo>,v]->(v)
+      case BL_ID(_GOOCLI,GET_):        // (*)->[GOOCLI:GET]->(v)
+        return bl_out(o,val,down);     // post message down
+
+      case BL_ID(_GOOCLI,STS_):        // (^)->[GOOCLI:STS]->(O)
+      case BL_ID(_GOOSRV,STS_):        // (^)->[GOOSRV:STS]->(O)
+			  LOG0(2,"in:",o,val);
+        return bl_out(o,val,out);      // output message down
+
       default:
         break;
     }
 
-    LOGO(level,"@",o,val);
+    LOG0(level,"@in:",o,val);
     return bl_out(o,val,out);          // forward message to subscriber
   }

@@ -28,3 +28,4 @@ Changelog History
 + renaming bl_api.c to bl_time.c, split bl_api.h into bl_time.h and bl_msg.h
 - test 03-meshfun/03-ledsrv in combi with 03-meshfun/02-swcli - works well :-)))
 - test 03-meshfun/04-clisrv - works well :-)))
+- modify and test 03-meshfun/05-nvm with different LEDs blinking after restart

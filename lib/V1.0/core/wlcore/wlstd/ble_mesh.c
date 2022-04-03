@@ -5,8 +5,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "ble_mesh.h"
-#include "device_composition.h"
+  #include "ble_mesh.h"
+  #include "bl_dcomp.h"
+
+  #include "bluccino.h"
+  #include "bl_wl.h"
 
 //==============================================================================
 // CORE level logging shorthands
@@ -20,8 +23,6 @@
 //==============================================================================
 // overview code migration from original onoff_app sample to a bluccino core
 //==============================================================================
-
-#include "bluccino.h"
 
 #ifndef MIGRATION_STEP1
   #define MIGRATION_STEP1         1    // TODO introduce bl_core()
@@ -58,22 +59,16 @@ static int output_string(const char *str)
 
 #endif
 
-static void prov_complete(uint16_t net_idx, uint16_t addr)
-{
-  #if MIGRATION_STEP2
-	  BL_ob o = {_SET,PRV_,0,NULL};
-	  bl_core(&o,1);            // post [MESH:PRV 1] to core, which posts it up
-  #endif // MIGRATION_STEP2
-}
+  static void prov_complete(uint16_t net_idx, uint16_t addr)
+  {
+    _bl_msg(ble_mesh,_MESH,PRV_, 0,NULL,1);     // (BL_WL) <- [#MESH,PRV 1]
+  }
 
-static void prov_reset(void)
-{
-	bt_mesh_prov_enable(BT_MESH_PROV_ADV | BT_MESH_PROV_GATT);
-  #if MIGRATION_STEP2
-	  BL_ob o = {_SET,PRV_,0,NULL};
-	  bl_core(&o,0);            // post [MESH:PRV 0] to core, which posts it up
-  #endif // MIGRATION_STEP2
-}
+  static void prov_reset(void)
+  {
+    bt_mesh_prov_enable(BT_MESH_PROV_ADV | BT_MESH_PROV_GATT);
+    _bl_msg(ble_mesh,_MESH,PRV_, 0,NULL,0);     // (BL_WL) <- [#MESH,PRV 0]
+  }
 
 //==============================================================================
 // provisioning link open/close callbacks
@@ -81,14 +76,12 @@ static void prov_reset(void)
 
   static void link_open(bt_mesh_prov_bearer_t bearer)
   {
-  	BL_ob o = {_SET, ATT_, 1, NULL};
-  	bl_core(&o,1);              // post [MESH:ATT 1] to core, which posts it up
+    _bl_msg(ble_mesh,_MESH,ATT_, 0,NULL,1);     // (BL_WL) <- [#MESH,ATT 1]
   }
 
   static void link_close(bt_mesh_prov_bearer_t bearer)
   {
-  	BL_ob o = {_SET, ATT_, 0, NULL};
-  	bl_core(&o,0);              // post [MESH:ATT 0] to core, which posts it up
+    _bl_msg(ble_mesh,_MESH,ATT_, 0,NULL,0);     // (BL_WL) <- [#MESH,ATT 0]
   }
 
 //==============================================================================
@@ -113,6 +106,10 @@ static void prov_reset(void)
   	.complete = prov_complete,
   	.reset = prov_reset,
   };
+
+//==============================================================================
+// callback: Bluetooth is ready
+//==============================================================================
 
   void bt_ready(void)
   {
@@ -141,4 +138,67 @@ static void prov_reset(void)
 
   	bt_mesh_prov_enable(BT_MESH_PROV_GATT | BT_MESH_PROV_ADV);
     LOG(4,BL_B"mesh initialized");
+  }
+
+//==============================================================================
+// worker: init
+//==============================================================================
+
+  static int init_ble_mesh(BL_ob *o, int val)
+  {
+    LOG(3,BL_C "init BLE/Mesh...");
+
+      // init Bluetooth subsystem
+
+    int err = bt_enable(NULL);
+    if (err)
+    {
+      bl_err(err,"Bluetooth init failed");
+      return err;
+    }
+
+    bt_ready();
+    return 0;                            // OK
+  }
+
+//==============================================================================
+// public module interface
+//==============================================================================
+//
+// (!) := (<parent>);  (O) := (<parent>);  (#) := (BLE_MESH)
+//                  +--------------------+
+//                  |      BLE_MESH      | manage BLE/mesh
+//                  +--------------------+
+//                  |        SYS:        | SYS: public interface
+// (!)->     INIT ->|      @id,<out>     | init module, store <out> callback
+//                  +--------------------+
+//                  |       MESH:        | MESH: public interface
+// (O)<-      PRV <-|       onoff        | provision on/off
+// (O)<-      ATT <-|       onoff        | attention on/off
+//                  +====================+
+//                  |      #MESH:        | MESH: private interface
+// (#)->      PRV ->|       onoff        | provision on/off
+// (#)->      ATT ->|       onoff        | attention on/off
+//                  +--------------------+
+//
+//==============================================================================
+
+  int ble_mesh(BL_ob *o, int val)
+  {
+    static BL_oval out = bl_wl;        // out goes to BL_WL by default
+
+    switch (bl_id(o))                  // dispatch message ID
+    {
+      case BL_ID(_SYS,INIT_):          // [SYS:INIT <out>]
+        out = o->data;                 // store output callback
+        return init_ble_mesh(o,val);   // delegate to init() worker
+
+      case _BL_ID(_MESH,PRV_):         // [#SET:PRV val]  (provision)
+      case _BL_ID(_MESH,ATT_):         // [#SET:ATT val]  (attention)
+//      LOGO(3,BL_G,o,val);
+        return bl_out(o,val,out);      // output to subscriber
+
+      default:
+        return -1;                     // bad input
+    }
   }

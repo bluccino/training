@@ -27,45 +27,68 @@
   int bl_gear(BL_ob *o, int val);      // gear module interface
 
 //==============================================================================
-// BL_IN module: input a message to Bluccino API
+// BL_IN: input a message to Bluccino API
+// - also housekeeps attention and provision status and controls log colors
+// - note: bl_gear.c provides a weak implementation (redefinition possible)
 //==============================================================================
+//
 // (*) := (<any>); (^) := (BL_UP); (#) := (BL_HW); (v) := (BL_DOWN);
 // (I) := (BL_IN); (O) := (<when>)
 //
 //                  +--------------------+
-//                  |       BL_IN        | Bluccino message input
+//                  |        BL_IN       | Bluccino message input
 //                  +--------------------+
 //                  |        SYS:        | SYS input interface
 // (!)->     INIT ->|       <out>        | init module, store <out> callback
 // (!)->     TICK ->|      @id,cnt       | tick module
 // (!)->     TOCK ->|      @id,cnt       | tock module
-//                  +--------------------+
+//                  |....................|
 //                  |        SYS:        | SYS input interface
 // (v)<-     INIT <-|       <out>        | init module, store <out> callback
 // (v)<-     TICK <-|      @id,cnt       | tick module
 // (v)<-     TOCK <-|      @id,cnt       | tock module
 //                  +--------------------+
-//                  |        SET:        | SET interface
+//                  |       MESH:        | MESH upper interface
 // (O)<-      ATT <-|        sts         | notiy attention status
 // (O)<-      PRV <-|        sts         | notiy provision status
+//                  |....................|
+//                  |       MESH:        | MESH lower interface
+// (^)->      ATT ->|        sts         | notiy attention status
+// (^)->      PRV ->|        sts         | notiy provision status
 //                  +--------------------+
-//                  |        GET:        | GET interface
+//                  |        GET:        | GET upper interface
 // (*)->      ATT ->|        sts         | get attention status
 // (*)->      PRV ->|        sts         | get provision status
+//                  |....................|
+//                  |        GET:        | GET lower interface
+// (v)<-      ATT <-|        sts         | get attention status
+// (v)<-      PRV <-|        sts         | get provision status
 //                  +--------------------+
-//                  |        LED:        | LED output interface
+//                  |        LED:        | LED upper interface
+// (*)->      SET ->|     @id,onoff      | turn LED @id on/off
+// (*)->   TOGGLE <-|        @id         | toggle LED @id
+//                  |....................|
+//                  |        LED:        | LED lower interface
 // (v)<-      SET <-|     @id,onoff      | turn LED @id on/off
 // (v)<-   TOGGLE <-|        @id         | toggle LED @id
 //                  +--------------------+
-//                  |        LED:        | LED input interface
-// (*)->      SET ->|     @id,onoff      | turn LED @id on/off
-// (*)->   TOGGLE <-|        @id         | toggle LED @id
-//                  +--------------------+
-//                  |        SCAN:       | SCAN output interface
+//                  |        SCAN:       | SCAN upper interface
 // (O)<-      ADV <-|      <BL_adv>      | forward advertising data
-//                  +--------------------+
-//                  |        SCAN:       | SCAN input interface
+//                  |....................|
+//                  |        SCAN:       | SCAN lower interface
 // (^)->      ADV ->|      <BL_adv>      | forward advertising data
+//                  +--------------------+
+//                  |        NVM:        | NVM: upper interface
+// (O)<-    READY <-|       ready        | notification that NVM is now ready
+// (*)->    STORE ->|      @id,val       | store value in NVM at location @id
+// (*)->   RECALL ->|        @id         | recall value in NVM at location @id
+// (*)->     SAVE ->|                    | save NVM cache to NVM
+//                  |....................|
+//                  |        NVM:        | NVM lower interface
+// (^)->    READY ->|       ready        | notification that NVM is now ready
+// (v)<-    STORE <-|      @id,val       | store value in NVM at location @id
+// (v)<-   RECALL <-|        @id         | recall value in NVM at location @id
+// (v)<-     SAVE <-|                    | save NVM cache to NVM
 //                  +--------------------+
 //
 //==============================================================================

@@ -96,17 +96,6 @@
   }
 
 //==============================================================================
-// syntactic sugar: set LED @id on/off or togggle LED @id (@id: 0..4)
-// - usage: bl_led(id,val)   // val 0:off, 1:on, -1:toggle
-//==============================================================================
-
-  static inline int bl_led(int id, int val)
-  {
-    BL_ob oo = {_LED,val<0?TOGGLE_:SET_,id,NULL};
-    return bl_in(&oo,val<0?0:val);
-  }
-
-//==============================================================================
 // syntactic sugar: set LED @id on/off,          // send augmented message
 // - usage: _bl_hw_LED_SET(bl_hw,id,val)         // val 0:off, 1:on
 //==============================================================================
@@ -124,36 +113,6 @@
   static inline int _bl_hw_LED_TOGGLE(BL_oval module, int id)
   {
     return _bl_msg(module,_LED,TOGGLE_, id,NULL,0);
-  }
-
-//==============================================================================
-// syntactic sugar: check if message is a button press message ([BUTTON:PRESS])
-// - usage: pressed = bl_pressed(o)
-//==============================================================================
-
-  static inline bool bl_pressed(BL_ob *o)
-  {
-    return  bl_is(o,_BUTTON,PRESS_);
-  }
-
-//==============================================================================
-// syntactic sugar: check if message is a button release msg ([BUTTON:RELEASE])
-// - usage: released = bl_released(o)
-//==============================================================================
-
-  static inline bool bl_released(BL_ob *o)
-  {
-    return  bl_is(o,_BUTTON,RELEASE_);
-  }
-
-//==============================================================================
-// syntactic sugar: check if message is a switch status update ([SWITCH:STS])
-// - usage: switched = bl_switched(o)
-//==============================================================================
-
-  static inline bool bl_switched(BL_ob *o)
-  {
-    return  bl_is(o,_SWITCH,STS_);
   }
 
 #endif // __BL_HW_H__

@@ -34,6 +34,7 @@
   #include "bl_time.h"
   #include "bl_gear.h"
   #include "bl_run.h"
+	#include "bl_sugar.h"
 
 #endif
 

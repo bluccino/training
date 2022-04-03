@@ -9,7 +9,7 @@
 # project definition and path setup
 #===============================================================================
 
-  project(05-nvm)
+  project(06-housekeep)
 
   set (LIB ../../../lib/V1.0)
   set (BLU ${LIB}/bluccino)            # Bluccino stuff
@@ -32,6 +32,7 @@ target_sources(app PRIVATE
 				 ${BLU}/bluccino.c
 	       ${HWC}/bl_hw.c
 	       ${WLC}/bl_wl.c
+	       ${LMO}/bl_house.c
 	       )
 
 target_sources_ifdef(CONFIG_MCUMGR app PRIVATE ${CORE}/smp_svr.c)

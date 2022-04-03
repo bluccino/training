@@ -1,12 +1,17 @@
-/* Bluetooth: Mesh Generic OnOff, Generic Level, Lighting & Vendor Models
- *
- * Copyright (c) 2018 Vikrant More
- *
- * SPDX-License-Identifier: Apache-2.0
- */
+//==============================================================================
+// bl_dcomp.h
+// device composition for multi model mesh demo based wireless (mesh) core
+//
+// Created by Hugo Pristauz on 2022-Jan-02
+// Copyright © 2022 Bluccino. All rights reserved.
+//==============================================================================
+// Bluetooth: Mesh Generic OnOff, Generic Level, Lighting & Vendor Models
+// Copyright (c) 2018 Vikrant More
+// SPDX-License-Identifier: Apache-2.0
+//==============================================================================
 
-#ifndef _DEVICE_COMPOSITION_H
-#define _DEVICE_COMPOSITION_H
+#ifndef __BL_DCOMP_H__
+#define __BL_DCOMP_H__
 
   #include "bluccino.h"
 
@@ -159,7 +164,7 @@ void gen_level_publish_temp(struct bt_mesh_model *model);
 //
 // (C) := (BL_CORE)
 //                  +--------------------+
-//                  |     BL_DEVCOMP     |
+//                  |     BL_DCOMP       | device composition
 //                  +--------------------+
 //                  |        SYS:        | SYS: interface
 // (C)->     INIT ->|       <out>        | init module, store <out> callback
@@ -170,6 +175,6 @@ void gen_level_publish_temp(struct bt_mesh_model *model);
 //
 //==============================================================================
 
-  int bl_devcomp(BL_ob *o, int val);
+  int bl_dcomp(BL_ob *o, int val);
 
-#endif
+#endif // __BL_DCOMP_H__

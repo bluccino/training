@@ -1,6 +1,6 @@
 //==============================================================================
-// device_composition.c
-// multi model mesh demo based mesh core
+// bl_dcomp.h
+// device composition for multi model mesh demo based wireless (mesh) core
 //
 // Created by Hugo Pristauz on 2022-Jan-02
 // Copyright © 2022 Bluccino. All rights reserved.
@@ -14,7 +14,7 @@
 
 #include "ble_mesh.h"
 #include "common.h"
-#include "device_composition.h"
+#include "bl_dcomp.h"
 #include "state_binding.h"
 #include "transition.h"
 #include "storage.h"
@@ -26,8 +26,6 @@
   #include "bluccino.h"
   #include "bl_mesh.h"
   #include "bl_gonoff.h"
-
-  #define _STS_   BL_HASH(STS_)        // hashed STS opcode
 
 //==============================================================================
 // CORE level logging shorthands
@@ -89,7 +87,7 @@
 
   static void workhorse(struct k_work *work)
   {
-    bl_devcomp(&post.oo,post.val);     // post to module interface for output
+    bl_dcomp(&post.oo,post.val);     // post to module interface for output
   }
 
   static K_WORK_DEFINE(work,workhorse);// assign work with workhorse
@@ -254,7 +252,7 @@ static int gen_onoff_set_unack(struct bt_mesh_model *model,
 	pay->onoff = onoff = net_buf_simple_pull_u8(buf);
 	pay->tid = tid = net_buf_simple_pull_u8(buf);
 
-  LOG(4,BL_R"rcv [GOOSRV:LET @id,%d]",pay->onoff);
+  LOG(4,BL_G"rcv [GOOSRV:LET @id,%d]",pay->onoff);
 
 	if (onoff > STATE_ON)
   {
@@ -326,12 +324,12 @@ static int gen_onoff_set_unack(struct bt_mesh_model *model,
   #if MIGRATION_STEP6                  // post upward
     bool dummy = 0;
 SUBMIT:  dummy = 1;                    // need this in order to use label
-    BL_ob oo = {_GOOSRV,_STS_,1,pay};
+    BL_ob oo = {BL_AUG(_GOOSRV),STS_,1,pay};
     LOG0(5,BL_R"goosrv:let:",&oo,pay->onoff);
     submit(&oo,pay->onoff);
   #endif
 
-	return 0;
+  return 0;
 }
 
 //==============================================================================
@@ -355,7 +353,7 @@ SUBMIT:  dummy = 1;                    // need this in order to use label
     pay->onoff = onoff = net_buf_simple_pull_u8(buf);
     pay->tid = tid = net_buf_simple_pull_u8(buf);
 
-    LOG(4,BL_R"rcv [GOOSRV:SET @id,%d] #%d",pay->onoff,tid);
+    LOG(4,BL_G"rcv [GOOSRV:SET @id,%d] #%d",pay->onoff,tid);
 
   	if (onoff > STATE_ON)
     {
@@ -435,7 +433,7 @@ SUBMIT:  dummy = 1;                    // need this in order to use label
       bool dummy = 0;
   SUBMIT:  dummy = 1;                    // need this in order to use label
 
-      BL_ob oo = {_GOOSRV,_STS_,1,pay};
+      BL_ob oo = {BL_AUG(_GOOSRV),STS_,1,pay};
       LOG0(5,"goosrv:set",&oo,pay->onoff);
       submit(&oo,pay->onoff);
     #endif
@@ -3426,7 +3424,7 @@ struct bt_mesh_model s0_models[] = {
 //
 //==============================================================================
 
-  int bl_devcomp(BL_ob *o, int val)
+  int bl_dcomp(BL_ob *o, int val)
   {
     static BL_oval out = NULL;          // store <out> callback
 
@@ -3436,7 +3434,7 @@ struct bt_mesh_model s0_models[] = {
         out = o->data;                 // store <out> callback
         return 0;                      // OK
 
-      case BL_ID(_GOOSRV,_STS_):
+      case _BL_ID(_GOOSRV,STS_):       // [#GOOSRV:STS @id,<BL_goo>,sts]
         return bl_out(o,val,out);
 
       default:

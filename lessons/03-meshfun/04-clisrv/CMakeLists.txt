@@ -12,9 +12,9 @@ find_package(Zephyr REQUIRED HINTS $ENV{ZEPHYR_BASE})
   project(04-clisrv)
 
   set (LIB ../../../lib/V1.0)
-  set (BLU ${LIB}/bluccino)
-  set (HWC ${LIB}/core/hwcore/hwtiny)
-  set (WLC ${LIB}/core/wlcore/wlmono)
+  set (BLU ${LIB}/bluccino)            # Bluccino stuff
+  set (HWC ${LIB}/core/hwcore/hwtiny)  # tiny hardware core
+  set (WLC ${LIB}/core/wlcore/wltiny)  # tiny wireless core
   set (SRC src)
 
   include_directories(${SRC} ${BLU} ${HWC})

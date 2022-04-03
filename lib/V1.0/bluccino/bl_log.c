@@ -57,7 +57,7 @@
 
   void bl_log_color(bool attention, bool provision)
   {
-    color = attention ? BL_G : (provision ? BL_Y : "");
+    color = attention ? BL_G : (provision ? BL_C : "");
   }
 
   int bl_verbose(int verbose)              // set verbose level

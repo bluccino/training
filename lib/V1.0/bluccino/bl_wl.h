@@ -13,42 +13,70 @@
 // public module interface
 //==============================================================================
 //
-// (v) := (BL_DOWN);  (^) := (BL_UP);  (#) := (BL_WL)
+// (N) := (BL_NVM);  (!) := (<parent>); (O) := (<out>); (B) := (BLE_MESH);
 //                  +--------------------+
-//                  |       BL_WL        | wireless core module
+//                  |        BL_WL       | wireless core
 //                  +--------------------+
 //                  |        SYS:        | SYS: public interface
-// (v)->     INIT ->|       @id,cnt      | init module, store <out> callback
-// (v)->     TICK ->|       @id,cnt      | tick the module
-// (v)->     TOCK ->|       @id,cnt      | tock the module
+// (!)->     INIT ->|       @id,cnt      | init module, store <out> callback
+// (!)->     TICK ->|       @id,cnt      | tick the module
+// (!)->     TOCK ->|       @id,cnt      | tock the module
 //                  +--------------------+
-//                  |       MESH:        | MESH: public interface
-// (^)<-      PRV <-|       onoff        | provision on/off
-// (^)<-      ATT <-|       onoff        | attention on/off
+//                  |       MESH:        | MESH upper interface
+// (O)<-      PRV <-|       onoff        | provision on/off
+// (O)<-      ATT <-|       onoff        | attention on/off
+//                  |....................|
+//                  |       MESH:        | MESH lower interface
+// (B)->      PRV ->|       onoff        | provision on/off
+// (B)->      ATT ->|       onoff        | attention on/off
 //                  +--------------------+
 //                  |       RESET:       | RESET: public interface
-// (v)->      INC ->|         ms         | inc reset counter & set due timer
-// (v)->      PRV ->|                    | unprovision node
-// (^)<-      DUE <-|                    | reset timer is due
+// (O)<-      DUE <-|                    | reset timer is due
+// (!)->      INC ->|         ms         | inc reset counter & set due timer
+// (!)->      PRV ->|                    | unprovision node
 //                  +--------------------+
-//                  |        NVM:        | NVM: public interface
-// (v)->    STORE ->|      @id,val       | store value in NVM at location @id
-// (v)->   RECALL ->|        @id         | recall value in NVM at location @id
-// (v)->     SAVE ->|                    | save NVM cache to NVM
-// (^)<-    READY <-|       ready        | notification that NVM is now ready
+//                  |        NVM:        | NVM: upper interface
+// (O)<-    READY <-|       ready        | notification that NVM is now ready
+// (!)->    STORE ->|      @id,val       | store value in NVM at location @id
+// (!)->   RECALL ->|        @id         | recall value in NVM at location @id
+// (!)->     SAVE ->|                    | save NVM cache to NVM
+//                  |....................|
+//                  |        NVM:        | NVM: lower interface
+// (N)->    READY ->|       ready        | notification that NVM is now ready
+// (N)<-    STORE <-|      @id,val       | store value in NVM at location @id
+// (N)<-   RECALL <-|        @id         | recall value in NVM at location @id
+// (N)<-     SAVE <-|                    | save NVM cache to NVM
+//                  +====================+
+//                  |       #SET:        | SET: private interface
+// (#)->      PRV ->|       onoff        | provision on/off
+// (#)->      ATT ->|       onoff        | attention on/off
 //                  +--------------------+
-//                  |      GOOSRV:       |  GOOSRV interface
-// (^)<-      STS <-| @id,onoff,<BL_goo> |  output generic on/off status
-//                  +--------------------+
-//                  |      GOOCLI:       |  GOOSRV interface
-// (v)->      SET ->| @id,<BL_goo>,onoff |  punlish ack'ed generic on/off SET
-// (v)->      LET ->| @id,<BL_goo>,onoff |  publish unack'ed generic on/off SET
-// (v)->      GET ->|        @id         |  request GOO server status
-// (^)<-      STS <-|  @id,<BL_goo>,sts  |  notify  GOO server status
+//                  |      #RESET:       | RESET: private interface
+// (#)->      DUE ->|                    | reset timer is due
 //                  +--------------------+
 //
 //==============================================================================
 
   int bl_wl(BL_ob *o, int val);        // HW core module interface
+
+//==============================================================================
+// syntactic sugar: store value to non volatile memory (NVM)
+// - usage: bl_wl_NVM_STORE(bl_in,id,val)  // store value at NVM location @id
+//==============================================================================
+
+  static inline int bl_wl_NVM_STORE(BL_oval module,int id, int val)
+  {
+    return bl_msg(module,_NVM,STORE_, id,NULL,val);
+  }
+
+//==============================================================================
+// syntactic sugar: recall value from non volatile memory (NVM)
+// - usage: val = bl_wl_NVM_RECALL(bl_in,id)    // recall val from NMV loc. @id
+//==============================================================================
+
+  static inline int bl_wl_NVM_RECALL(BL_oval module, int id)
+  {
+    return bl_msg(module,_NVM,RECALL_, id,NULL,0);
+  }
 
 #endif // __BL_HW_H__

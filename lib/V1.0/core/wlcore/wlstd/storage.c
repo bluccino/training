@@ -11,12 +11,10 @@
 //==============================================================================
 
   #include "ble_mesh.h"
-  #include "device_composition.h"
+  #include "bl_dcomp.h"
   #include "storage.h"
 
   #include "bluccino.h"
-
-  #define _READY_   BL_HASH(READY_)    // hashed symbol #READY
 
 //==============================================================================
 // NVM level logging shorthands
@@ -40,7 +38,7 @@
   static bool ready = false;           // is nvm cache ready?
 
 //==============================================================================
-// local save functions
+// helper: local save functions
 //==============================================================================
 
   static void save_nvm_cache(void)
@@ -112,7 +110,7 @@
   }
 
 //==============================================================================
-// storage work handler
+// callback: storage work handler
 //==============================================================================
 
   static void storage_work_handler(struct k_work *work)
@@ -150,7 +148,7 @@
   }
 
 //==============================================================================
-// save on flash
+// helper: save on flash
 //==============================================================================
 
   K_WORK_DEFINE(storage_work, storage_work_handler);
@@ -162,15 +160,14 @@
   }
 
 //==============================================================================
-// notify readiness
+// helper: notify readiness
 //==============================================================================
 
   static void nvm_ready_worker(struct k_work *work)
   {
-    ready = true;
-    BL_ob oo = {_NVM,_READY_,0,NULL};
-    LOGO(4,BL_M,&oo,ready);
-    bl_nvm(&oo,ready);                   // post [NVM:READY] via <out>
+		ready = true;
+    LOG(4,BL_M "NVM is now ready");
+    _bl_msg(bl_nvm,_NVM,READY_, 0,NULL,ready);  // (BL_NVM) <- [NVM:READY ready]
   }
 
   K_WORK_DEFINE(nvm_ready_work, nvm_ready_worker);
@@ -181,73 +178,73 @@
   }
 
 //==============================================================================
-// save on flash
+// helper: save settings on flash
 //==============================================================================
 
   static int ps_set(const char *key, size_t len_rd,
   		  settings_read_cb read_cb, void *cb_arg)
   {
-  	ssize_t len = 0;
-  	int key_len;
-  	const char *next;
+    ssize_t len = 0;
+    int key_len;
+    const char *next;
 
-  	key_len = settings_name_next(key, &next);
+    key_len = settings_name_next(key, &next);
     //LOG(4,"ps_set - key:%s",next?next:"???");
 
-  	if (!next)
+    if (!next)
     {
-  		if (!strncmp(key, "nvm", key_len))
+      if (!strncmp(key, "nvm", key_len))
       {
-  			len = read_cb(cb_arg, &nvm_cache, sizeof(nvm_cache));
-  	    submit_nvm_ready();
+        len = read_cb(cb_arg, &nvm_cache, sizeof(nvm_cache));
+        submit_nvm_ready();
       }
 
-  		if (!strncmp(key, "rc", key_len))
+      if (!strncmp(key, "rc", key_len))
       {
-  			len = read_cb(cb_arg, &reset_counter, sizeof(reset_counter));
+        len = read_cb(cb_arg, &reset_counter, sizeof(reset_counter));
         //LOG(4,"ps_set: reset counter = %d",reset_counter);
       }
 
-  		if (!strncmp(key, "gdtt", key_len))
+      if (!strncmp(key, "gdtt", key_len))
       {
-  			len = read_cb(cb_arg, &ctl->tt, sizeof(ctl->tt));
+        len = read_cb(cb_arg, &ctl->tt, sizeof(ctl->tt));
         //LOG(4,"ps_set: tt = %d",ctl->tt);
       }
 
-  		if (!strncmp(key, "gpo", key_len))
-  			len = read_cb(cb_arg, &ctl->onpowerup, sizeof(ctl->onpowerup));
+      if (!strncmp(key, "gpo", key_len))
+        len = read_cb(cb_arg, &ctl->onpowerup, sizeof(ctl->onpowerup));
 
-  		if (!strncmp(key, "ld", key_len))
+      if (!strncmp(key, "ld", key_len))
         len = read_cb(cb_arg, &ctl->light->def, sizeof(ctl->light->def));
 
-  		if (!strncmp(key, "td", key_len))
-  			len = read_cb(cb_arg, &ctl->temp->def, sizeof(ctl->temp->def));
+      if (!strncmp(key, "td", key_len))
+  	    len = read_cb(cb_arg, &ctl->temp->def, sizeof(ctl->temp->def));
 
-  		if (!strncmp(key, "dd", key_len))
-  			len = read_cb(cb_arg, &ctl->duv->def, sizeof(ctl->duv->def));
+      if (!strncmp(key, "dd", key_len))
+  	    len = read_cb(cb_arg, &ctl->duv->def, sizeof(ctl->duv->def));
 
-  		if (!strncmp(key, "ll", key_len))
-  			len = read_cb(cb_arg, &ctl->light->last, sizeof(ctl->light->last));
+      if (!strncmp(key, "ll", key_len))
+  	    len = read_cb(cb_arg, &ctl->light->last, sizeof(ctl->light->last));
 
-  		if (!strncmp(key, "llt", key_len))
-  			len = read_cb(cb_arg, &ctl->light->target, sizeof(ctl->light->target));
+      if (!strncmp(key, "llt", key_len))
+  	    len = read_cb(cb_arg, &ctl->light->target, sizeof(ctl->light->target));
 
-  		if (!strncmp(key, "tlt", key_len))
-  			len = read_cb(cb_arg, &ctl->temp->target, sizeof(ctl->temp->target));
+      if (!strncmp(key, "tlt", key_len))
+  	    len = read_cb(cb_arg, &ctl->temp->target, sizeof(ctl->temp->target));
 
-  		if (!strncmp(key, "dlt", key_len))
-  			len = read_cb(cb_arg, &ctl->duv->target, sizeof(ctl->duv->target));
+      if (!strncmp(key, "dlt", key_len))
+  	    len = read_cb(cb_arg, &ctl->duv->target, sizeof(ctl->duv->target));
 
-  		if (!strncmp(key, "lr", key_len))
-  			len = read_cb(cb_arg, &ctl->light->range,  sizeof(ctl->light->range));
+      if (!strncmp(key, "lr", key_len))
+  	    len = read_cb(cb_arg, &ctl->light->range,  sizeof(ctl->light->range));
 
-  		if (!strncmp(key, "tr", key_len))
-  			len = read_cb(cb_arg, &ctl->temp->range, sizeof(ctl->temp->range));
+      if (!strncmp(key, "tr", key_len))
+  	    len = read_cb(cb_arg, &ctl->temp->range, sizeof(ctl->temp->range));
 
-  		return (len < 0) ? len : 0;
-  	}
+      return (len < 0) ? len : 0;
+    }
 
-  	return -ENOENT;
+    return -ENOENT;
   }
 
 //==============================================================================
@@ -261,7 +258,13 @@
          };
 
 //==============================================================================
-// save NVM cache to NVM
+//------------------------------------------------------------------------------
+//                                WORKERS
+//------------------------------------------------------------------------------
+//==============================================================================
+
+//==============================================================================
+// worker: save NVM cache to NVM
 //==============================================================================
 
   static int save(BL_ob *o, int val)
@@ -271,7 +274,7 @@
   }
 
 //==============================================================================
-// store value in NVM
+// worker: store value in NVM
 //==============================================================================
 
   static int store(BL_ob *o, int val)
@@ -292,7 +295,7 @@
   }
 
 //==============================================================================
-// recall value from NVM
+// worker: recall value from NVM
 //==============================================================================
 
   static int recall(BL_ob *o, int val)
@@ -306,7 +309,7 @@
   }
 
 //==============================================================================
-// tock module
+// worker: tock
 //==============================================================================
 
   static int tock(BL_ob *o, int val)
@@ -337,7 +340,7 @@
   }
 
 //==============================================================================
-// init module
+// worker: init module
 //==============================================================================
 
   static int init_nvm(BL_ob *o, int val)
@@ -365,19 +368,19 @@
 // public module interface
 //==============================================================================
 //
-// (C) := (BL_CORE)
+// (W) := (BL_WL)
 //                  +--------------------+
 //                  |       BL_NVM       | non volatile memory access
 //                  +--------------------+
 //                  |        SYS:        | SYS: public interface
-// (C)->     INIT ->|       @id,cnt      | init module, store <out> callback
-// (C)->     TOCK ->|       @id,cnt      | tock the module
+// (W)->     INIT ->|       @id,cnt      | init module, store <out> callback
+// (W)->     TOCK ->|       @id,cnt      | tock the module
 //                  +--------------------+
 //                  |        NVM:        | NVM: public interface
-// (C)<-    READY <-|       ready        | notification that NVM is now ready
-// (C)->    STORE ->|      @id,val       | store value in NVM at location @id
-// (C)->   RECALL ->|        @id         | recall value in NVM at location @id
-// (C)->     SAVE ->|                    | save NVM cache to NVM
+// (W)<-    READY <-|       ready        | notification that NVM is now ready
+// (W)->    STORE ->|      @id,val       | store value in NVM at location @id
+// (W)->   RECALL ->|        @id         | recall value in NVM at location @id
+// (W)->     SAVE ->|                    | save NVM cache to NVM
 //                  +====================+
 //                  |        NVM:        | NVM: private interface
 // (#)->   #READY ->|       ready        | notification that NVM is now ready
@@ -398,8 +401,8 @@
       case BL_ID(_SYS,TOCK_):        // [SYS:TOCK @0,cnt]
         return tock(o,val);          // forward to tock() worker
 
-      case BL_ID(_NVM,_READY_):      // [NVM:#READY ready]
-        return bl_out(o,val,out);    // forward to store() worker
+      case _BL_ID(_NVM,READY_):      // [#NVM:READY]
+        return bl_out(o,val,out);    // (O) <- [NVM:READY]
 
       case BL_ID(_NVM,STORE_):       // [NVM:STORE @id,val]
         return store(o,val);         // forward to store() worker

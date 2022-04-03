@@ -8,7 +8,7 @@
 #ifndef _TRANSITION_H
 #define _TRANSITION_H
 
-#include "device_composition.h"
+#include "bl_dcomp.h"
 
 #define UNKNOWN_VALUE 0x3F
 #define DEVICE_SPECIFIC_RESOLUTION 10

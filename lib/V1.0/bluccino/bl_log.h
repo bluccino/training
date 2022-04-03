@@ -60,22 +60,6 @@
 #endif
 
 //==============================================================================
-// BASIS Logging
-//==============================================================================
-
-#ifndef CFG_LOG_BASIS
-    #define CFG_LOG_BASIS    0         // BASIS logging is by default off
-#endif
-
-#if (CFG_LOG_BASIS)
-    #define LOG_BASIS(l,f,...)    BL_LOG(CFG_LOG_BASIS-1+l,f,##__VA_ARGS__)
-    #define LOGO_BASIS(l,f,o,v)   bl_logo(CFG_LOG_BASIS-1+l,f,o,v)
-#else
-    #define LOG_BASIS(l,f,...)    {}     // empty
-    #define LOGO_BASIS(l,f,o,v)   {}     // empty
-#endif
-
-//==============================================================================
 // BUTTON Logging
 //==============================================================================
 

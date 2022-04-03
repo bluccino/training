@@ -580,8 +580,6 @@ static void bt_ready(int err)
 //==============================================================================
 // public module interface
 //==============================================================================
-// public module interface
-//==============================================================================
 //
 // (v) := (BL_DOWN);  (^) := (BL_UP);  (#) := (BL_WL)
 //                  +--------------------+
@@ -607,14 +605,18 @@ static void bt_ready(int err)
 // (v)->     SAVE ->|                    | save NVM cache to NVM
 // (^)<-    READY <-|       ready        | notification that NVM is now ready
 //                  +--------------------+
-//                  |      GOOSRV:       |  GOOSRV interface
-// (^)<-      STS <-| @id,onoff,<BL_goo> |  output generic on/off status
+//                  |      GOOSRV:       | GOOSRV interface
+// (^)<-      STS <-| @id,onoff,<BL_goo> | output generic on/off status
 //                  +--------------------+
-//                  |      GOOCLI:       |  GOOSRV interface
-// (v)->      SET ->| @id,<BL_goo>,onoff |  punlish ack'ed generic on/off SET
-// (v)->      LET ->| @id,<BL_goo>,onoff |  publish unack'ed generic on/off SET
-// (v)->      GET ->|        @id         |  request GOO server status
-// (^)<-      STS <-|  @id,<BL_goo>,sts  |  notify  GOO server status
+//                  |      GOOCLI:       | GOOSRV interface
+// (v)->      SET ->| @id,<BL_goo>,onoff | publish ack'ed generic on/off SET
+// (v)->      LET ->| @id,<BL_goo>,onoff | publish unack'ed generic on/off SET
+// (v)->      GET ->|        @id         | request GOO server status
+// (^)<-      STS <-|  @id,<BL_goo>,sts  | notify  GOO server status
+//                  +====================+
+//                  |       #MESH:       | MESH: private interface
+// (#)->      PRV ->|       onoff        | provision on/off
+// (#)->      ATT ->|       onoff        | attention on/off
 //                  +--------------------+
 //
 //==============================================================================

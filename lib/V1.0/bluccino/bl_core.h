@@ -192,6 +192,10 @@
 //      |                |                |                |                |
 //      |                |                |                |                |
 //      |                |                |                |                |
+//==============================================================================
+
+#ifndef __BL_CORE_H__
+#define __BL_CORE_H__
 
 //==============================================================================
 // public module interface
@@ -235,67 +239,6 @@
 // (^)<-      STS <-|       @id,sts      | on/off status update of switch @id
 //                  |       SWITCH:      | SWITCH: input interface
 // (B)->      STS ->|       @id,sts      | on/off status update of switch @id
-//                  +--------------------+
-//
-//==============================================================================
-// dummy interface for core module public interface (default/__weak)
-//==============================================================================
-
-#ifndef __BL_CORE_H__
-#define __BL_CORE_H__
-
-//==============================================================================
-// public module interface
-//==============================================================================
-//
-// (H) := (BL_HW);  (W) := (BL_WL);  (v) := (BL_DOWN);  (^) := (BL_UP)
-//
-//                  +--------------------+
-//                  |      BL_CORE       |
-//                  +--------------------+
-// (v)->          ->|        SYS:        | SYS (system) input interface
-// (H,W)<-        <-|        SYS:        | SYS (system) output interface
-//                  +--------------------+
-// (v)->          ->|        LED:        | LED input interface
-// (H)<-          <-|        LED:        | LED output interface
-//                  +--------------------+
-// (^)->          ->|       BUTTON:      | BUTTON input interface
-// (H)<-          <-|       BUTTON:      | BUTTON output interface
-//                  +--------------------+
-// (^)<-          <-|       SWITCH:      | SWITCH interface (output only)
-//                  +--------------------+
-// (^)<-          <-|        MESH:       | MESH output interface (to reset node)
-// (W)->          ->|        MESH:       | MESH input interface (to reset node)
-//                  +--------------------+
-// (v)->          ->|       RESET:       | RESET input interface (to reset node)
-// (W)<-          <-|       RESET:       | RESET output interface (to reset node)
-//                  +--------------------+
-// (v)->          ->|        NVM:        | NVM input ifc. (non volatile memory)
-// (W)<-          <-|        NVM:        | NVM output ifc. (non volatile memory)
-//                  +--------------------+
-// (v)->          ->|       CFGCLI:      | CFGCLI interface (config client)
-// (W)<-          <-|       CFGCLI:      | CFGCLI interface (config client)
-//                  +--------------------+
-// (^)<-          <-|       CFGSRV:      | CFGSRV interface (config server)
-// (W)->          ->|       CFGSRV:      | CFGSRV interface (config server)
-//                  +--------------------+
-// (v)->          ->|       HEACLI:      | HEACLI interface (health client)
-// (W)<-          <-|       HEACLI:      | HEACLI interface (health client)
-//                  +--------------------+
-// (^)<-          <-|       HEASRV:      | HEASRV interface (health server)
-// (W)->          ->|       HEASRV:      | HEASRV interface (health server)
-//                  +--------------------+
-// (v)->          ->|       GOOCLI:      | GOOCLI interface (generic on/off cli)
-// (W)<-          <-|       GOOCLI:      | GOOCLI interface (generic on/off cli)
-//                  +--------------------+
-// (^)<-          <-|       GOOSRV:      | GOOSRV interface (generic on/off srv)
-// (W)->          ->|       GOOSRV:      | GOOSRV interface (generic on/off srv)
-//                  +--------------------+
-// (W)<-          <-|       GLVCLI:      | GLVCLI interface (generic level cli)
-// (v)->          ->|       GLVCLI:      | GLVCLI interface (generic level cli)
-//                  +--------------------+
-// (^)<-          <-|       GLVSRV:      | GLVSRV interface (generic level srv)
-// (W)->          ->|       GLVSRV:      | GLVSRV interface (generic level srv)
 //                  +--------------------+
 //
 //==============================================================================

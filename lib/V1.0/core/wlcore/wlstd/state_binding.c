@@ -8,7 +8,7 @@
 #include <drivers/gpio.h>
 
 #include "ble_mesh.h"
-#include "device_composition.h"
+#include "bl_dcomp.h"
 #include "state_binding.h"
 #include "storage.h"
 #include "transition.h"

@@ -9,6 +9,22 @@
 #ifndef __BL_HOUSE_H__
 #define __BL_HOUSE_H__
 
+//==============================================================================
+// HOUSE Logging
+//==============================================================================
+
+#ifndef CFG_LOG_HOUSE
+    #define CFG_LOG_HOUSE    1           // HOUSE logging is by default on
+#endif
+
+#if (CFG_LOG_HOUSE)
+    #define LOG_HOUSE(l,f,...)    BL_LOG(CFG_LOG_HOUSE-1+l,f,##__VA_ARGS__)
+    #define LOGO_HOUSE(l,f,o,v)   bl_logo(CFG_LOG_HOUSE-1+l,f,o,v)
+#else
+    #define LOG_HOUSE(l,f,...)    {}     // empty
+    #define LOGO_HOUSE(l,f,o,v)   {}     // empty
+#endif
+
 ///==============================================================================
 // public module interface
 //==============================================================================

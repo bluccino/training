@@ -108,6 +108,30 @@
 #define	BT_MESH_MODEL_LIGHT_CTL_TEMP_RANGE_SET_UNACK \
 	BT_MESH_MODEL_OP_2(0x82, 0x6C)
 
-void bt_ready(void);
+//void bt_ready(void);
+
+//==============================================================================
+// public module interface
+//==============================================================================
+//
+// (v) := (BL_DOWN);  (^) := (BL_UP);  (#) := (BL_WL)
+//                  +--------------------+
+//                  |      BLE_MESH      | manage BLE/mesh
+//                  +--------------------+
+//                  |        SYS:        | SYS: public interface
+// (v)->     INIT ->|      @id,<out>     | init module, store <out> callback
+//                  +--------------------+
+//                  |       MESH:        | MESH: public interface
+// (^)<-      PRV <-|       onoff        | provision on/off
+// (^)<-      ATT <-|       onoff        | attention on/off
+//                  +====================+
+//                  |      #MESH:        | MESH: private interface
+// (#)->      PRV ->|       onoff        | provision on/off
+// (#)->      ATT ->|       onoff        | attention on/off
+//                  +--------------------+
+//
+//==============================================================================
+
+  int ble_mesh(BL_ob *o, int val);
 
 #endif
