@@ -3428,7 +3428,7 @@ struct bt_mesh_model s0_models[] = {
 
   int bl_devcomp(BL_ob *o, int val)
   {
-    static BL_fct out = NULL;          // store <out> callback
+    static BL_oval out = NULL;          // store <out> callback
 
     switch (bl_id(o))                  // dispatch message ID
     {

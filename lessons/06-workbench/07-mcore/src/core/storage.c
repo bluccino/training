@@ -387,7 +387,7 @@
 
   int bl_nvm(BL_ob *o, int val)
   {
-    static BL_fct out = NULL;
+    static BL_oval out = NULL;
 
     switch (bl_id(o))
     {

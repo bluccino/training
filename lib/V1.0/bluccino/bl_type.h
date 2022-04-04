@@ -12,21 +12,6 @@
   #define BL_LENGTH(a)      (sizeof(a)/sizeof(a[0]))         // array length
   #define BL_LEN(a)         (sizeof(a)/sizeof(a[0]))         // array length
 
-    // we use the concept of "hashed opcodes", a kind of internal opcodes
-    // which have the second most significant bit ("hash bit") of the lower
-    // 2 byte nibble set. Functions like bl_out will always clear the hash bit
-    // before posting
-
-  #define BL_HASHBIT        0x00008000      // or mask to set hash bit
-  #define BL_HASHCLR        0x00007FFF      // and mask to clear hash bit
-
-     // macro BL_HASH() sets opcode's hashbit, macro BL_CLEAR() clears opcode's
-     // hashbit, BL_HASHED() checks if opcode's hash bit is set
-
-  #define BL_HASH(op)       ((BL_op)((uint32_t)(op)|BL_HASHBIT))
-  #define BL_HASHED(op)     (((op) & BL_HASHBIT) != 0)
-  #define BL_CLEAR(op)      ((BL_op)((uint32_t)(op)&BL_HASHCLR))
-
     // macros for mesh message identification
 
   #define BL_ID_(cl,op)     (((uint32_t)(cl)<<16)|BL_HASH(op))  // hashed msg ID
@@ -44,12 +29,12 @@
 
   #define BL_AUG(op)        ((BL_op)((uint32_t)(op)|BL_AUGBIT))
   #define BL_ISAUG(op)      (((op) & BL_AUGBIT) != 0)
+  #define BL_UNAUG(cl)      ((BL_cl)((uint32_t)(cl)&BL_AUGCLR)) // clear AUG bit
 
     // macros for mesh message identification
 
   #define BL_ID(cl,op)      (((uint32_t)(cl)<<16)|(op))         // message ID
   #define _BL_ID(cl,op)     (((uint32_t)BL_AUG(cl)<<16)|(op))   // aug'ed msg ID
-  #define BL_CLR(cl)        ((BL_cl)((uint32_t)(cl)&BL_AUGCLR)) // clear AUG bit
 
     // useful macros for min(), max() and abs()
 
@@ -74,7 +59,8 @@
   typedef uint32_t BL_u32;              // we like short type identifiers :-)
   typedef uint64_t BL_u64;              // we like short type identifiers :-)
 
-  typedef const char *BL_txt;
+  typedef const char *BL_txt;           // short hand for const char pointer
+	typedef const void *BL_data;          // Bluccino messaging data reference
 
     // we define ZL_ms to represent miliseconds since system start or clock
     // restart in 64-bit signed integer representation. This allows

@@ -16,17 +16,18 @@
 
   #include "bluccino.h"
 
-  int app(BL_ob *o, int val)                // public APP module interface
+  int app(BL_ob *o, int val)           // public APP module interface
   {
-    BL_ob cli = {_GOOCLI,SET_,o->id,NULL};  // generic on/off client object
+    BL_ob cli = {_GOOCLI,LET_,o->id,NULL};  // generic on/off client object
 
-    if (bl_is(o,_SWITCH,STS_))              // switch status update
-      bl_down(&cli,val);                    // send generic on/off SET message
-    return 0;                               // OK
+    if (bl_is(o,_SWITCH,STS_))         // switch status update
+      bl_down(&cli,val);               // send generic on/off SET message
+    return 0;                          // OK
   }
 
   void main(void)
   {
-    bl_hello(4,"02-swicli");                // set verbose level, print hello message
-    bl_init(bluccino,app);                  // init bluccino, output to app()
+
+    bl_hello(4,"02-swicli");           // set verbose level, print hello message
+    bl_engine(app,10,1000);            // run app with 10/1000ms ticks/tocks
   }

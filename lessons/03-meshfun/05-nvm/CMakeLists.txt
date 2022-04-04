@@ -12,9 +12,9 @@
   project(05-nvm)
 
   set (LIB ../../../lib/V1.0)
-  set (BLU ${LIB}/bluccino)
-  set (HWC ${LIB}/hwcore)
-  set (WLC ${LIB}/mcore)
+  set (BLU ${LIB}/bluccino)            # Bluccino stuff
+  set (HWC ${LIB}/core/hwcore/hwtiny)  # tiny hardware core
+  set (WLC ${LIB}/core/wlcore/wlstd)   # standard wireless core
   set (LMO ${LIB}/module)
   set (SRC src)
 
@@ -31,13 +31,12 @@ target_sources(app PRIVATE
 	       ${SRC}/main.c
 				 ${BLU}/bluccino.c
 	       ${HWC}/bl_hw.c
-	       ${WLC}/bl_mcore.c
-	       ${LMO}/bl_basis.c
+	       ${WLC}/bl_wl.c
 	       )
 
 target_sources_ifdef(CONFIG_MCUMGR app PRIVATE ${CORE}/smp_svr.c)
 
-zephyr_include_directories(
-	src/
-	src/mesh
-)
+#zephyr_include_directories(
+#	src/
+#	src/mesh
+#)

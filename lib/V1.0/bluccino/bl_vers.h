@@ -1,5 +1,5 @@
 //==============================================================================
-//  bl_vers.h
+//  bl_vers.h 
 //  Define Bluccino library version
 //
 //  Created by Hugo Pristauz on 2022-04-02
@@ -9,6 +9,6 @@
 #ifndef __BL_VERS_H__
 #define __BL_VERS_H__
 
-  #define BL_VERSION "1.0.0"
+  #define BL_VERSION "1.0.1"
 
 #endif // __BL_VERS_H__

@@ -1,6 +1,6 @@
-===============================================================================
-# 05-nvm (using Bluccino mesh core and NVM memory)
-#===============================================================================
+================================================================================
+05-nvm (using WLSTD wireless core, HWTINY hardware core and NVM memory)
+================================================================================
 
 - mesh application which can count system starts
 - utilizes non-volatile memory (NVM)

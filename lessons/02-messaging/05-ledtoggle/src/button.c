@@ -34,13 +34,10 @@
 
   static void worker(struct k_work *work)
   {
-    if (gp_pin_get(&button_io))
+    if (gp_pin_get(&button_io))                  // only in case of rising edge
     {
       LOG(5,BL_Y "button press");
-
-      // post button state to module interface for output
-
-      button_press(button);      // (BUTTON)<-[#BUTTON:PRESS]
+      bl_msg(button,_BUTTON,PRESS_,1,NULL,0);    // (BUTTON)<-[#BUTTON:PRESS]
     }
   }
 
@@ -113,7 +110,7 @@
 
   int button(BL_ob *o, int val)        // BUTTON core module interface
   {
-    static BL_fct O = NULL;            // to store output callback
+    static BL_oval O = NULL;            // to store output callback
 
     switch (bl_id(o))                  // message ID? ([cl:op])
     {

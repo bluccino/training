@@ -6,6 +6,10 @@
 //  Copyright © 2021 Bluenetics GmbH. All rights reserved.
 //==============================================================================
 
+#undef LOG                             // makes concatenating of .c files easier
+#undef LOGO                            // makes concatenating of .c files easier
+#undef LOG0                            // makes concatenating of .c files easier
+
 #ifndef __BLUCCINO_H__
 #define __BLUCCINO_H__
 
@@ -13,38 +17,46 @@
     #include "blclass.h"               // include Bluccino C++ class definitions
   #else
 
-    #include "bl_type.h"
+  #include "bl_type.h"
 
-    #ifdef BL_CONFIG
-      #include "config.h"
-    #endif
-
-    #include "bl_symb.h"
-
-    #ifdef BL_LOGGING
-      #include "logging.h"
-    #endif
-
-    #include "bl_api.h"
-    #include "bl_log.h"
-    #include "bl_hw.h"
-
+  #ifdef BL_CONFIG
+    #include "config.h"
   #endif
 
+  #include "bl_symb.h"
+	#include "bl_msg.h"
+
+  #ifdef BL_LOGGING
+    #include "logging.h"
+  #endif
+
+  #include "bl_log.h"
+  #include "bl_time.h"
+  #include "bl_gear.h"
+  #include "bl_run.h"
+	#include "bl_sugar.h"
+
+#endif
+
 //==============================================================================
-// public module interface
+// BLUCCINO public module interface
 //==============================================================================
 //
-// (!) := (<parent>); (O) := (<out>); (#) := (BL_HW)
+// (!) := (<parent>); (v) := (BL_DOWN); (I) := (BL_IN);
 //
 //                  +--------------------+
 //                  |      BLUCCINO      |
 //                  +--------------------+
-//                  |        SYS:        | SYS interface
+//                  |        SYS:        | SYS input interface
 // (!)->     INIT ->|       <out>        | init module, store <out> callback
-// (!)->     TICK ->|      @id,cnt       |
-// (!)->     TOCK ->|      @id,cnt       |
+// (!)->     TICK ->|      @id,cnt       | tick module
+// (!)->     TOCK ->|      @id,cnt       | tock module
 // (!)->      OUT ->|       <out>        | set <out> callback
+//                  +--------------------+
+//                  |        SYS:        | SYS output interface
+// (v,I)<-   INIT <-|       <out>        | init module, store <out> callback
+// (v)<-     TICK <-|      @id,cnt       | tick module
+// (!)<-     TOCK <-|      @id,cnt       | tock module
 //                  +--------------------+
 //
 //==============================================================================

@@ -34,7 +34,7 @@
 // app personality
 //==============================================================================
 
-  #define CFG_APP_VERSION        "07-mcore"
+  #define CFG_APP_VERSION        "05-nvm"
   #define CFG_APP_VERBOSE         4    // verbose level for application
 
 //==============================================================================

@@ -69,6 +69,7 @@
 
   void main(void)
   {
-    bl_hello(4,"06-rgbcycle (click any button to activate another LED");
+    bl_hello(4,"06-rgbcycle (click any button to activate another LED)");
+    bl_cfg(bl_down,_BUTTON,BL_PRESS);  // only want get [BUTTON:PRESS] events
     bl_init(bluccino,app);             // run - output goes to app()
   }

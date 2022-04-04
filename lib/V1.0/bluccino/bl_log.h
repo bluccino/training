@@ -11,7 +11,8 @@
 
 #include "bl_rtos.h"
 #include "bl_type.h"
-#include "bl_api.h"
+#include "bl_msg.h"
+
 
 #if 0
 //==============================================================================
@@ -43,22 +44,6 @@
     #define bl_log(l,f,...)  BL_LOG(l,f,##__VA_ARGS__)  // always enabled
 
 //==============================================================================
-// API Logging
-//==============================================================================
-
-#ifndef CFG_LOG_API
-    #define CFG_LOG_API    1           // no API logging by default
-#endif
-
-#if (CFG_LOG_API)
-    #define LOG_API(l,f,...)    BL_LOG(CFG_LOG_API-1+l,f,##__VA_ARGS__)
-    #define LOGO_API(l,f,o,v)   bl_logo(CFG_LOG_API-1+l,f,o,v)
-#else
-    #define LOG_API(l,f,...)    {}     // empty
-    #define LOGO_API(l,f,o,v)   {}     // empty
-#endif
-
-//==============================================================================
 // APP Logging
 //==============================================================================
 
@@ -72,22 +57,6 @@
 #else
     #define LOG_APP(l,f,...)    {}     // empty
     #define LOGO_APP(l,f,o,v)   {}     // empty
-#endif
-
-//==============================================================================
-// BASIS Logging
-//==============================================================================
-
-#ifndef CFG_LOG_BASIS
-    #define CFG_LOG_BASIS    0         // BASIS logging is by default off
-#endif
-
-#if (CFG_LOG_BASIS)
-    #define LOG_BASIS(l,f,...)    BL_LOG(CFG_LOG_BASIS-1+l,f,##__VA_ARGS__)
-    #define LOGO_BASIS(l,f,o,v)   bl_logo(CFG_LOG_BASIS-1+l,f,o,v)
-#else
-    #define LOG_BASIS(l,f,...)    {}     // empty
-    #define LOGO_BASIS(l,f,o,v)   {}     // empty
 #endif
 
 //==============================================================================
@@ -120,6 +89,22 @@
 #else
     #define LOG_CORE(l,f,...)    {}     // empty
     #define LOGO_CORE(l,f,o,v)   {}     // empty
+#endif
+
+//==============================================================================
+// GEAR Logging
+//==============================================================================
+
+#ifndef CFG_LOG_GEAR
+    #define CFG_LOG_GEAR    1           // GEAR logging is by default on
+#endif
+
+#if (CFG_LOG_GEAR)
+    #define LOG_GEAR(l,f,...)    BL_LOG(CFG_LOG_GEAR-1+l,f,##__VA_ARGS__)
+    #define LOGO_GEAR(l,f,o,v)   bl_logo(CFG_LOG_GEAR-1+l,f,o,v)
+#else
+    #define LOG_GEAR(l,f,...)    {}     // empty
+    #define LOGO_GEAR(l,f,o,v)   {}     // empty
 #endif
 
 //==============================================================================
@@ -216,6 +201,22 @@
 #else
     #define LOG_TEST(l,f,...)    {}     // empty
     #define LOGO_TEST(l,f,o,v)   {}     // empty
+#endif
+
+//==============================================================================
+// TIME Logging
+//==============================================================================
+
+#ifndef CFG_LOG_TIME
+    #define CFG_LOG_TIME    1           // no TIME logging by default
+#endif
+
+#if (CFG_LOG_TIME)
+    #define LOG_TIME(l,f,...)    BL_LOG(CFG_LOG_TIME-1+l,f,##__VA_ARGS__)
+    #define LOGO_TIME(l,f,o,v)   bl_logo(CFG_LOG_TIME-1+l,f,o,v)
+#else
+    #define LOG_TIME(l,f,...)    {}     // empty
+    #define LOGO_TIME(l,f,o,v)   {}     // empty
 #endif
 
 //==============================================================================

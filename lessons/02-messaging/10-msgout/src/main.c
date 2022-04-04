@@ -44,7 +44,7 @@
 
   int sender(BL_ob *o, int val)
   {
-    static BL_fct out = NULL;
+    static BL_oval out = NULL;
     static BL_ob oo = {_MESH,ONOFF_,0,NULL};     // message object
 
     if ( bl_is(o,_SYS,INIT_) )                   // init module, store <out> cb

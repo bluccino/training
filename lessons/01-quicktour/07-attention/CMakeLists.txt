@@ -8,23 +8,25 @@
 # project definition and path setup
 #===============================================================================
 
-  project(06-attention)
+  project(07-attention)
 
-  set (LIB ../../../lib/V1.0)
-  set (BLU ${LIB}/bluccino)
+  set (LIB ../../../lib/V1.0)          # library path
+  set (BLU ${LIB}/bluccino)            # Bluccino library modules
+  set (HWC ${LIB}/hwcore)              # hardware core
+  set (WLC ${LIB}/ocore)               # wireless core
   set (SRC src)
 
-  include_directories(${SRC} ${BLU})
+  set (MAIN ${SRC})
 
-  add_definitions(-DCFG_PRETTY_LOGGING=1)   # push define down to C level
-  add_definitions(-DINCLUDE="config.h")     # push define down to C level
+  include_directories(${SRC} ${BLU} ${HWC} ${MAIN})
 
 #===============================================================================
 # source files
 #===============================================================================
 
   target_sources(app PRIVATE
-                 ${SRC}/main.c
-                 ${SRC}/ocore2.c
-                 ${BLU}/bluccino.c
-                )
+	               ${MAIN}/main.c         # main module
+				         ${BLU}/bluccino.c      # Bluccino standard library
+				         ${HWC}/bl_hw.c         # hardware core
+				         ${WLC}/bl_ocore.c      # wireless core
+	              )
