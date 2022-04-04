@@ -6,10 +6,10 @@
 //                   |        APP         |
 //                   +--------------------+
 //                   |      GOOSRV:       |  GOOSRV ifc. (generic on/off server)
-//  (^)->      SET ->|  @id,<goosrv>,val  |  recieve generic on/off SET message
+//  (^)->      STS ->|  @id,<goosrv>,val  |  recieve generic on/off SET message
 //                   +--------------------+
 //                   |        LED:        |  LED interface
-//  (#)<-      SET <-|      @id,val       |  set LED @id on/off
+//  (v)<-      SET <-|      @id,val       |  set LED @id on/off
 //                   +--------------------+
 //
 //==============================================================================

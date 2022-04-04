@@ -9,7 +9,7 @@
 //  (^)->      STS ->|      @id,val       |  receive switch @id status
 //                   +--------------------+
 //                   |      GOOCLI:       |  GOOCLI ifc. (generic on/off client)
-//  (v)<-      SET <-|  @id,<goosrv>,val  |  publish generic on/off SET message
+//  (v)<-      SET <-|  @id,<BL_goo>,val  |  publish generic on/off SET message
 //                   +--------------------+
 //
 //==============================================================================

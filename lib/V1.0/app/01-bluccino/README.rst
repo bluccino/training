@@ -6,6 +6,31 @@
 - also used for representative regression test of Bluccino library
 
 ================================================================================
+Bluccino V1.0.3
+Goals:
+- test all training lecture sample programs
+- bug: crash in 07-attention
+================================================================================
+
+Changelog History
+- some bug fixes in interface docs
+
+################################################################################
+
+================================================================================
+Bluccino V1.0.2
+Goals:
++ bug fix: already defined LOG/LOGO macros in case of #include "symbol.h"
+- test all training lecture sample programs
+- bug: crash in 07-attention
+================================================================================
+
+Changelog History
++ bug fix: already defined LOG/LOGO macros in case of #include "symbol.h"
+- test 01-quicktour and 03-meshfun samples
+- Bluccino v1.0.2
+
+================================================================================
 Bluccino V1.0.1
 Goals:
 + provide a bl_core.c/.h module as a default template for HW core and WL core
@@ -31,15 +56,3 @@ Changelog History
 - modify and test 03-meshfun/05-nvm with different LEDs blinking after restart
 + test all 03-meshfun training lecture sample programs
 - Bluccino v1.0.1
-
-================================================================================
-Bluccino V1.0.2
-Goals:
-+ bug fix: already defined LOG/LOGO macros in case of #include "symbol.h"
-- test all training lecture sample programs
-- bug: crash in 07-attention
-================================================================================
-
-Changelog History
-+ bug fix: already defined LOG/LOGO macros in case of #include "symbol.h"
-- test 01-quicktour and 03-meshfun samples
