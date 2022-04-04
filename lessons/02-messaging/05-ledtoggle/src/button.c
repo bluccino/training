@@ -11,13 +11,6 @@
   #include "button.h"
 
 //==============================================================================
-// BUTTON level logging shorthands
-//==============================================================================
-
-  #define LOG                     LOG_BUTTON
-  #define LOGO(lvl,col,o,val)     LOGO_BUTTON(lvl,col"button:",o,val)
-
-//==============================================================================
 // Get button configuration from the devicetree sw0 alias. This is mandatory.
 //==============================================================================
 
@@ -36,7 +29,7 @@
   {
     if (gp_pin_get(&button_io))                  // only in case of rising edge
     {
-      LOG(5,BL_Y "button press");
+      bl_log(5,BL_Y "button press");
       bl_msg(button,_BUTTON,PRESS_,1,NULL,0);    // (BUTTON)<-[#BUTTON:PRESS]
     }
   }
@@ -62,7 +55,7 @@
   {
     if (!device_is_ready(button_io.port))
     {
-      LOG(1,BL_R "error -1: button device %s not ready", button_io.port->name);
+      bl_log(1,BL_R "error -1: button device %s not ready",button_io.port->name);
       return;
     }
 
@@ -70,7 +63,7 @@
     gp_int_cfg(&button_io, GPIO_INT_EDGE_BOTH);
     gp_add_cb(&button_io, &context, button_irs);
 
-    LOG(4,"set up button @1: %s pin %d", button_io.port->name, button_io.pin);
+    bl_log(4,"set up button @1: %s pin %d", button_io.port->name,button_io.pin);
   }
 
 //==============================================================================
@@ -79,7 +72,7 @@
 
   static int init(BL_ob *o, int val)
   {
-    LOG(3,BL_B "button init (1 button)");
+    bl_log(3,BL_B "button init (1 button)");
 
     k_work_init(&work, worker);
 
@@ -118,7 +111,7 @@
         O = o->data;                   // store output callback
       	return init(o,val);            // delegate to init() worker
 
-      case _BL_ID(_BUTTON,PRESS_):     // [#BUTTON:PRESS @id]
+      case BL_ID(_BUTTON,PRESS_):      // [BUTTON:PRESS @id]
 			  bl_logo(4,BL_Y "button",o,val);
         return bl_out(o,val,(O));      // post to output subscriber
 

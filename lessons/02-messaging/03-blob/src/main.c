@@ -39,9 +39,9 @@
 // utility functions
 //==============================================================================
 
-  #define ID(cl,ob)    (((cl) << 16) | (op))
+  #define ID(cl,op)    (((cl) << 16) | (op))
 
-  static int id(BL_obj *o)
+  static int id(BL_ob *o)
   {
     return ID(o->cl,o->op);
   }
@@ -77,14 +77,21 @@
   }
 
 //==============================================================================
-// syntactic sugar: send [LIGHT:CTRL @id,onoff,<room>] message to any module
+// syntactic sugar: [LIGHT:CTRL @id,onoff,<room>] -> (<module>)
 // - usage: light_ctrl(app,id,true,"kitchen")
+// - note the definition of inline function bl_msg():
+//
+//  static inline
+//    int bl_msg(BL_oval module, BL_cl cl,BL_op op, int id,BL_data data,int val)
+//  {
+//    BL_ob oo = {cl,op,id,data};
+//    return module(&oo,val);            // post message to module interface
+//  }
 //==============================================================================
 
-  static inline int light_ctrl(BL_oval module, int id, bool onoff, BL_txt room)
+  static inline int LIGHT_CTRL(BL_oval module, int id, bool onoff, BL_txt room)
   {
-    BL_ob oo = {LIGHT,CTRL,id,room};
-    return module(&oo,onoff);         // (MODULE)<-[LIGHT:CTRL @id,onoff,<room>]
+    return bl_msg(module,LIGHT,CTRL, id,room,onoff); 
   }
 
 //==============================================================================
@@ -97,6 +104,6 @@
   {
     bl_hello(4,"03-blob - messaging with Blobs (Bluccino messaging objects)");
 
-    light_ctrl(app,2,1,"kitchen");     // (APP)<-[LIGHT:CTRL @2,1,"kitchen"]
-    light_ctrl(app,3,0,"living room"); // (APP)<-[LIGHT:CTRL @3,0,"living room"]
+    LIGHT_CTRL(app,2,1,"kitchen");     // (APP)<-[LIGHT:CTRL @2,1,"kitchen"]
+    LIGHT_CTRL(app,3,0,"living room"); // (APP)<-[LIGHT:CTRL @3,0,"living room"]
   }

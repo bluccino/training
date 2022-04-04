@@ -14,9 +14,9 @@
 // - usage: bl_led(id,val)   // val 0:off, 1:on, -1:toggle
 //==============================================================================
 
-  static inline int bl_led(int id, int val)
+  static inline int bl_led(int id, int val)  // (BL_DOWN) <- [LED:op onoff]
   {
-    return bl_msg(bl_in,_LED,val<0?TOGGLE_:SET_, id,NULL, val<0?0:val);
+    return bl_msg(bl_down,_LED,val<0?TOGGLE_:SET_, id,NULL, val<0?0:val);
   }
 
 //==============================================================================
@@ -56,7 +56,7 @@
 
   static inline int bl_store(int id, int val)
   {
-    return bl_msg(bl_in,_NVM,STORE_, id,NULL,val);
+    return bl_msg(bl_down,_NVM,STORE_, id,NULL,val);
   }
 
 //==============================================================================
@@ -66,37 +66,37 @@
 
   static inline int bl_recall(int id)
   {
-    return bl_msg(bl_in,_NVM,RECALL_, id,NULL,0);
+    return bl_msg(bl_down,_NVM,RECALL_, id,NULL,0);
   }
 
 //==============================================================================
 // syntactic sugar: send generic on/off SET message via mesh (using GOOCLI @id)
-// - usage: val = bl_gooset(id,onoff)  // (BL_IN)<-[GOOCLI:SET @id,<NULL>,onoff]
+// - usage: val = bl_gooset(id,onoff)  // (BL_DOWN)<-[GOOCLI:SET @id,<NULL>,onoff]
 //==============================================================================
 
   static inline int bl_gooset(int id, int onoff)
   {
-    return bl_msg(bl_in,_GOOCLI,SET_, id,NULL,onoff);
+    return bl_msg(bl_down,_GOOCLI,SET_, id,NULL,onoff);
   }
 
 //==============================================================================
 // syntactic sugar: send generic on/off LET message via mesh (using GOOCLI @id)
-// - usage: val = bl_goolet(id,onoff)  // (BL_IN)<-[GOOCLI:LET @id,onoff]
+// - usage: val = bl_goolet(id,onoff)  // (BL_DOWN)<-[GOOCLI:LET @id,onoff]
 //==============================================================================
 
   static inline int bl_goolet(int id, int onoff)
   {
-    return bl_msg(bl_in,_GOOCLI,LET_, id,NULL,onoff);
+    return bl_msg(bl_down,_GOOCLI,LET_, id,NULL,onoff);
   }
 
 //==============================================================================
 // syntactic sugar: send generic on/off GET message via mesh (using GOOCLI @id)
-// - usage: val = bl_googet(id)       // (BL_IN)<-[GOOCLI:GET @id]
+// - usage: val = bl_googet(id)       // (BL_DOWN)<-[GOOCLI:GET @id]
 //==============================================================================
 
   static inline int bl_googet(int id)
   {
-    return bl_msg(bl_in,_GOOCLI,GET_, id,NULL,0);
+    return bl_msg(bl_down,_GOOCLI,GET_, id,NULL,0);
   }
 
 #endif // __BL_SUGAR_H__

@@ -8,6 +8,9 @@
 ================================================================================
 Bluccino V1.0.3
 Goals:
+- bug: housekeep starts flashing the blue LED in the startup sequence, but it
+       should start the status LED
+- bug: wltiny has an issue wit GOOLET/GOOSET (seems they fire at the same time)			 
 - test all training lecture sample programs
 - bug: crash in 07-attention
 ================================================================================

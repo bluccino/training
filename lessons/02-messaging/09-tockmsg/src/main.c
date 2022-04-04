@@ -30,10 +30,9 @@
   {
     bl_hello(4,"09-tickmsg (post tick messages)");
 
-    BL_ob oo = {_SYS,TOCK_,0,NULL};    // declare [SYS:TOCK] message object
-    for (int cnt=0;; cnt++)            // forever
+    for (int cnt=0;; cnt++)                 // forever
     {
-      app(&oo,cnt);                    // post [SYS,TOCK @0,val] to APP
-      bl_sleep(1000);                  // sleep 1000ms
+      bl_msg(app,_SYS,TOCK_, 0,NULL,cnt);   // post [SYS,TOCK @0,cnt] to APP
+      bl_sleep(1000);                       // sleep 1000ms
     }
   }

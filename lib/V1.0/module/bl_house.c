@@ -70,7 +70,7 @@
 
   static int startup(BL_ob *o, int val)     // public module interface
   {
-    BL_oval output = NULL;                   // output callback
+    BL_oval output = NULL;                  // output callback
     static volatile int count = 0;          // reset counter
     static int8_t map[4] = {-1,3,4,2};      // LED @id map: [-,GREEN,BLUE,RED]
 

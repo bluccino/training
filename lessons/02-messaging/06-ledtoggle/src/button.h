@@ -27,13 +27,12 @@
 
 //==============================================================================
 // syntactic sugar: pseudo-invoke button press event (@id:1 - only one button)
-// - usage: button_press(button)
+// - usage: button_BUTTON_PRESS(button)
 //==============================================================================
 
-  static inline int button_press(BL_oval module)
+  static inline int button_BUTTON_PRESS(BL_oval module)
   {
-    BL_ob oo = {BL_AUG(_BUTTON),PRESS_,1,NULL};
-    return module(&oo,1);                // pass val=1 to indicate 'active'
+    return bl_msg(module,_BUTTON,PRESS_, 1,NULL,0);
   }
 
 #endif // __BUTTON_H__

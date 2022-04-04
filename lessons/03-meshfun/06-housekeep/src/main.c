@@ -108,7 +108,7 @@
 // public app module interface
 //==============================================================================
 //
-// (B) := (BL_HWBUT);  (L) := (BL_HWLED)
+// (^) := (BL_UP);  (v) := (BL_DOWN)
 //                  +--------------------+
 //                  |        APP         |
 //                  +--------------------+
@@ -121,10 +121,10 @@
 // (^)->      STS ->|       @id,sts      | on/off status update of switch @id
 //                  +--------------------+
 //                  |       GOOSRV:      | GOOSRV: ifc. (generic on/off server)
-// (^)->      STS ->|       @id,sts      | on/off server status update
+// (^)->      STS ->| @id,<BL_goo>,onoff | on/off server status update
 //                  +--------------------+
 //                  |       GOOCLI:      | GOOCLI: ifc. (generic on/off client)
-// (v)<-      SET <-|      @id,onoff     | publish generic on/off SET command
+// (v)<-      SET <-| @id,<BL_goo>,onoff | publish generic on/off SET command
 //                  +--------------------+
 //                  |         NVM:       | NVM: interface (non volatile memory)
 // (^)->    READY ->|                    | notify that NVM is ready
