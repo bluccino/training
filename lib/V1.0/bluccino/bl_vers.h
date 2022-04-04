@@ -9,6 +9,6 @@
 #ifndef __BL_VERS_H__
 #define __BL_VERS_H__
 
-  #define BL_VERSION "1.0.2"
+  #define BL_VERSION "1.0.3"
 
 #endif // __BL_VERS_H__
