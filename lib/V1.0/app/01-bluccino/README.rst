@@ -29,4 +29,4 @@ Changelog History
 - test 03-meshfun/03-ledsrv in combi with 03-meshfun/02-swcli - works well :-)))
 - test 03-meshfun/04-clisrv - works well :-)))
 - modify and test 03-meshfun/05-nvm with different LEDs blinking after restart
-- Bluccino v1.0.1
+- Bluccino v1.0.1 (merge into master)
