@@ -1,5 +1,4 @@
-![Bluccino Banner](https://user-images.githubusercontent.com/39674928/145687742-748bacf8-e285-45de-ac3b-af922959222a.jpg)
-
+![Bluccino Banner](https://user-images.githubusercontent.com/17394277/160484048-d023032f-727b-4825-9989-7d537f4d7940.png)
 
 ## Bluccino Training
 
