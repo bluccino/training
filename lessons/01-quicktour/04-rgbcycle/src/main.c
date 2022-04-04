@@ -2,7 +2,8 @@
 // main.c for 04-rgbcycle (tiny RGB LED cycle control by buttons)
 //==============================================================================
 
-  #include "bluccino.h"
+  #include "bluccino.h"                // access to Bluccino stuff
+	#include "bl_hw.h"                   // access to hardware stuff
 
   int app(BL_ob *o, int val);          // forward declaration
 

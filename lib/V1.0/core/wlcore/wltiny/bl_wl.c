@@ -633,7 +633,6 @@ static void bt_ready(int err)
 
       case _BL_ID(_MESH,PRV_):         // [#SET:PRV val]  (provision)
       case _BL_ID(_MESH,ATT_):         // [#SET:ATT val]  (attention)
-//      LOGO(3,BL_G,o,val);
         return bl_out(o,val,out);      // output to subscriber
 
       case BL_ID(_GOOCLI,LET_):        // pub [GOOCLI:LET @id,<BL_goo>,onoff]

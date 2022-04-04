@@ -30,7 +30,7 @@
     #include "logging.h"
   #endif
 */
-  #include "bl_app.h"  // #include "config.h", #include "logging.h" 
+  #include "bl_app.h"  // #include "config.h", #include "logging.h"
 
   #include "bl_symb.h"
 	#include "bl_msg.h"

@@ -37,7 +37,9 @@ Bluccino V1.0.2
 Goals:
 + bug fix: already defined LOG/LOGO macros in case of #include "symbol.h"
 - test all training lecture sample programs
+- bug: crash in 07-attention
 ================================================================================
 
 Changelog History
 + bug fix: already defined LOG/LOGO macros in case of #include "symbol.h"
+- test 01-quicktour and 03-meshfun samples

@@ -9,9 +9,9 @@
 
   project(02-blink)
 
-  set (LIB ../../../lib/V1.0)
-  set (BLU ${LIB}/bluccino)
-  set (HWC ${LIB}/hwcore)
+  set (LIB ../../../lib/V1.0)          # library path
+  set (BLU ${LIB}/bluccino)            # Bluccino library modules
+  set (HWC ${LIB}/core/hwcore/hwtiny)  # tiny hardware core
   set (SRC src)
 
   include_directories(${SRC} ${BLU} ${HWC})
