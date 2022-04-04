@@ -6,10 +6,10 @@
 //                   |        APP         |
 //                   +--------------------+
 //                   |      SWITCH:       |  SWITCH interface
-//  (^)->      STS ->|      @id,val       |  receive switch @id status
+//  (^)->      STS ->|      @id,sts       |  receive switch @id status
 //                   +--------------------+
 //                   |      GOOCLI:       |  GOOCLI ifc. (generic on/off client)
-//  (v)<-      SET <-|  @id,<goosrv>,val  |  publish generic on/off SET message
+//  (v)<-      SET <-| @id,<BL_goo>,onoff |  publish generic on/off SET message
 //                   +--------------------+
 //
 //==============================================================================
@@ -18,7 +18,7 @@
 
   int app(BL_ob *o, int val)           // public APP module interface
   {
-    BL_ob cli = {_GOOCLI,LET_,o->id,NULL};  // generic on/off client object
+    BL_ob cli = {_GOOCLI,SET_,o->id,NULL};  // generic on/off client object
 
     if (bl_is(o,_SWITCH,STS_))         // switch status update
       bl_down(&cli,val);               // send generic on/off SET message

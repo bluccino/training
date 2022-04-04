@@ -1,6 +1,21 @@
 //==============================================================================
 // main.c for 10-msgput (Bluccino message output)
 //==============================================================================
+//
+// Event Flow Chart
+//
+//        MAIN                   SENDER                 RECEIVER
+//         |                       |                       |
+//         | [SYS:INIT <receiver>] |                       |
+//         o---------------------->#======================>|
+//         |                       |                       |
+//         |                       |                       |
+//         |    [SYS:TOCK cnt]     |                       |
+//         o---------------------->|   [MESH:ONOFF val]    |
+//         |                       o---------------------->|
+//         |                       |                       |
+//
+//==============================================================================
 
   #include "bluccino.h"                // 10-msgout
 
@@ -45,12 +60,15 @@
   int sender(BL_ob *o, int val)
   {
     static BL_oval out = NULL;
-    static BL_ob oo = {_MESH,ONOFF_,0,NULL};     // message object
 
     if ( bl_is(o,_SYS,INIT_) )                   // init module, store <out> cb
       out = o->data;
     else if ( bl_is(o,_SYS,TOCK_) )              // [SYS:TOCK val] msg received?
-      bl_out(&oo,(val%2),out);                   // output (val%2) to RECEIVER
+    {
+      bl_log(1,BL_M "sender:   [MESH:ONOFF @0,%d]",val%2);
+      bl_msg(out,_MESH,ONOFF_, 0,NULL,(val%2));  // output (val%2) to RECEIVER
+    }
+    return 0;
   }
 
 //==============================================================================
@@ -60,9 +78,11 @@
   void main(void)
   {
     bl_hello(4,"10-msgout (Bluccino message output)");
-    bl_init(sender,receiver);          // init SENDER, output goes to RECEIVER
+    bl_init(sender,receiver);          // init SENDER, <out> goes to RECEIVER
 
-    BL_ob oo = {_SYS,TOCK_,0,NULL};
-    for (int cnt=0; cnt<=50; cnt++)
-      sender(&oo,cnt);                 // post [SYS,TOCK i] to SENDER
+    for (int cnt=0;; cnt++)
+    {
+      bl_msg(sender,_SYS,TOCK_, 0,NULL,cnt); // [SYS,TOCK cnt] -> (SENDER)
+      bl_sleep(1000);
+    }
   }

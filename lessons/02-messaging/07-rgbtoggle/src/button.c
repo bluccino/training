@@ -40,7 +40,7 @@
 
       // post button state to module interface for output
 
-      button_press(button);      // (BUTTON)<-[#BUTTON:PRESS]
+      button_BUTTON_PRESS(button);      // (BUTTON)<-[BUTTON:PRESS]
     }
   }
 
@@ -113,7 +113,7 @@
 
   int button(BL_ob *o, int val)        // BUTTON core module interface
   {
-    static BL_oval O = NULL;            // to store output callback
+    static BL_oval O = NULL;           // to store output callback
 
     switch (bl_id(o))                  // message ID? ([cl:op])
     {
@@ -121,7 +121,7 @@
         O = o->data;                   // store output callback
       	return init(o,val);            // delegate to init() worker
 
-      case _BL_ID(_BUTTON,PRESS_):     // [#BUTTON:PRESS @id]
+      case BL_ID(_BUTTON,PRESS_):      // [BUTTON:PRESS @id]
 			  bl_logo(4,BL_Y "button",o,val);
         return bl_out(o,val,(O));      // post to output subscriber
 
