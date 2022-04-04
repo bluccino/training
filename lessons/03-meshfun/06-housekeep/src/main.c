@@ -79,20 +79,21 @@
   static int starts = 0;                    // counts system starts
 
 //==============================================================================
-// helper: attention blinker (let green status LED @0 attention blinking)
+// helper: blinker (let green status LED @0 attention blinking)
 // - @id=0: dark, @id=1: status, @id=2: red, @id=3: green, @id=4: blue
 //==============================================================================
 
-  static int blink(BL_ob *o, int ticks)     // attention blinker to be ticked
+  static int blink(BL_ob *o, int ticks)     // blinker to be ticked
   {
     static BL_ms due = 0;                   // need for periodic action
 
     if (id <= 1 || !bl_due(&due,T_BLINK))   // no blinking if @id:off or not due
       return 0;                             // bye if LED off or not due
 
-    if ( bl_get(bl_house,ATT_) ||           // no blinking in attention mode
-         bl_get(bl_house,BUSY_))            // no blinking during startup
-      return 0;                             // bye if attention state
+          // no blinking in attention mode or housekeeping blinker busy
+
+		if ( bl_get(bl_house,ATT_) || bl_get(bl_house,BUSY_))
+      return 0;                             // bye if attention mode or busy
 
     static bool toggle;
     toggle = !toggle;
@@ -133,14 +134,16 @@
 
   int app(BL_ob *o, int val)           // public APP module interface
   {
+		bl_house(o,val);                   // mesh house keeping
+
     switch (bl_id(o))                  // dispatch mesage ID
     {
       case BL_ID(_SYS,INIT_):          // [SYS:INIT <cb>]
-        return bl_init(bl_house,bl_in);// init BL_BASIS, output goes "in"
+        bl_led(0,0);                   // turn status LED initially off
+        return 0;                      // OK
 
       case BL_ID(_SYS,TICK_):          // [SYS:TICK @id,cnt]
         blink(o,val);                  // tick blinker
-        bl_house(o,val);               // tick BL_HOUSE module
         return 0;                      // OK
 
       case BL_ID(_SYS,TOCK_):          // [SYS:TOCK @id,cnt]
@@ -150,7 +153,7 @@
 
       case BL_ID(_SWITCH,STS_):        // button press to cause LED on off
         LOGO(1,BL_M,o,val);
-        if ( bl_get(bl_house,PRV_))    // only if provisioned
+        if ( bl_get(bl_in,PRV_))       // only if provisioned
           bl_msg(bl_in,_GOOCLI,SET_,  1,NULL,val);
         else
           bl_led(id,val);              // switch LED @id on/off
@@ -158,7 +161,7 @@
 
       case BL_ID(_GOOSRV,STS_):        // [GOOSRV:STS] status update
         LOGO(1,BL_C,o,val);            // let us see!
-        if (o->id == 1)                // only in case of GOOSRV @1 
+        if (o->id == 1)                // only in case of GOOSRV @1
           bl_led(id,val);              // turn LED @id on/off
         return 0;                      // OK
 
@@ -171,7 +174,7 @@
         return 0;                      // OK
 
       default:
-        return bl_house(o,val);        // else forward event to BL_BASE module
+        return 0;                      // OK (ignore other messages)
     }
   }
 

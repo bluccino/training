@@ -141,7 +141,7 @@
     switch (bl_id(o))                  // dispatch mesage ID
     {
       case BL_ID(_SYS,INIT_):          // [SYS:INIT <cb>]
-        bl_led(0,0);                   // turn status LED initially on
+        bl_led(0,0);                   // turn status LED initially off
         return 0;                      // nothing to int
 
       case BL_ID(_SYS,TICK_):          // [SYS:TICK @id,cnt]
