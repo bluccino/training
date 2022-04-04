@@ -204,6 +204,8 @@
 //
 //==============================================================================
 
+  #include "bluccino.h"
+
   #define init  init_button
   #include "bl_hwbut.c"                // button core driver
   #undef init

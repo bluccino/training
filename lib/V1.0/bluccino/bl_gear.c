@@ -51,7 +51,7 @@
     nolog = nolog || (o->cl == _SYS);
 
     if ( !nolog )
-      LOG0(3,"down:",o,val);         // not suppressed messages are logged
+      LOG0(3,"down:",o,val);           // not suppressed messages are logged
 
     return bl_core(o,val);             // forward down to BL_CORE module
   }

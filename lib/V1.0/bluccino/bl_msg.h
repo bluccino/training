@@ -9,9 +9,10 @@
 #ifndef __BL_MSG_H__
 #define __BL_MSG_H__
 
+#include "bl_app.h"
 #include "bl_log.h"
-#include "bl_type.h"
 #include "bl_symb.h"
+#include "bl_type.h"
 #include "bl_vers.h"
 
   extern bool bl_attention;            // attention mode
