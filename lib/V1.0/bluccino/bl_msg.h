@@ -9,9 +9,10 @@
 #ifndef __BL_MSG_H__
 #define __BL_MSG_H__
 
+#include "bl_app.h"
 #include "bl_log.h"
-#include "bl_type.h"
 #include "bl_symb.h"
+#include "bl_type.h"
 #include "bl_vers.h"
 
   extern bool bl_attention;            // attention mode
@@ -157,36 +158,6 @@
   static inline void *bl_data(BL_ob *o)
   {
     return (void*)o->data;
-  }
-
-//==============================================================================
-// syntactig sugar: init a module
-// usage:  bl_init(module,cb)       // init module, <out> goes to callback
-//==============================================================================
-
-  static inline int bl_init(BL_oval module,BL_oval cb)
-  {
-    return bl_msg(module,_SYS,INIT_, 0,cb,0);  // init module
-  }
-
-//==============================================================================
-// syntactic sugar: tick a module
-// - usage: bl_tick(module,count)   // (MODULE)<-[SYS:TICK @id,count]
-//==============================================================================
-
-  static inline int bl_tick(BL_oval module, int id, int cnt)
-  {
-    return bl_msg(module,_SYS,TICK_, id,NULL,cnt);
-  }
-
-//==============================================================================
-// syntactic sugar: tock a module
-// - usage: bl_tock(module,count)   // (MODULE)<-[SYS:TOCK @id,count]
-//==============================================================================
-
-  static inline int bl_tock(BL_oval module, int id, int cnt)
-  {
-    return bl_msg(module,_SYS,TOCK_, id,NULL,cnt);
   }
 
 //==============================================================================

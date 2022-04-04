@@ -201,6 +201,11 @@
 //                  +--------------------+
 //
 //==============================================================================
+// - important note: all messages invoked at bl_core() are intended to go down to
+//   bl_core's sub-modules !!!
+// - don't post up-stream messages to bl_core, as they have to go directly to
+//   bl_up()
+//==============================================================================
 
   __weak int bl_core(BL_ob *o, int val)
   {

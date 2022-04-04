@@ -18,7 +18,7 @@
   #else
 
   #include "bl_type.h"
-
+/*
   #ifdef BL_CONFIG
     #include "config.h"
   #endif
@@ -29,6 +29,11 @@
   #ifdef BL_LOGGING
     #include "logging.h"
   #endif
+*/
+  #include "bl_app.h"  // #include "config.h", #include "logging.h"
+
+  #include "bl_symb.h"
+	#include "bl_msg.h"
 
   #include "bl_log.h"
   #include "bl_time.h"

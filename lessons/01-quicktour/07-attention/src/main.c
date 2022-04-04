@@ -29,14 +29,15 @@
           bl_log(1,BL_M "attention state");
         return 0;                      // OK
 
-      case BL_ID(_SET,ATT_):
-        attention = val;               // store a copy updated attention state
-				bl_led(0,val);                 // switch status LED on/off
-        return 0;
-
-      case BL_ID(_SET,PRV_):
+      case BL_ID(_MESH,PRV_):
         provision = val;               // store a copy updated provision state
+        bl_led(1,provision);           // show provision status at LED @1
         return 0;                      // OK
+
+      case BL_ID(_MESH,ATT_):
+        attention = val;               // store a copy updated attention state
+        bl_led(2,attention);           // show attention status at LED @2
+        return 0;
 
       default:
         return -1;                     // bad args

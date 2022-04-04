@@ -16,6 +16,7 @@
 //==============================================================================
 
   #include "bluccino.h"
+  #include "bl_hw.h"
 
   static int id = -1;                  // id of blinking LED (id=-1: invalid)
   static bool enable = false;          // blinking enabled?

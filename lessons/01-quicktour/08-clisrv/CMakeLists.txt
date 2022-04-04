@@ -13,8 +13,8 @@
 
   set (LIB ../../../lib/V1.0)          # library path
   set (BLU ${LIB}/bluccino)            # Bluccino library modules
-  set (HWC ${LIB}/hwcore)              # hardware core
-  set (WLC ${LIB}/mcore)               # wireless core
+  set (HWC ${LIB}/core/hwcore/hwtiny)  # tiny hardware core
+  set (WLC ${LIB}/core/wlcore/wlstd)   # standard wireless core
   set (SRC src)
 
   set (MAIN ${SRC})
@@ -29,5 +29,5 @@
 	               ${MAIN}/main.c         # main module
 				         ${BLU}/bluccino.c      # Bluccino standard library
 				         ${HWC}/bl_hw.c         # hardware core
-				         ${WLC}/bl_mcore.c      # wireless core
+				         ${WLC}/bl_wl.c         # wireless core
 	              )
