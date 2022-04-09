@@ -213,7 +213,7 @@
     {
       case _SYS:                       // SYSTEM interface
         if (bl_is(o,_SYS,INIT_))
-	  LOG(2,BL_B "init core ..."); // init Bluccino core
+          LOG(2,BL_B "init core ..."); // init Bluccino core
 
         bl_hw(o,val);                  // forward to hardware core
         bl_wl(o,val);                  // forward to wireless core

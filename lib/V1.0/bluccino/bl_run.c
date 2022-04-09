@@ -11,6 +11,19 @@
   static BL_oval test = NULL;
 
 //==============================================================================
+// set callback value (warn if new callback deviates from provided default)
+// - usage: out = bl_cb(o,out);
+//==============================================================================
+
+  BL_oval bl_cb(BL_ob *o, BL_oval def)
+  {
+    BL_oval cb = o->data;              // fetch callback from object's data ref
+    if (cb != def && bl_dbg(2))        // does callback deviate from default?
+      bl_prt(BL_R "warning: change of default callback\n" BL_0);
+    return cb;
+  }
+
+//==============================================================================
 // setup initializing, ticking and tocking for a test module
 // - usage: bl_test(module)            // controlled by bl_run()
 //==============================================================================

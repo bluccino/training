@@ -155,6 +155,13 @@
   }
 
 //==============================================================================
+// set callback value (warn if new callback deviates from provided default)
+// - usage: out = bl_cb(o,out);
+//==============================================================================
+
+  BL_oval bl_cb(BL_ob *o, BL_oval def);
+
+//==============================================================================
 // setup a initializing, ticking and tocking for a test module
 // - usage: bl_test(module)            // controlled by bl_run()
 //==============================================================================
