@@ -153,8 +153,8 @@
 
       case BL_ID(_SWITCH,STS_):        // button press to cause LED on off
         LOGO(1,BL_M,o,val);
-        if ( bl_get(bl_in,PRV_))       // only if provisioned
-          bl_msg(bl_in,_GOOCLI,SET_,  1,NULL,val);
+        if ( bl_get(bl_down,PRV_))     // only if provisioned
+          bl_msg(bl_down, _GOOCLI,SET_, 1,NULL,val);
         else
           bl_led(id,val);              // switch LED @id on/off
         return 0;                      // OK
@@ -185,6 +185,6 @@
   void main(void)
   {
     bl_hello(VERBOSE,VERSION);         // set verbose level, print hello message
-    bl_cfg(bl_in,_BUTTON,BL_SWITCH);   // mask [BUTTON:SWITCH] events only
+    bl_cfg(bl_down,_BUTTON,BL_SWITCH); // mask [BUTTON:SWITCH] events only
     bl_run(app,10,1000,app);           // run app with 10/1000 ms tick/tock
   }
