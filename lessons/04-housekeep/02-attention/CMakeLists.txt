@@ -9,9 +9,9 @@ find_package(Zephyr REQUIRED HINTS $ENV{ZEPHYR_BASE})
 # project definition and path setup
 #===============================================================================
 
-  project(01-main)
+  project(02-attention)
 
-  set (LIB ../../../lib/V1.05)
+  set (LIB ../../../lib/V1.0.5)
   set (BLU ${LIB}/bluccino)            # Bluccino stuff
   set (HWC ${LIB}/core/hwcore/hwtiny)  # tiny hardware core
   set (WLC ${LIB}/core/wlcore/wlstd)   # standard wireless core
@@ -25,6 +25,7 @@ find_package(Zephyr REQUIRED HINTS $ENV{ZEPHYR_BASE})
 
   target_sources(app PRIVATE
                ${SRC}/main.c           # main program
+							 ${SRC}/attention.c      # attention module
                ${WLC}/bl_wl.c          # wireless core
                ${HWC}/bl_hw.c          # hardware core
                ${BLU}/bluccino.c       # work bench
