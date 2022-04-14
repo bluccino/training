@@ -59,13 +59,13 @@
 //==============================================================================
 // message upward posting to API layer (default/__weak)
 // - bl_up() is defined as weak and can be overloaded
-// - by default all messages posted to BL_UP are forwarded to BL_IN
+// - by default all messages posted to BL_UP are forwarded to BL_TOP
 // - note: bl_gear.c provides a weak implementation (redefinition possible)
 //==============================================================================
 
   __weak int bl_up(BL_ob *o, int val)
   {
-		static BL_oval out = bl_in;        // outputs to BL_IN by default
+		static BL_oval out = bl_top;        // outputs to BL_TOP by default
 
     LOG0(3,"up:",o,val);
 
@@ -76,61 +76,62 @@
 			  return 0;
 
 			default:
-        return bl_out(o,val,out);      // post to BL_IN by default
+        return bl_out(o,val,out);      // post to BL_TOP by default
 		}
   }
 
 //==============================================================================
-// BL_IN: input a message to Bluccino API
+// BL_TOP: input a message to Bluccino API
+// - bl_top() is defined as weak and can be overloaded
 // - also housekeeps attention and provision status and controls log colors
 // - note: bl_gear.c provides a weak implementation (redefinition possible)
 //==============================================================================
 //
-// (*) := (<any>); (^) := (BL_UP); (#) := (BL_HW); (v) := (BL_DOWN);
-// (I) := (BL_IN); (O) := (<when>)
+// (*) := (<any>); (U) := (BL_UP); (#) := (BL_HW); (D) := (BL_DOWN);
+// (I) := (BL_TOP); (O) := (<when>);  (B) := (BLUCCINO)
 //
 //                  +--------------------+
-//                  |        BL_IN       | Bluccino message input
+//                  |       BL_TOP       | Bluccino top gear
 //                  +--------------------+
 //                  |        SYS:        | SYS input interface
-// (!)->     INIT ->|       <out>        | init module, store <out> callback
-// (!)->     TICK ->|      @id,cnt       | tick module
-// (!)->     TOCK ->|      @id,cnt       | tock module
+// (B)->     INIT ->|       <out>        | init module, store <out> callback
+// (B)->     TICK ->|      @id,cnt       | tick module
+// (B)->     TOCK ->|      @id,cnt       | tock module
 //                  |....................|
 //                  |        SYS:        | SYS input interface
-// (v)<-     INIT <-|       <out>        | init module, store <out> callback
-// (v)<-     TICK <-|      @id,cnt       | tick module
-// (v)<-     TOCK <-|      @id,cnt       | tock module
+// (D)<-     INIT <-|       <out>        | init module, store <out> callback
+// (D)<-     TICK <-|      @id,cnt       | tick module
+// (D)<-     TOCK <-|      @id,cnt       | tock module
 //                  +--------------------+
 //                  |       MESH:        | MESH upper interface
 // (O)<-      ATT <-|        sts         | notiy attention status
 // (O)<-      PRV <-|        sts         | notiy provision status
 //                  |....................|
 //                  |       MESH:        | MESH lower interface
-// (^)->      ATT ->|        sts         | notiy attention status
-// (^)->      PRV ->|        sts         | notiy provision status
+// (U)->      ATT ->|        sts         | notiy attention status
+// (U)->      PRV ->|        sts         | notiy provision status
 //                  +--------------------+
 //                  |        GET:        | GET upper interface
 // (*)->      ATT ->|        sts         | get attention status
 // (*)->      PRV ->|        sts         | get provision status
 //                  |....................|
 //                  |        GET:        | GET lower interface
-// (v)<-      ATT <-|        sts         | get attention status
-// (v)<-      PRV <-|        sts         | get provision status
+// (D)<-      ATT <-|        sts         | get attention status
+// (D)<-      PRV <-|        sts         | get provision status
 //                  +--------------------+
 //                  |        LED:        | LED upper interface
 // (*)->      SET ->|     @id,onoff      | turn LED @id on/off
 // (*)->   TOGGLE <-|        @id         | toggle LED @id
 //                  |....................|
 //                  |        LED:        | LED lower interface
-// (v)<-      SET <-|     @id,onoff      | turn LED @id on/off
-// (v)<-   TOGGLE <-|        @id         | toggle LED @id
+// (D)<-      SET <-|     @id,onoff      | turn LED @id on/off
+// (D)<-   TOGGLE <-|        @id         | toggle LED @id
 //                  +--------------------+
 //                  |        SCAN:       | SCAN upper interface
 // (O)<-      ADV <-|      <BL_adv>      | forward advertising data
 //                  |....................|
 //                  |        SCAN:       | SCAN lower interface
-// (^)->      ADV ->|      <BL_adv>      | forward advertising data
+// (U)->      ADV ->|      <BL_adv>      | forward advertising data
 //                  +--------------------+
 //                  |        NVM:        | NVM: upper interface
 // (O)<-    READY <-|       ready        | notification that NVM is now ready
@@ -139,10 +140,10 @@
 // (*)->     SAVE ->|                    | save NVM cache to NVM
 //                  |....................|
 //                  |        NVM:        | NVM lower interface
-// (^)->    READY ->|       ready        | notification that NVM is now ready
-// (v)<-    STORE <-|      @id,val       | store value in NVM at location @id
-// (v)<-   RECALL <-|        @id         | recall value in NVM at location @id
-// (v)<-     SAVE <-|                    | save NVM cache to NVM
+// (U)->    READY ->|       ready        | notification that NVM is now ready
+// (D)<-    STORE <-|      @id,val       | store value in NVM at location @id
+// (D)<-   RECALL <-|        @id         | recall value in NVM at location @id
+// (D)<-     SAVE <-|                    | save NVM cache to NVM
 //                  +--------------------+
 //                  |       GOOCLI:      | GOOCLI upper interface
 // (*)->      SET ->| @id,<BL_goo>,onoff | post generic on/off SET msg. via mesh
@@ -151,21 +152,21 @@
 // (O)<-      STS <-| @id,<BL_goo>,onoff | receive gen. on/off status from mesh
 //                  |....................|
 //                  |       GOOCLI:      | GOOCLI lower interface
-// (v)<-      SET <-| @id,<BL_goo>,onoff | post generic on/off SET msg. via mesh
-// (v)<-      LET <-| @id,<BL_goo>,onoff | post generic on/off LET msg. via mesh
-// (v)<-      GET <-|        @id         | post generic on/off GET msg. via mesh
-// (^)->      STS ->| @id,<BL_goo>,onoff | receive gen. on/off status from mesh
+// (D)<-      SET <-| @id,<BL_goo>,onoff | post generic on/off SET msg. via mesh
+// (D)<-      LET <-| @id,<BL_goo>,onoff | post generic on/off LET msg. via mesh
+// (D)<-      GET <-|        @id         | post generic on/off GET msg. via mesh
+// (U)->      STS ->| @id,<BL_goo>,onoff | receive gen. on/off status from mesh
 //                  +--------------------+
 //                  |       GOOSRV:      | GOOSRV upper interface
 // (O)<-      STS <-| @id,<BL_goo>,onoff | receive gen. on/off status from mesh
 //                  |....................|
 //                  |       GOOSRV:      | GOOSRV lower interface
-// (^)->      STS ->| @id,<BL_goo>,onoff | receive gen. on/off status from mesh
+// (U)->      STS ->| @id,<BL_goo>,onoff | receive gen. on/off status from mesh
 //                  +--------------------+
 //
 //==============================================================================
 
-  __weak int bl_in(BL_ob *o, int val)
+  __weak int bl_top(BL_ob *o, int val)
   {
 		bool attention = false;
 		bool provision = false;
@@ -193,7 +194,7 @@
       case BL_ID(_MESH,PRV_):          // provision state changed
         provision = val;
         bl_log_color(attention,provision);
-        LOG(2,BL_M"in: node %sprovision",val?"":"un");
+        LOG(2,BL_M"top: node %sprovision",val?"":"un");
         return bl_out(o,val,out);
 
       case BL_ID(_GET,ATT_):           // [GET:ATT]
@@ -219,22 +220,22 @@
       case BL_ID(_SWITCH,STS_):        // [SWITCH:STS @id,time]
         return bl_out(o,val,out);      // post BUTTON stuff without logging
 
-      case BL_ID(_NVM,READY_):         // (^)->[NVM:READY ready]->(O)
+      case BL_ID(_NVM,READY_):         // (U)->[NVM:READY ready]->(O)
         return bl_out(o,val,out);      // output message
 
-      case BL_ID(_NVM,STORE_):         // (*) ->[NVM:STORE  @id,val]-> (v)
-      case BL_ID(_NVM,RECALL_):        // (*) ->[NVM:RECALL @id,val]-> (v)
-      case BL_ID(_NVM,SAVE_):          // (*) ->[NVM:SAVE   @id,val]-> (v)
+      case BL_ID(_NVM,STORE_):         // (*) ->[NVM:STORE  @id,val]-> (D)
+      case BL_ID(_NVM,RECALL_):        // (*) ->[NVM:RECALL @id,val]-> (D)
+      case BL_ID(_NVM,SAVE_):          // (*) ->[NVM:SAVE   @id,val]-> (D)
         return bl_out(o,val,down);     // post message down
 
-      case BL_ID(_GOOCLI,SET_):        // (*)->[GOOCLI:SET @id,<BL_goo>,v]->(v)
-      case BL_ID(_GOOCLI,LET_):        // (*)->[GOOCLI:LET @id,<BL_goo>,v]->(v)
-      case BL_ID(_GOOCLI,GET_):        // (*)->[GOOCLI:GET]->(v)
+      case BL_ID(_GOOCLI,SET_):        // (*)->[GOOCLI:SET @id,<BL_goo>,v]->(D)
+      case BL_ID(_GOOCLI,LET_):        // (*)->[GOOCLI:LET @id,<BL_goo>,v]->(D)
+      case BL_ID(_GOOCLI,GET_):        // (*)->[GOOCLI:GET]->(D)
         return bl_out(o,val,down);     // post message down
 
-      case BL_ID(_GOOCLI,STS_):        // (^)->[GOOCLI:STS]->(O)
-      case BL_ID(_GOOSRV,STS_):        // (^)->[GOOSRV:STS]->(O)
-			  LOG0(2,"in:",o,val);
+      case BL_ID(_GOOCLI,STS_):        // (U)->[GOOCLI:STS]->(O)
+      case BL_ID(_GOOSRV,STS_):        // (U)->[GOOSRV:STS]->(O)
+			  LOG0(2,"top:",o,val);
         return bl_out(o,val,out);      // output message down
 
       default:
