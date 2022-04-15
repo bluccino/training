@@ -170,14 +170,14 @@
   {
 		bool attention = false;
 		bool provision = false;
-		static BL_oval out = NULL;         // output a message
-		static BL_oval down = bl_down;     // down-post a message
+		static BL_oval O = NULL;           // output a message
+		static BL_oval D = bl_down;        // down-post a message
     int level = 2;                     // default verbose level
 
     switch (bl_id(o))                  // dispatch event
     {
       case BL_ID(_SYS,INIT_):          // provision state changed
-        out = o->data;                 // store <out> callback
+        O = o->data;                   // store <out> callback
 				return 0;
 
       case BL_ID(_SYS,TICK_):
@@ -189,13 +189,13 @@
         attention = val;
         bl_log_color(attention,provision);
         LOG(2,BL_G"attention %s",val?"on":"off");
-        return bl_out(o,val,out);
+        return bl_out(o,val,(O));
 
       case BL_ID(_MESH,PRV_):          // provision state changed
         provision = val;
         bl_log_color(attention,provision);
         LOG(2,BL_M"top: node %sprovision",val?"":"un");
-        return bl_out(o,val,out);
+        return bl_out(o,val,(O));
 
       case BL_ID(_GET,ATT_):           // [GET:ATT]
         return attention;              // return attention state
@@ -211,37 +211,37 @@
       case BL_ID(_LED,TOGGLE_):        // [LED:TOGGLE @id]
 			  if (o->id > 0)                 // @id > 0?
           LOG0(level,"@top:",o,val);   // log only for @id = 1..4
-        return bl_out(o,val,down);     // post LED stuff down
+        return bl_out(o,val,(D));      // post LED stuff down
 
       case BL_ID(_BUTTON,PRESS_):      // [BUTTON:PRESS @id,0]
       case BL_ID(_BUTTON,RELEASE_):    // [BUTTON:RELEASE @id,time]
       case BL_ID(_BUTTON,CLICK_):      // [BUTTON:CLICK @id,cnt]
       case BL_ID(_BUTTON,HOLD_):       // [BUTTON:HOLD @id,time]
       case BL_ID(_SWITCH,STS_):        // [SWITCH:STS @id,time]
-        return bl_out(o,val,out);      // post BUTTON stuff without logging
+        return bl_out(o,val,(O));      // post BUTTON stuff without logging
 
       case BL_ID(_NVM,READY_):         // (U)->[NVM:READY ready]->(O)
-        return bl_out(o,val,out);      // output message
+        return bl_out(o,val,(O));      // output message
 
       case BL_ID(_NVM,STORE_):         // (*) ->[NVM:STORE  @id,val]-> (D)
       case BL_ID(_NVM,RECALL_):        // (*) ->[NVM:RECALL @id,val]-> (D)
       case BL_ID(_NVM,SAVE_):          // (*) ->[NVM:SAVE   @id,val]-> (D)
-        return bl_out(o,val,down);     // post message down
+        return bl_out(o,val,(D));      // post message down
 
       case BL_ID(_GOOCLI,SET_):        // (*)->[GOOCLI:SET @id,<BL_goo>,v]->(D)
       case BL_ID(_GOOCLI,LET_):        // (*)->[GOOCLI:LET @id,<BL_goo>,v]->(D)
       case BL_ID(_GOOCLI,GET_):        // (*)->[GOOCLI:GET]->(D)
-        return bl_out(o,val,down);     // post message down
+        return bl_out(o,val,(D));      // post message down
 
       case BL_ID(_GOOCLI,STS_):        // (U)->[GOOCLI:STS]->(O)
       case BL_ID(_GOOSRV,STS_):        // (U)->[GOOSRV:STS]->(O)
 			  LOG0(2,"top:",o,val);
-        return bl_out(o,val,out);      // output message down
+        return bl_out(o,val,(O));      // output message down
 
       default:
         break;
     }
 
     LOG0(level,"@top:",o,val);
-    return bl_out(o,val,out);          // forward message to subscriber
+    return bl_out(o,val,(O));          // forward message to subscriber
   }
