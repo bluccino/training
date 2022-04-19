@@ -11,12 +11,14 @@ Bluccino V1.0.6
 Goals:
 + use GEAR logging instead of API logging
 + introduce _bl_out() for augmented output
++ add augmented _bl_led() function
 - rewrite top gear to use augmented messages for upstream and unaugmented
   messages for downstream messages
 
 Changelog History
 + use GEAR logging instead of API logging
 + introduce _bl_out() for augmented output
++ add augmented _bl_led() function
 
 ################################################################################
 

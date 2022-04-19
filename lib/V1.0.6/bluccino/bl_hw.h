@@ -86,33 +86,43 @@
   int bl_hw(BL_ob *o, int val);        // HW core module interface
 
 //==============================================================================
-// syntactic sugar: HW core init
-// - usage: bl_hw_SYS_INIT(bl_hw,cb)
+// syntactic sugar: set LED @id on/off,         // send un-augmented message
+// - usage: _LED_SET_(id,val,(to))              // val 0:off, 1:on
 //==============================================================================
 
-  static inline int bl_hw_SYS_INIT(BL_oval module,BL_oval cb)
+  static inline int _LED_SET_(int id, int val,BL_oval to)
   {
-    return bl_init(module,cb);
+    return bl_msg((to),_LED,SET_, id,NULL,val);
   }
 
 //==============================================================================
 // syntactic sugar: set LED @id on/off,          // send augmented message
-// - usage: _bl_hw_LED_SET(bl_hw,id,val)         // val 0:off, 1:on
+// - usage: __LED_SET_(id,val,(to))              // val 0:off, 1:on
 //==============================================================================
 
-  static inline int _bl_hw_LED_SET(BL_oval module,int id, int val)
+  static inline int __LED_SET_(int id, int val,BL_oval to)
   {
-    return _bl_msg(module,_LED,SET_, id,NULL,val);
+    return _bl_msg((to), _LED,SET_, id,NULL,val);
+  }
+
+//==============================================================================
+// syntactic sugar: toggle LED @id (@id: 0..4),  // send un-augmented message
+// - usage: _LED_TOGGLE_(id,(to))                // (BL_HW)<-[LED:TOGGLE @id]
+//==============================================================================
+
+  static inline int _LED_TOGGLE_(int id,BL_oval to)
+  {
+    return bl_msg((to), _LED,TOGGLE_, id,NULL,0);
   }
 
 //==============================================================================
 // syntactic sugar: toggle LED @id (@id: 0..4),  // send augmented message
-// - usage: _bl_hw_LED_TOGGLE(bl_hw,id)          // (BL_HW)<-[#LED:TOGGLE @id]
+// - usage: __LED_TOGGLE_(id,(to))               // (BL_HW)<-[#LED:TOGGLE @id]
 //==============================================================================
 
-  static inline int _bl_hw_LED_TOGGLE(BL_oval module, int id)
+  static inline int __LED_TOGGLE_(int id,BL_oval to)
   {
-    return _bl_msg(module,_LED,TOGGLE_, id,NULL,0);
+    return _bl_msg((to), _LED,TOGGLE_, id,NULL,0);
   }
 
 #endif // __BL_HW_H__
