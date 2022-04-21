@@ -36,6 +36,6 @@
 
   void main(void)
   {
-    bl_hello(4,"04-clisrv");                // set verbose level, print hello message
+    bl_hello(4,"04-clisrv");                // set verbose level, hello message
     bl_init(bluccino,app);                  // init bluccino, output to app()
   }
