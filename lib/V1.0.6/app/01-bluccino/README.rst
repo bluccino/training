@@ -12,6 +12,9 @@ Goals:
 + use GEAR logging instead of API logging
 + introduce _bl_out() for augmented output
 + add augmented _bl_led() function
+- add bl_duty(o,duty,period) inline function
+- add a bl_nvm core library module
+- exact timing for bl_run (how to solve HW independent timer challenge?)
 - rewrite top gear to use augmented messages for upstream and unaugmented
   messages for downstream messages
 
