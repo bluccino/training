@@ -40,7 +40,7 @@ target_sources(app PRIVATE
 	       ${CORE}/storage.c
 	       ${CORE}/ble_mesh.c
 	       ${CORE}/device_composition.c
-	       ${CORE}/no_transition_work_handler.c
+	       ${CORE}/notrans.c
 	       ${CORE}/publisher.c
 	       ${CORE}/state_binding.c
 	       ${CORE}/transition.c

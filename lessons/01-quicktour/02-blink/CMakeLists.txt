@@ -4,12 +4,18 @@
   find_package(Zephyr REQUIRED HINTS $ENV{ZEPHYR_BASE})
 
 #===============================================================================
-# project definition and path setup
+# project personality (definitions to be pushed down to C-level)
 #===============================================================================
 
   project(02-blink)
 
-  set (LIB ../../../lib/V1.0)          # library path
+  add_definitions(-DPROJECT="${CMAKE_PROJECT_NAME}")
+
+#===============================================================================
+# path setup
+#===============================================================================
+
+  set (LIB ../../../lib/V1.0.6)          # library path
   set (BLU ${LIB}/bluccino)            # Bluccino library modules
   set (HWC ${LIB}/core/hwcore/hwtiny)  # tiny hardware core
   set (SRC src)

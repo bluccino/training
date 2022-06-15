@@ -23,13 +23,13 @@
   static BL_ms due = 0;                // due time for turning off blinker
 
 //==============================================================================
-// button worker (handles [BUTTON:PRESS] events)
+// worker: button press (handles [BUTTON:PRESS] events)
 // - turns off current selected LED @id
 // - cycle increments @id (1->2->3->4 -> 1->2->...) to select next LED @id
 // - enable blinking of selected LED @id, and setting up a timeout for blinking
 //==============================================================================
 
-  static int button(BL_ob *o, int val) // handle [BUTTON:PRESS @id] message
+  static int button_press(BL_ob *o, int val)
   {
     bl_led(id,0);                      // turn off current LED @id
     id = 1 + (id  % 4);                // cycle id through 1,2,3,4 -> 1,2,...
@@ -39,12 +39,12 @@
   }
 
 //==============================================================================
-// tick worker (handles [SYS:TICK] events) - tick() is called every 10ms
+// worker: system tick (handles [SYS:TICK] events) - tick() is called every 10ms
 // - is passive if current LED @id is zero
 // - otherwise toggles LED every 80-th tick (every 800ms, as tick period = 10ms)
 //==============================================================================
 
-  static int tick(BL_ob *o, int val)   // handle [SYS:TICK @id,cnt] message
+  static int sys_tick(BL_ob *o, int val)
   {
     if (enable && bl_ms() >= due)      // if blinker is enabled and we are due
     {
@@ -55,12 +55,12 @@
   }
 
 //==============================================================================
-// tock worker (handles [SYS:TOCK] events)
+// worker: system tock (handles [SYS:TOCK] events)
 // - behaves passive if blinking not enabled (enable=false)
 // - otherwise toggles LED every 5-th tock (every 500ms, as tock period = 100ms)
 //==============================================================================
 
-  static int tock(BL_ob *o, int val)   // handle [SYS:TOCK @id,cnt] message
+  static int sys_tock(BL_ob *o, int val)
   {
     if (val % 5 == 0 && enable)        // every 5-th tick (500ms), if enabled
       bl_led(id,-1);                   // toggle selected LED
@@ -68,13 +68,13 @@
   }
 
 //==============================================================================
-// init worker (handles [SYS:INIT <out>] events)
+// worker: system init (handles [SYS:INIT <out>] events)
 // - prints a log so we can cross check whether APP module is initialized
 // - init id with value 0 (next LED selection to be @1) (note: blinker disabled)
 // - <out> argument is ignored, since APP does not emit messages
 //==============================================================================
 
-  static int init(BL_ob *o, int val)   // handle [SYS:INIT <out>] message
+  static int sys_init(BL_ob *o, int val)
   {
     bl_log(2,BL_B "init app");         // event message log in blue
     id = 0;                            // init LED @id=0 => starts with LED @1
@@ -86,16 +86,16 @@
 // public module interface
 //==============================================================================
 //
-// (E) := (BL_ENGINE);
+// (M) := (main);  (U) := (bl_up)
 //                  +--------------------+
-//                  |        APP         |
+//                  |        app         |
 //                  +--------------------+
-//                  |        SYS:        | SYS: interface
-// (E)->     INIT ->|       <out>        | init module, store <out> callback
-// (E)->     TICK ->|       @id,cnt      | tick the module
+//                  |        SYS:        | SYS input interface
+// (M)->     INIT ->|       <cb>         | init module, store output callback
+// (M)->     TICK ->|       @id,cnt      | tick the module
 //                  +--------------------+
-//                  |       BUTTON:      | BUTTON: output interface
-// (^)->    PRESS ->|        @id,1       | button @id pressed (rising edge)
+//                  |       BUTTON:      | BUTTON output interface
+// (U)->    PRESS ->|        @id,1       | button @id pressed (rising edge)
 //                  +--------------------+
 //
 //==============================================================================
@@ -104,17 +104,17 @@
   {
     switch (bl_id(o))                  // dispatch message ID
     {
-      case BL_ID(_SYS,INIT_):          // [SYS:INIT <out>] => init module
-        return init(o,val);            // forward to init() worker
+      case SYS_INIT_0_cb_0:            // [SYS:INIT <cb>] => init module
+        return sys_init(o,val);        // forward to sys_init() worker
 
-      case BL_ID(_SYS,TICK_):          // [SYS:TICK @id,cnt] => handle sys tick
-        return tick(o,val);            // forward to tick() worker
+      case SYS_TICK_id_BL_pace_cnt:          // [SYS:TICK @id,cnt] => handle sys tick
+        return sys_tick(o,val);        // forward to sys_tick() worker
 
-      case BL_ID(_SYS,TOCK_):          // [SYS:TOCK @id,cnt] => handle sys tick
-        return tock(o,val);            // forward to tock() worker
+      case SYS_TOCK_id_BL_pace_cnt:          // [SYS:TOCK @id,cnt] => handle sys tick
+        return sys_tock(o,val);        // forward to tock() worker
 
-      case BL_ID(_BUTTON,PRESS_):      // [BUTTON:PRESS @id] => putton pressed
-        return button(o,val);          // forward to button() worker
+      case BUTTON_PRESS_id_0_0:        // [BUTTON:PRESS @id] => putton pressed
+        return button_press(o,val);    // forward to button_press() worker
 
       default:
         return 0;                      // OK - ignore anything else
@@ -129,7 +129,7 @@
 
   void main(void)
   {
-    bl_hello(2,"06-ledtoggle (click button to cycle to next LED to be toggled)");
-    bl_cfg(bl_down,_BUTTON,BL_PRESS);  // configure only [BUTTON:PRESS] events 
+    bl_hello(2,PROJECT " (click button to cycle to next LED to be toggled)");
+    bl_cfg(bl_down,_BUTTON,BL_PRESS);  // configure only [BUTTON:PRESS] events
     bl_engine(app,10,100);             // run APP with 10/100ms ticks/tocks
   }

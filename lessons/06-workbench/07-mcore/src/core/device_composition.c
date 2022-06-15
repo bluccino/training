@@ -75,7 +75,7 @@
 
             union pay
             {
-              BL_gonoff_set gooset;
+              BL_gooset gooset;
             } pay;
           } TP_post;
 
@@ -107,7 +107,7 @@
 //==============================================================================
 
   static void log_rx(int lvl, BL_txt ptxt, uint16_t oc,
-      BL_model *pmod, BL_ctx *ctx, BL_gonoff_set *ppay, long cnt)
+      BL_model *pmod, BL_ctx *ctx, BL_gooset *ppay, long cnt)
   {
     LOG(lvl,
       "%s($%d:%d:%d, <%04x.%04x>, [%04x]->[%04x], %s,#%d,/%dms,&%dms) #%ld#",
@@ -245,7 +245,7 @@ static int gen_onoff_set_unack(struct bt_mesh_model *model,
     uint32_t oc = BL_GOO_SET;
     static long bl_log_gonoff_set_rx = 0;
     long cnt = ++bl_log_gonoff_set_rx;
-    BL_gonoff_set *pay = &post.pay.gooset;
+    BL_gooset *pay = &post.pay.gooset;
   #endif
 
 	uint8_t tid, onoff, tt, delay;
@@ -346,7 +346,7 @@ SUBMIT:  dummy = 1;                    // need this in order to use label
       uint32_t oc = BL_GOO_SET;
       static long bl_log_gonoff_set_rx = 0;
       long cnt = ++bl_log_gonoff_set_rx;
-      BL_gonoff_set *pay = &post.pay.gooset;
+      BL_gooset *pay = &post.pay.gooset;
     #endif
 
     uint8_t tid, onoff, tt, delay;

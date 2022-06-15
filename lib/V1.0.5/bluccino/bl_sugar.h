@@ -20,6 +20,16 @@
   }
 
 //==============================================================================
+// syntactic sugar: augmented set LED @id on/off or togggle LED @id (@id: 0..4)
+// - usage: bl_led(id,val,(to))   // val 0:off, 1:on, -1:toggle
+//==============================================================================
+
+  static inline int _bl_led(int id, int val, BL_oval to) // (to)<-[LED:op onoff]
+  {
+    return _bl_msg((to),_LED,val<0?TOGGLE_:SET_, id,NULL, val<0?0:val);
+  }
+
+//==============================================================================
 // syntactic sugar: check if message is a button press message ([BUTTON:PRESS])
 // - usage: pressed = bl_pressed(o)
 //==============================================================================

@@ -16,10 +16,10 @@
   }
 
 //==============================================================================
-// tock worker (note: OVAL interface!)
+// worker: system tock (note: OVAL interface!)
 //==============================================================================
 
-  static int tock(BL_ob *o, int val)   // [SYS:TOCK] worker
+  static int sys_tock(BL_ob *o, int val)
   {
     bl_logo(1,"app:",o,val);           // log [SYS:TOCK @id,cnt] message
 
@@ -30,10 +30,10 @@
   }
 
 //==============================================================================
-// init worker (note: OVAL interface!)
+// worker: system init (note: OVAL interface!)
 //==============================================================================
 
-  static int init(BL_ob *o, int val)   // [SYS:INIT] worker
+  static int sys_init(BL_ob *o, int val)
   {
     bl_logo(1,"app:",o,val);           // log [SYS:INIT <out>>] message
 
@@ -47,13 +47,13 @@
 // - the switch() dispatcher here can be treated as THE Bluccino standard
 //==============================================================================
 //
-// (M) := (MAIN)
+// (M) := (main)
 //                  +--------------------+
 //                  |        APP         |
 //                  +--------------------+
 //                  |        SYS:        | SYS interface
 // (M)->     INIT ->|       <out>        | init module, ignore <out> arg
-// (M)->     TOCK ->|       @id,cnt      | receive system tocks (500ms period)
+// (M)->     TOCK ->|      @id,cnt       | receive system tocks (500ms period)
 //                  +--------------------+
 //
 //==============================================================================
@@ -62,11 +62,11 @@
   {
     switch (bl_id(o))
     {
-      case BL_ID(_SYS,INIT_):          // [SYS:INIT <out>] init module
-        return init(o,val);            // delegate to init() worker
+      case SYS_INIT_0_cb_0:            // [SYS:INIT <cb>] init module
+        return sys_init(o,val);        // delegate to sys_init() worker
 
-      case BL_ID(_SYS,TOCK_):          // [SYS:TOCK @id,cnt] every 500ms tock
-        return tock(o,val);            // delegate to tock() worker
+      case SYS_TOCK_id_BL_pace_cnt:          // [SYS:TOCK @id,cnt] every 500ms tock
+        return sys_tock(o,val);        // delegate to sys_tock() worker
 
       default:
         return -1;                     // message ignored
@@ -81,7 +81,7 @@
 
   void main(void)
   {
-    bl_hello(4,"05-binker");           // print hello message, set verbose level
+    bl_hello(4,PROJECT);               // print hello message, set verbose level
     bl_init(bluccino,app);             // run - output goes to app()
     bl_init(app,NULL);                 // init APP, output goes nowhere
 

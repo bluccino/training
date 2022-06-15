@@ -19,7 +19,7 @@
 
   #include "ble_mesh.h"
   #include "device_composition.h"
-  #include "no_transition_work_handler.h"
+  #include "notrans.h"
   #include "state_binding.h"
   #include "storage.h"
   #include "transition.h"
