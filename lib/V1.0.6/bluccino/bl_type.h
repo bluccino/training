@@ -9,38 +9,43 @@
   #include <stdbool.h>
   #include <stdlib.h>
 
-  #define BL_LENGTH(a)      (sizeof(a)/sizeof(a[0]))         // array length
-  #define BL_LEN(a)         (sizeof(a)/sizeof(a[0]))         // array length
+  typedef uint32_t BL_id;              // bluccino message ID
+
+  #define BL_LENGTH(a)  (sizeof(a)/sizeof(a[0]))         // array length
+  #define BL_LEN(a)     (sizeof(a)/sizeof(a[0]))         // array length
 
     // macros for mesh message identification
 
-  #define BL_ID_(cl,op)     (((uint32_t)(cl)<<16)|BL_HASH(op))  // hashed msg ID
+  #define BL_OP(mid)    ((BL_op)  ((mid) & 0xffff))
+  #define BL_CL(mid)    ((BL_cl)  (((mid) >> 16) & 0xffff))
+
+  #define BL_ID_(cl,op) (BL_id)(((BL_id)(cl)<<16)|BL_HASH(op)) // aug'ed mID
 
     // similarily we use the concept of "augmented class tags", denoting a kind
     // of internal interface which have the second most significant bit ("aug
     // bit") of the lower 2 byte nibble set. Functions like bl_out will always
     // clear the aug bit before posting
 
-  #define BL_AUGBIT        0x00008000      // or mask to set hash bit
-  #define BL_AUGCLR        0x00007FFF      // and mask to clear hash bit
+  #define BL_AUGBIT     0x00008000      // or mask to set hash bit
+  #define BL_AUGCLR     0x00007FFF      // and mask to clear hash bit
 
      // macro BL_AUG() sets opcode's hashbit, macro BL_CLEAR() clears opcode's
      // hashbit, BL_AUGED() checks if opcode's hash bit is set
 
-  #define BL_AUG(op)        ((BL_op)((uint32_t)(op)|BL_AUGBIT))
-  #define BL_ISAUG(op)      (((op) & BL_AUGBIT) != 0)
-  #define BL_UNAUG(cl)      ((BL_cl)((uint32_t)(cl)&BL_AUGCLR)) // clear AUG bit
+  #define BL_AUG(cl)    ((BL_cl)((uint32_t)(cl)|BL_AUGBIT))
+  #define BL_ISAUG(cl)  (((cl) & BL_AUGBIT) != 0)
+  #define BL_UNAUG(cl)  ((BL_cl)((uint32_t)(cl)&BL_AUGCLR)) // clear AUG bit
 
     // macros for mesh message identification
 
-  #define BL_ID(cl,op)      (((uint32_t)(cl)<<16)|(op))         // message ID
-  #define _BL_ID(cl,op)     (((uint32_t)BL_AUG(cl)<<16)|(op))   // aug'ed msg ID
+  #define BL_ID(cl,op)  (BL_id)(((BL_id)(cl)<<16)|(op))         // message ID
+  #define _BL_ID(cl,op) (BL_id)(((BL_id)BL_AUG(cl)<<16)|(op))   // aug'ed mID
 
     // useful macros for min(), max() and abs()
 
-  #define BL_MAX(x,y) (((x) > (y)) ? (x) : (y))
-  #define BL_MIN(x,y) (((x) < (y)) ? (x) : (y))
-  #define BL_ABS(x)   ((x) < 0    ? -(x) : (x))
+  #define BL_MAX(x,y)   (((x) > (y)) ? (x) : (y))
+  #define BL_MIN(x,y)   (((x) < (y)) ? (x) : (y))
+  #define BL_ABS(x)     ((x) < 0    ? -(x) : (x))
 
 //==============================================================================
 // typedefs
@@ -79,20 +84,19 @@
       BL_ERR_FAILED  = 1300,           // operation failed
       BL_ERR_MEMORY  = 1400,           // out of memory
   } BL_err;
-/*
-  typedef struct BL_pace               // tick/tock pace control
-          {
-            BL_ms start;               // start time frame for pace maker
-            BL_ms clock;               // pace clock
-            BL_ms period;              // tick period
-            int divider;               // tock divider
-          } BL_pace;                   // tick/tock pace control
-*/
+
   typedef struct BL_pace               // tick/tock pace control
           {
             BL_ms period;              // tick/tock period
             BL_ms time;                // tick/tock time
           } BL_pace;                   // tick/tock pace control
+
+  typedef struct BL_dac                // data access structure
+          {
+	          BL_txt key;                // data key
+	          void *data;                // data pointer
+	          size_t size;               // data size
+          } BL_dac;
 
   #define BL_LO(x)           ((BL_byte)  ((x) & 0xff))
   #define BL_HI(x)           ((BL_byte)  (((x) >> 8) & 0xff))

@@ -8,12 +8,14 @@ About the Sample App
   1) Bluccino initialising
   2) LED control and
   3) deal with simple timing
-- the sample is prepared for nrf52dk_nrf52832, nrf52dk_nrf52840 and
+  4) using a Bluccino hardware core (hwtiny) to control real LEDs
+- the sample is prepared for nrf52dk_nrf52832 DK, nrf52dk_nrf52840 DK and
  nrf52840dongle_nrf52840 (dongle)
 
 Lessons to Learn
 - how to initialize the Bluccino module (if core level functions like LED
   control, button control and/or Bluetooth mesh access is utilized)
+- how to extend CMakeLists.txt file to link a hardware core ('hwtiny')
 - demonstration of simple LED control
 - how to get in low power sleep mode for some intended delay time
 

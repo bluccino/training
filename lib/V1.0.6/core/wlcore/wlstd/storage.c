@@ -17,11 +17,13 @@
   #include "bluccino.h"
 
 //==============================================================================
-// NVM level logging shorthands
+// logging shorthands
 //==============================================================================
 
+  #define WHO  "storage:"
+
   #define LOG                     LOG_NVM
-  #define LOGO(lvl,col,o,val)     LOGO_NVM(lvl,col"nvm:",o,val)
+  #define LOGO(lvl,col,o,val)     LOGO_NVM(lvl,col WHO,o,val)
   #define LOG0(lvl,col,o,val)     LOGO_NVM(lvl,col,o,val)
 
 //==============================================================================
@@ -38,11 +40,38 @@
   static bool ready = false;           // is nvm cache ready?
 
 //==============================================================================
+// helper: settings init (initializes the zephyr settings subsystem)
+// - we keep this function global in order to avoid multiple initializing
+//   calls to settings_subsys_init()
+// - we define this function weak to avoid collision with the same named
+//   function in bl_hwnvm
+//==============================================================================
+
+  __weak int bl_settings_init(void)
+  {
+    static bool initialized = false;
+
+    if (initialized)
+      return 0;                        // already initialized
+
+    LOG(4,BL_B "init settings subsystem (bl_storage)");
+
+    int err = settings_subsys_init();
+    if (err)
+      bl_err(err,"settings subsys initialization");
+    else
+      initialized = true;
+
+    return err;
+  }
+
+//==============================================================================
 // helper: local save functions
 //==============================================================================
 
   static void save_nvm_cache(void)
   {
+    LOG(4,"store: @nvm_cache");
   	settings_save_one("ps/nvm", &nvm_cache, sizeof(nvm_cache));
   }
 
@@ -147,15 +176,16 @@
   	}
   }
 
+  K_WORK_DEFINE(storage_work, storage_work_handler);
+
 //==============================================================================
 // helper: save on flash
 //==============================================================================
 
-  K_WORK_DEFINE(storage_work, storage_work_handler);
-
   void save_on_flash(uint8_t id)
   {
   	storage_id = id;
+    LOG(5,BL_R "save_on_flash: @%d",id);
   	k_work_submit(&storage_work);
   }
 
@@ -167,7 +197,7 @@
   {
 		ready = true;
     LOG(4,BL_M "NVM is now ready");
-    _bl_msg(bl_nvm,_NVM,READY_, 0,NULL,ready);  // (BL_NVM) <- [NVM:READY ready]
+    _bl_msg((bl_storage),_NVM,READY_, 0,NULL,ready);  // (BL_NVM) <- [NVM:READY ready]
   }
 
   K_WORK_DEFINE(nvm_ready_work, nvm_ready_worker);
@@ -189,7 +219,7 @@
     const char *next;
 
     key_len = settings_name_next(key, &next);
-    //LOG(4,"ps_set - key:%s",next?next:"???");
+    LOG(5,BL_R"ps_set - key:%s, next: %s", key, next?next:"<NULL>");
 
     if (!next)
     {
@@ -265,19 +295,25 @@
 
 //==============================================================================
 // worker: save NVM cache to NVM
+// - save operation will be only executed if <data> equals NULL
 //==============================================================================
 
-  static int save(BL_ob *o, int val)
+  static int nvm_save(BL_ob *o, int val)
   {
-    save_nvm_cache();
-    return 0;                          // OK
+    if (o->data == NULL)
+    {
+      save_nvm_cache();
+      return 0;                        // OK
+    }
+
+    return -1;                         // otherwise return error
   }
 
 //==============================================================================
 // worker: store value in NVM
 //==============================================================================
 
-  static int store(BL_ob *o, int val)
+  static int nvm_store(BL_ob *o, int val)
   {
       if (o->id < 0 || o->id >= BL_LEN(nvm_cache))
         return -1;                   // bad storage ID
@@ -298,7 +334,7 @@
 // worker: recall value from NVM
 //==============================================================================
 
-  static int recall(BL_ob *o, int val)
+  static int nvm_recall(BL_ob *o, int val)
   {
       if (o->id < 0 || o->id >= BL_LEN(nvm_cache))
         return 0;
@@ -309,10 +345,10 @@
   }
 
 //==============================================================================
-// worker: tock
+// worker: system tock
 //==============================================================================
 
-  static int tock(BL_ob *o, int val)
+  static int sys_tock(BL_ob *o, int val)
   {
     if (val % 2 == 0)                  // every 2 seconds
     {
@@ -326,13 +362,13 @@
         ready = true;
         dirty = true;
 
-  	    submit_nvm_ready();            // notify higher levels
+        submit_nvm_ready();            // notify higher levels
       }
 
       if (ready && dirty)
       {
         LOG(4,"backup NVM cache ...");
-        save(o,val);
+        save_nvm_cache();
         dirty = false;
       }
     }
@@ -340,28 +376,28 @@
   }
 
 //==============================================================================
-// worker: init module
+// worker: system init
 //==============================================================================
 
-  static int init_nvm(BL_ob *o, int val)
+  static int sys_init(BL_ob *o, int val)
   {
     LOG(3,BL_C "init NVM");
 
-  	int err = settings_subsys_init();
-  	if (err)
+    int err = bl_settings_init();
+    if (err)
     {
-  		bl_err(err,"settings_subsys_init failed");
-  		return err;
-  	}
+      bl_err(err,"settings_subsys_init failed");
+      return err;
+    }
 
-  	err = settings_register(&ps_settings);
-  	if (err)
+    err = settings_register(&ps_settings);
+    if (err)
     {
-  		bl_err(err,"ps_settings_register failed");
-  		return err;
-  	}
+      bl_err(err,"ps_settings_register failed");
+      return err;
+    }
 
-  	return 0;
+    return 0;
   }
 
 //==============================================================================
@@ -370,50 +406,59 @@
 //
 // (W) := (BL_WL)
 //                  +--------------------+
-//                  |       BL_NVM       | non volatile memory access
+//                  |     bl_storage     | non volatile memory access
 //                  +--------------------+
 //                  |        SYS:        | SYS: public interface
 // (W)->     INIT ->|       @id,cnt      | init module, store <out> callback
 // (W)->     TOCK ->|       @id,cnt      | tock the module
 //                  +--------------------+
-//                  |        NVM:        | NVM: public interface
-// (W)<-    READY <-|       ready        | notification that NVM is now ready
+//                  |        NVM:        | NVM input interface
 // (W)->    STORE ->|      @id,val       | store value in NVM at location @id
 // (W)->   RECALL ->|        @id         | recall value in NVM at location @id
 // (W)->     SAVE ->|                    | save NVM cache to NVM
-//                  +====================+
-//                  |        NVM:        | NVM: private interface
-// (#)->   #READY ->|       ready        | notification that NVM is now ready
+//                  |....................|
+//                  |        NVM:        | NVM output interface
+// (W)<-    READY <-|       ready        | notification that NVM is now ready
 //                  +--------------------+
 //
 //==============================================================================
 
-  int bl_nvm(BL_ob *o, int val)
+  int bl_storage(BL_ob *o, int val)
   {
-    static BL_oval out = NULL;
+    static BL_oval W = bl_wl;
 
     switch (bl_id(o))
     {
       case BL_ID(_SYS,INIT_):        // [SYS:INIT <out>]
-        out = o->data;               // store output callback
-        return init_nvm(o,val);      // forward to init() worker
+        W = bl_cb(o,(W),WHO"(W)");   // store output callback
+        return sys_init(o,val);      // forward to sys_init() worker
 
       case BL_ID(_SYS,TOCK_):        // [SYS:TOCK @0,cnt]
-        return tock(o,val);          // forward to tock() worker
-
-      case _BL_ID(_NVM,READY_):      // [#NVM:READY]
-        return bl_out(o,val,out);    // (O) <- [NVM:READY]
+        return sys_tock(o,val);      // forward to sys_tock() worker
 
       case BL_ID(_NVM,STORE_):       // [NVM:STORE @id,val]
-        return store(o,val);         // forward to store() worker
+        return nvm_store(o,val);     // delegate to nvm_store() worker
 
       case BL_ID(_NVM,RECALL_):      // val = [NVM:RECALL @id]
-        return recall(o,val);        // forward to recall() worker
+        return nvm_recall(o,val);    // delegate to nvm_recall() worker
 
       case BL_ID(_NVM,SAVE_):        // [NVM:STORE @id,val]
-        return save(o,val);          // forward to save() worker
+        return nvm_save(o,val);      // delegate to nvm_save() worker
+
+      case _BL_ID(_NVM,READY_):      // [#NVM:READY]
+        return bl_out(o,val,(W));    // [NVM:READY] -> (W)
+
+      case NVM_AVAIL_0_0_0:
+        LOG(4,BL_B "NVM supported by bl_storage");
+        return 1;                    // yes, NVM functionality available
 
       default:
         return -1;                   // bad input
     }
   }
+
+//==============================================================================
+// cleanup
+//==============================================================================
+
+  #include "bl_cleanup.h"

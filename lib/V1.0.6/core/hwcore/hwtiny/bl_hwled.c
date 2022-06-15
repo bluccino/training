@@ -9,15 +9,20 @@
   #include <drivers/gpio.h>
 
   #include "bluccino.h"
+  #include "bl_hw.h"
   #include "bl_gpio.h"
   #include "bl_hwled.h"
 
+  #define PMI bl_hwled            // public module interface
+
 //==============================================================================
-// LED level logging shorthands
+// logging shorthands
 //==============================================================================
 
+  #define WHO "bl_hwled:"          // who is logging
+
   #define LOG                     LOG_LED
-  #define LOGO(lvl,col,o,val)     LOGO_LED(lvl,col"led:",o,val)
+  #define LOGO(lvl,col,o,val)     LOGO_LED(lvl,col WHO,o,val)
 
 //==============================================================================
 // defines
@@ -104,7 +109,7 @@
 // LED init
 //==============================================================================
 
-  static int init(BL_ob *o, int val)
+  static int sys_init(BL_ob *o, int val)
   {
   	  // LEDs configuration & setting
 
@@ -163,10 +168,10 @@
   {
     switch (bl_id(o))
     {
-      case BL_ID(_SYS,INIT_):          // [SYS:INIT <cb>]
-      	return init(o,val);            // delegate to init() worker
+      case SYS_INIT_0_cb_0:
+      	return sys_init(o,val);        // delegate to sys_init() worker
 
-      case BL_ID(_LED,SET_):           // [LED:set]
+      case LED_SET_id_0_onoff:
       {
         BL_ob oo ={o->cl,o->op,1,NULL};// change @id=0 -> @id=1
         if (o->id)
@@ -176,7 +181,7 @@
 	      return led_set(o,val != 0);    // delegate to led_set();
       }
 
-      case BL_ID(_LED,TOGGLE_):        // [LED:toggle]
+      case LED_TOGGLE_id_0_0:
       {
         BL_ob oo = {o->cl,o->op,1,NULL};  // change @id=0 -> @id=1
         o = o->id ? o : &oo;           // if (o->id==0) re-map o to &oo
@@ -187,3 +192,9 @@
 	      return -1;                     // bad input
     }
   }
+
+//==============================================================================
+// cleanup (needed for *.c file merge of the bluccino core)
+//==============================================================================
+
+  #include "bl_cleanup.h"

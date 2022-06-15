@@ -19,17 +19,11 @@
   extern bool bl_provisioned;          // provisioned mode
 
 //==============================================================================
-// mesh opcodes
-//==============================================================================
-
-// #define BL_GOOLET 0x8203
-
-//==============================================================================
 // syntactic sugar: compound message identifier
 // - usage: bl_id(o)                   // same as BL_PAIR(o->cl,o->op)
 //==============================================================================
 
-  static inline int bl_id(BL_ob *o)
+  static inline BL_id bl_id(BL_ob *o)
   {
     return BL_ID(o->cl,o->op);
   }
@@ -69,14 +63,38 @@
 
 //==============================================================================
 // post general message [CL:OP @id,<data>,val] to module
+// - usage: bl_post((to),mid,id,data,val)
+//          bl_post((to),SYS_INIT_0_cb_0, 0,cb,0)
+//==============================================================================
+
+  static inline int bl_post(BL_oval to, BL_id mid, int id,BL_data data,int val)
+  {
+    BL_ob oo = {BL_CL(mid),BL_OP(mid),id,data};
+    return to(&oo,val);            // post message to module interface
+  }
+
+//==============================================================================
+// post general augmented message [#CL:OP @id,<data>,val] to module
+// - usage: _bl_post((to),mid,id,data,val)
+//          _bl_post((to),SYS_INIT_0_cb_0, 0,cb,0)
+//==============================================================================
+
+  static inline int _bl_post(BL_oval to, BL_id mid, int id,BL_data data,int val)
+  {
+    BL_ob oo = {BL_AUG(BL_CL(mid)),BL_OP(mid),id,data};
+    return to(&oo,val);            // post augmented message to module interface
+  }
+
+//==============================================================================
+// post general message [CL:OP @id,<data>,val] to module
 // - usage: bl_msg(module,cl,op,id,data,val)
 //==============================================================================
 
   static inline
-	  int bl_msg(BL_oval module, BL_cl cl,BL_op op, int id, BL_data data, int val)
+    int bl_msg(BL_oval to, BL_cl cl, BL_op op, int id, BL_data data, int val)
   {
     BL_ob oo = {cl,op,id,data};
-    return module(&oo,val);            // post message to module interface
+    return to(&oo,val);            // post message to module interface
   }
 
 //==============================================================================
@@ -85,32 +103,10 @@
 //==============================================================================
 
   static inline
-	  int _bl_msg(BL_oval module, BL_cl cl,BL_op op, int id, BL_data data,int val)
+    int _bl_msg(BL_oval to, BL_cl cl, BL_op op, int id, BL_data data, int val)
   {
     BL_ob oo = {BL_AUG(cl),op,id,data};// augmented class tag
-    return module(&oo,val);            // post message to module interface
-  }
-
-//==============================================================================
-// get module property
-// - usage: val = bl_get(module,op)    // use opcodes for property names
-//==============================================================================
-
-  static inline int bl_get(BL_oval module, BL_op op)
-  {
-    BL_ob oo = {_GET,op,0,NULL};
-    return module(&oo,0);              // post to test module via upward gear
-  }
-
-//==============================================================================
-// set module property
-// - usage: val = bl_set(module,op,val) // use opcodes for property names
-//==============================================================================
-
-  static inline int bl_set(BL_oval module, BL_op op, int val)
-  {
-    BL_ob oo = {_SET,op,0,NULL};
-    return module(&oo,val);            // post to test module via upward gear
+    return to(&oo,val);            // post message to module interface
   }
 
 //==============================================================================

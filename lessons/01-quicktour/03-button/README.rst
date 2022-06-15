@@ -14,8 +14,8 @@ About the Sample App
   message we toggle the related ID
 - identification of button and LED is accomplished by the '@id' argument of
   the message, which is passed n therms of the o->id data.
-- the sample is prepared for nrf52dk_nrf52832, nrf52dk_nrf52840 and
-  nrf52840dongle_nrf52840 (dongle)
+- the sample is prepared for nrf52dk_nrf52832 DK, nrf52dk_nrf52840 DK and
+  nrf52840dongle_nrf52840 dongle
 
 Lessons to Learn
 - how to write the prototype of an app() callback ("OVAL interface") in order
@@ -28,6 +28,8 @@ Lessons to Learn
   via an app() callback
 - demonstration of event message (in our case a button event) dispatching
   and simple LED toggle control
+- learn about the different button events: [BUTTON:PRESS], [BUTTON:RELEASE],
+  [BUTTON:CLICK], [BUTTON:HOLD], [SWITCH:STS]
 
 Bluccino Primitives Used
 - bluccino(): public module interface of bluccino module

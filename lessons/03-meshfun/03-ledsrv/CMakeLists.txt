@@ -6,12 +6,18 @@ set(QEMU_EXTRA_FLAGS -s)
 find_package(Zephyr REQUIRED HINTS $ENV{ZEPHYR_BASE})
 
 #===============================================================================
-# project definition and path setup
+# project personality (definitions to be pushed down to C-level)
 #===============================================================================
 
   project(03-ledsrv)
 
-  set (LIB ../../../lib/V1.0)
+  add_definitions(-DPROJECT="${CMAKE_PROJECT_NAME}")
+
+#===============================================================================
+# path setup
+#===============================================================================
+
+  set (LIB ../../../lib/V1.0.6)
   set (BLU ${LIB}/bluccino)            # Bluccino stuff
   set (HWC ${LIB}/core/hwcore/hwtiny)  # tiny hardware core
   set (WLC ${LIB}/core/wlcore/wltiny)  # tiny wireless core

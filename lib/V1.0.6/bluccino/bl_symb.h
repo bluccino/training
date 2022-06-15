@@ -16,10 +16,11 @@
   #ifndef BL_CL_TEXT
 
     #define BL_CL_TEXT {"VOID","SYS","OUT","RESET","TIMER","TEST","TIC",\
-                        "SET","GET","MESH","BLE","NGMN","CFGSRV","CFGCLI",\
-                        "HEASRV","HEACLI","GOOCLI","GOOSRV","GLVCLI","GLVSRV",\
+                        "SET","GET","MESH","BLE","NGMN", \
+                        "CFGCLI","CFGSRV","HEACLI","HEASRV",\
+                        "GOOCLI","GOOSRV","GLVCLI","GLVSRV",\
                         "BUTTON", "SWITCH", "LED",           \
-                        "CTRL","SCAN","ADVT","SOS","NVM"}
+                        "CTRL","SCAN","ADVT","SOS","NVM","TRANS"}
 
     typedef enum BL_cl                 // class tag
             {
@@ -37,10 +38,10 @@
               _BLE,                    // BLE
               _NGMN,                   // 3G/4G/5G (next gen mobile networks)
 
-              _CFGSRV,                 // Config Server
               _CFGCLI,                 // Config Client
-              _HEASRV,                 // Health Server
+              _CFGSRV,                 // Config Server
               _HEACLI,                 // Health Client
+              _HEASRV,                 // Health Server
 
               _GOOCLI,                 // Generic OnOff Client
               _GOOSRV,                 // Generic OnOff Server
@@ -56,6 +57,7 @@
               _ADVT,                   // advertizer
               _SOS,                    // SOS module
               _NVM,                    // non volatile memory
+              _TRANS,                  // transition
             } BL_cl;                   // class tag
 
   #endif // BL_CL_TEXT
@@ -71,7 +73,8 @@
                         "GET","STS","TRIG","TICK","TOCK","CMD","VAL","LEVEL", \
                         "ONOFF","COUNT","TOGGLE","INC","DEC","PAY", "ADV", \
                         "BEACON","SEND","PRESS","RELEASE","CLICK","HOLD","MS", \
-                        "STORE","RECALL","SAVE"}
+                        "STORE","RECALL","SAVE","LOAD","AVAIL", \
+                        "MPUB","REPEAT","INTERVAL"}
 
     typedef enum BL_op
             {
@@ -121,6 +124,12 @@
               STORE_,                  // store data
               RECALL_,                 // recall data
               SAVE_,                   // save data
+              LOAD_,                   // load data
+              AVAIL_,                  // functionality available
+
+              MPUB_,                   // mesh publisher
+              REPEAT_,                 // number of repeats
+              INTERVAL_,               // interval between repeats
             } BL_op;
 
   #endif // BL_OP_TEXT
@@ -139,6 +148,6 @@
 
     // define "OVAL" function interface and callback type
 
-  typedef int (*BL_oval)(BL_ob *o, int value);
+  typedef int (*BL_oval)(BL_ob *o, int val);
 
 #endif // __BL_SYMB_H__

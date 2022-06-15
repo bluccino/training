@@ -9,7 +9,7 @@
 
   project(01-hello)
 
-  set (LIB ../../../lib/V1.0)
+  set (LIB ../../../lib/V1.0.6)
   set (BLU ${LIB}/bluccino)
   set (SRC src)
 

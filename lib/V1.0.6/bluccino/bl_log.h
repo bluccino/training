@@ -13,14 +13,15 @@
 #include "bl_type.h"
 #include "bl_msg.h"
 
-
 #if 0
 //==============================================================================
-// XYZ level logging shorthands
+// logging shorthands
 //==============================================================================
 
+  #define WHO "xyz"               // who is logging?
+
   #define LOG                     LOG_XYZ
-  #define LOGO(lvl,col,o,val)     LOGO_XYZ(lvl,col"xyz:",o,val)
+  #define LOGO(lvl,col,o,val)     LOGO_XYZ(lvl,col WHO ":",o,val)
   #define LOG0(lvl,col,o,val)     LOGO_XYZ(lvl,col,o,val)
 
 #endif
@@ -247,7 +248,7 @@
 //void bl_log2(int lev, BL_txt msg, int id, int value);
   void bl_logo(int lev, BL_txt msg, BL_ob *o, int value);
 
-  void bl_log_color(bool attention, bool provisioned);
+  void bl_decor(bool attention, bool provisioned);
   int bl_verbose(int verbose);        // set verbose level
 
 //==============================================================================

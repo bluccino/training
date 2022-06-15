@@ -52,10 +52,11 @@
 
 #endif // __NRF_SDK__
 //==============================================================================
-// set log color
+// decorate log time stamps
+// - depending on attention and provision status
 //==============================================================================
 
-  void bl_log_color(bool attention, bool provision)
+  void bl_decor(bool attention, bool provision)
   {
     color = attention ? BL_G : (provision ? BL_C : "");
   }

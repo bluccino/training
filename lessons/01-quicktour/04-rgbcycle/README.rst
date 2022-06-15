@@ -37,38 +37,45 @@ Exercise 1
 - note: log messages have the following form:  tag: [cl:op @id,val]
 
 Exercise 2
+- study the definition of symbol BUTTON_PRESS_id_0_0
+- rewrite the application by using macro BL_ID() instead of BUTTON_PRESS_id_0_0
+- what might be the reason for the Bluccino recommendation to use symbol
+  BUTTON_PRESS_id_0_0 instead of using BL_ID(_BUTTON,CLICK_), even both approa-
+  ches are working?
+
+Exercise 3
 - rewrite the sample app by dispatching [BUTTON:CLICK] events instead of
   [BUTTON:PRESS] events
 - also update the diagram for the public APP module interface
 
-Exercise 3
+Exercise 4
 - rewrite the sample app by dispatching [BUTTON:CLICK] events instead of
   [SWITCH:STS] events
 - also update the diagram for the public APP module interface
 
-Exercise 4
+Exercise 5
 - rewrite the sample app in such a way that only a button press of button @id
   can select the next RGB LED, if LED @id is currently selected.
 
-Exercise 5
-- replace the statement bl_cfg(bl_down,_BUTTON,BL_PRESS) in main() by
-  bl_cfg(bl_down,_BUTTON,BL_EDGE)
-- which kind of changes do you recognize?
-- what could be the meaning of adding this statement?
-
 Exercise 6
-- similarily to exercise 5 use (instead) the statement
-   bl_cfg(bl_down,_BUTTON,BL_SWITCH) in main()
+- replace the statement bl_cfg((bl_down),_BUTTON,BL_PRESS) in main() by
+  bl_cfg((bl_down),_BUTTON,BL_EDGE)
 - which kind of changes do you recognize?
 - what could be the meaning of adding this statement?
 
 Exercise 7
+- similarily to exercise 5 use (instead) the statement
+   bl_cfg((bl_down),_BUTTON,BL_SWITCH) in main()
+- which kind of changes do you recognize?
+- what could be the meaning of adding this statement?
+
+Exercise 8
 - use the initial code of the sample as a basis
 - for LED control replace statement bl_led(1,-1) by bl_led(1,val)
 - does the app still show the same behavior?
 - explain why the behavior is the same, or is different?
 
-Exercise 8
+Exercise 9
 - start with the modified code of exercise 7 and make changes in order to
 	dispatch on message [SWITCH:STS] instead of [BUTTON:PRESS]
 - does the app now show the (correct) initial behavior?

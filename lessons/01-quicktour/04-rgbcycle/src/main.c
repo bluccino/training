@@ -3,7 +3,7 @@
 //==============================================================================
 
   #include "bluccino.h"                // access to Bluccino stuff
-	#include "bl_hw.h"                   // access to hardware stuff
+  #include "bl_hw.h"                   // access to hardware stuff
 
   int app(BL_ob *o, int val);          // forward declaration
 
@@ -21,10 +21,10 @@
   }
 
 //==============================================================================
-// button worker (note: OVAL interface!)
+// worker: button pressed (note: OVAL interface!)
 //==============================================================================
 
-  static int button(BL_ob *o, int val) // [BUTTON:PRESS] worker function
+  static int button_press(BL_ob *o, int val)
   {
     bl_logo(1,"app:",o,val);           // log [BUTTON:PRESS @id,sts] message
 
@@ -44,8 +44,8 @@
 //                  +--------------------+
 //                  |        APP         |
 //                  +--------------------+
-//                  |       BUTTON:      | BUTTON: output interface
-// (B)->    PRESS ->|       @id,sts      | button @id pressed (rising edge)
+//                  |       BUTTON:      | BUTTON input interface
+// (B)->    PRESS ->|        @id         | button @id pressed (rising edge)
 //                  +--------------------+
 //
 //==============================================================================
@@ -54,8 +54,8 @@
   {
     switch (bl_id(o))
     {
-      case BL_ID(_BUTTON,PRESS_):      // [BUTTON:PRESS @id,sts]
-        return button(o,val);          // delegate to button worker
+      case BUTTON_PRESS_id_0_0:        // [BUTTON:PRESS @id]
+        return button_press(o,val);    // delegate to button_press worker
 
       default:
         return -1;                     // message not dispatched
@@ -70,7 +70,7 @@
 
   void main(void)
   {
-    bl_hello(4,"06-rgbcycle (click any button to activate another LED)");
+    bl_hello(4,PROJECT " (click any button to activate another LED)");
     bl_cfg(bl_down,_BUTTON,BL_PRESS);  // only want get [BUTTON:PRESS] events
     bl_init(bluccino,app);             // run - output goes to app()
   }

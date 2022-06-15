@@ -110,7 +110,7 @@
   class GooCli : public Blob
   {
     public:
-      GooCli(int Id) : Blob(BL_GOO_CLI,Id) {}
+      GooCli(int Id) : Blob(BL_GOOCLI,Id) {}
   };
 
 //==============================================================================
@@ -121,7 +121,7 @@
   {
     public:
       GooSrv(int id, WhenGooSrv cb=0);
-      GooSrv(int id, int op): Blob(BL_GOO_SRV,id,op) {}
+      GooSrv(int id, int op): Blob(BL_GOOSRV,id,op) {}
 //    void when_set(int value);        // 'button set' event handler
   };
 

@@ -6,33 +6,41 @@
 	find_package(Zephyr REQUIRED HINTS $ENV{ZEPHYR_BASE})
 
 #===============================================================================
-# project definition and path setup
+# project personality (definitions to be pushed down to C-level)
 #===============================================================================
 
   project(01-bluccino)
 
-  set (LIB ../../../../lib/V1.0)
+  add_definitions(-DPROJECT="${CMAKE_PROJECT_NAME}")
+
+    # logging control
+
+  add_definitions(-DVERBOSE=4)          # verbose level
+  add_definitions(-DCFG_LOG_GEAR=0)     # no gear logging
+  add_definitions(-DCFG_LOG_LED=0)      # no LED logging
+
+#===============================================================================
+# path setup
+#===============================================================================
+  set (LIB ../../../../lib/V1.0.6)
   set (BLU ${LIB}/bluccino)
   set (HWC ${LIB}/core/hwcore/hwtiny)
-  set (WLC ${LIB}/core/wlcore/wlmono)
+  set (WLC ${LIB}/core/wlcore/wlstd)
   set (LMO ${LIB}/module)
   set (SRC src)
 
   include_directories(${SRC} ${BLU} ${LMO} ${HWC} ${WLC})
-
-  add_definitions(-DBL_CONFIG="config.h")   # push define down to C level
-  add_definitions(-DBL_LOGGING="logging.h") # push define down to C level
 
 #===============================================================================
 # source files
 #===============================================================================
 
 target_sources(app PRIVATE
-	       ${SRC}/main.c
-				 ${BLU}/bluccino.c
-	       ${HWC}/bl_hw.c
-	       ${WLC}/bl_wl.c
-	       ${LMO}/bl_house.c
+	       ${SRC}/main.c                  # main module
+				 ${BLU}/bluccino.c              # bluccino library
+	       ${HWC}/bl_hw.c                 # hardware core
+	       ${WLC}/bl_wl.c                 # wireless core
+	       ${LMO}/bl_node.c               # mesh node house keeping
 	       )
 
 target_sources_ifdef(CONFIG_MCUMGR app PRIVATE ${CORE}/smp_svr.c)

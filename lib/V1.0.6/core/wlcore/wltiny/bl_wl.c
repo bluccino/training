@@ -2,7 +2,6 @@
 // bl_wl.c - onoff-app based Bluetooth mesh wireless core
 //==============================================================================
 
-//include <sys/printk.h>
   #include <settings/settings.h>
   #include <sys/byteorder.h>
   #include <bluetooth/bluetooth.h>
@@ -15,15 +14,20 @@
 
   #include "bluccino.h"
   #include "bl_gpio.h"                 // GPIO shorthands
+  #include "bl_gonoff.h"               // generic on/off model
   #include "bl_hw.h"                   // hardware core
   #include "bl_wl.h"                   // wireless core
 
+  #define PMI  bl_wl                   // public module interface
+
 //==============================================================================
-// CORE level logging shorthands
+// logging shorthands
 //==============================================================================
 
+  #define WHO                     "bl_wl:"
+
   #define LOG                     LOG_CORE
-  #define LOGO(lvl,col,o,val)     LOGO_CORE(lvl,col"bl_wl:",o,val)
+  #define LOGO(lvl,col,o,val)     LOGO_CORE(lvl,col WHO,o,val)
   #define LOG0(lvl,col,o,val)     LOGO_CORE(lvl,col,o,val)
 
 //==============================================================================
@@ -125,6 +129,7 @@ static const struct bt_mesh_model_op gen_onoff_cli_op[] = {
 };
 
 struct onoff_state {
+  int id;
 	uint8_t current;
 	uint8_t previous;
 	uint8_t led_gpio_pin;
@@ -137,10 +142,10 @@ struct onoff_state {
  */
 
 static struct onoff_state onoff_state[] = {
-	{ .led_gpio_pin = DT_GPIO_PIN(DT_ALIAS(led0), gpios) },
-	{ .led_gpio_pin = DT_GPIO_PIN(DT_ALIAS(led1), gpios) },
-	{ .led_gpio_pin = DT_GPIO_PIN(DT_ALIAS(led2), gpios) },
-	{ .led_gpio_pin = DT_GPIO_PIN(DT_ALIAS(led3), gpios) },
+	{ .id=1, .led_gpio_pin = DT_GPIO_PIN(DT_ALIAS(led0), gpios) },
+	{ .id=2, .led_gpio_pin = DT_GPIO_PIN(DT_ALIAS(led1), gpios) },
+	{ .id=3, .led_gpio_pin = DT_GPIO_PIN(DT_ALIAS(led2), gpios) },
+	{ .id=4, .led_gpio_pin = DT_GPIO_PIN(DT_ALIAS(led3), gpios) },
 };
 
 /*
@@ -288,10 +293,11 @@ static int gen_onoff_set_unack(struct bt_mesh_model *model,
 //   - dont directly set LED                                          //@@@4.6
 //	gpio_pin_set(p->led_device, p->led_gpio_pin,
 //		     p->current);
-  int id = p->led_gpio_pin - 16;
+// int id = p->led_gpio_pin - 16;
+  int id = p->id;
 	LOG(4,BL_G "rcv [GOOSRV:LET @%d,%d]",id,p->current);
 
-  _bl_msg(bl_wl,_GOOSRV,STS_, id,NULL,p->current);
+  bl_post((PMI), _GOOSRV_STS_id_BL_goo_sts, id,NULL,p->current);
 //<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 	/*
@@ -341,7 +347,7 @@ static int gen_onoff_set(struct bt_mesh_model *model,
 }
 
 //==============================================================================
-// GOOSTS server message handler
+// GOO server message handler
 //==============================================================================
 
 static int gen_onoff_status(struct bt_mesh_model *model,
@@ -376,34 +382,34 @@ static void prov_complete(uint16_t net_idx, uint16_t addr)
 	primary_addr = addr;
 	primary_net_idx = net_idx;
 
-	_bl_msg(bl_wl,_MESH,PRV_, 0,NULL,1);  // (BL_WL)<-[#MESH:PRV 1]
+	bl_post((PMI), _MESH_PRV_0_0_sts, 0,NULL,1);  // (BL_WL)<-[#MESH:PRV 1]
 }
 
 static void prov_reset(void)
 {
 	bt_mesh_prov_enable(BT_MESH_PROV_ADV | BT_MESH_PROV_GATT);
 
-	_bl_msg(bl_wl,_MESH,PRV_, 0,NULL,0);  // (BL_WL)<-[#MESH:PRV 0]
+	bl_post((PMI), _MESH_PRV_0_0_sts, 0,NULL,0);  // (BL_WL)<-[#MESH:PRV 0]
 }
 
 static uint8_t dev_uuid[16] = { 0xdd, 0xdd };
 
 //==============================================================================
-// provisioning link open/close callbacks                             //@@@3.3
+// callback: provisioning link open/close                             //@@@3.3
 //==============================================================================
 
   static void link_open(bt_mesh_prov_bearer_t bearer)
   {
-  	_bl_msg(bl_wl,_MESH,ATT_, 0,NULL,1);  // (BL_WL)<-[#MESH:ATT 1]
+  	bl_post((PMI), _MESH_ATT_0_0_sts, 0,NULL,1);  // (BL_WL)<-[#MESH:ATT 1]
   }
 
   static void link_close(bt_mesh_prov_bearer_t bearer)
   {
-  	_bl_msg(bl_wl,_MESH,ATT_, 0,NULL,0);  // (BL_WL)<-[#MESH:ATT 0]
+  	bl_post((PMI), _MESH_ATT_0_0_sts, 0,NULL,0);  // (BL_WL)<-[#MESH:ATT 0]
   }
 
 //==============================================================================
-// provisioning table
+// table: provisioning table
 //==============================================================================
 
 /* Disable OOB security for SILabs Android app */
@@ -581,68 +587,53 @@ static void bt_ready(int err)
 // public module interface
 //==============================================================================
 //
-// (v) := (BL_DOWN);  (^) := (BL_UP);  (#) := (BL_WL)
+// (D) := (bl_down);  (U) := (bl_up);
 //                  +--------------------+
-//                  |       BL_WL        | wireless core module
+//                  |       bl_wl        | wireless core module
 //                  +--------------------+
-//                  |        SYS:        | SYS: public interface
-// (v)->     INIT ->|       @id,cnt      | init module, store <out> callback
-// (v)->     TICK ->|       @id,cnt      | tick the module
-// (v)->     TOCK ->|       @id,cnt      | tock the module
+//                  |        SYS:        | SYS input interface
+// (D)->     INIT ->|       @id,cnt      | init module, store <out> callback
 //                  +--------------------+
-//                  |       MESH:        | MESH: public interface
-// (^)<-      PRV <-|       onoff        | provision on/off
-// (^)<-      ATT <-|       onoff        | attention on/off
+//                  |       #MESH:       | MESH output interface
+// (U)<-      PRV <-|       onoff        | provision on/off
+// (U)<-      ATT <-|       onoff        | attention on/off
 //                  +--------------------+
-//                  |       RESET:       | RESET: public interface
-// (v)->      INC ->|         ms         | inc reset counter & set due timer
-// (v)->      PRV ->|                    | unprovision node
-// (^)<-      DUE <-|                    | reset timer is due
-//                  +--------------------+
-//                  |        NVM:        | NVM: public interface
-// (v)->    STORE ->|      @id,val       | store value in NVM at location @id
-// (v)->   RECALL ->|        @id         | recall value in NVM at location @id
-// (v)->     SAVE ->|                    | save NVM cache to NVM
-// (^)<-    READY <-|       ready        | notification that NVM is now ready
-//                  +--------------------+
-//                  |      GOOSRV:       | GOOSRV interface
-// (^)<-      STS <-| @id,onoff,<BL_goo> | output generic on/off status
-//                  +--------------------+
-//                  |      GOOCLI:       | GOOSRV interface
-// (v)->      SET ->| @id,<BL_goo>,onoff | publish ack'ed generic on/off SET
-// (v)->      LET ->| @id,<BL_goo>,onoff | publish unack'ed generic on/off SET
-// (v)->      GET ->|        @id         | request GOO server status
-// (^)<-      STS <-|  @id,<BL_goo>,sts  | notify  GOO server status
-//                  +====================+
-//                  |       #MESH:       | MESH: private interface
-// (#)->      PRV ->|       onoff        | provision on/off
-// (#)->      ATT ->|       onoff        | attention on/off
+//                  |      GOOCLI:       | GOOCLI input interface
+// (D)->      SET ->| @id,<BL_goo>,onoff | publish ack'ed generic on/off SET
+// (D)->      LET ->| @id,<BL_goo>,onoff | publish unack'ed generic on/off SET
+// (D)->      GET ->|        @id         | request GOO server status
+//                  |....................|
+//                  |      #GOOSRV:      | GOOSRV output interface
+// (U)<-      STS <-|  @id,<BL_goo>,sts  | notify GOO server status
 //                  +--------------------+
 //
 //==============================================================================
 
   int bl_wl(BL_ob *o, int val)         // public interface
   {
-    static BL_oval out = bl_up;        // out goes to BL_UP by default
+    static BL_oval U = bl_up;          // out goes to bl_up by default
 
     switch (bl_id(o))                  // dispatch message ID
     {
-      case BL_ID(_SYS,INIT_):          // [SYS:INIT <out>]
-        out = o->data;                 // store output callback
+      case SYS_INIT_0_cb_0:            // [SYS:INIT <out>]
+        U = bl_cb(o,(U),WHO"(U)");     // store output callback
         return init(o,val);            // delegate to init() worker
 
-      case _BL_ID(_MESH,PRV_):         // [#SET:PRV val]  (provision)
-      case _BL_ID(_MESH,ATT_):         // [#SET:ATT val]  (attention)
-        return bl_out(o,val,out);      // output to subscriber
+      case _MESH_PRV_0_0_sts:          // [#SET:PRV val]  (provision)
+      case _MESH_ATT_0_0_sts:          // [#SET:ATT val]  (attention)
+        return bl_out(o,val,(U));      // output to subscriber
 
-      case BL_ID(_GOOCLI,LET_):        // pub [GOOCLI:LET @id,<BL_goo>,onoff]
-      case BL_ID(_GOOCLI,SET_):        // pub [GOOCLI:SET @id,<BL_goo>,onoff]
-      case BL_ID(_GOOCLI,GET_):        // pub [GOOCLI:STS @id]
+      case GOOCLI_LET_id_BL_goo_onoff: // pub [GOOCLI:LET @id,<BL_goo>,onoff]
+      case GOOCLI_SET_id_BL_goo_onoff: // pub [GOOCLI:SET @id,<BL_goo>,onoff]
+      case GOOCLI_GET_id_0_0:          // pub [GOOCLI:GET @id]
         return pub(o,val);             // pub [GOOCLI:LET/SET/GET] message
 
-      case _BL_ID(_GOOSRV,STS_):       // [#GOOSRV:STS @id,sts] GOO status
-//      LOGO(3,BL_M "(#)",o,val);
-        return bl_out(o,val,out);      // publish [GOOSRV:STS] upward
+      case _GOOSRV_STS_id_BL_goo_sts:  // [#GOOSRV:STS @id,<BL_goo>,sts]
+        return bl_out(o,val,(U));      // output [GOOSRV:STS ...] to up gear
+
+      case NVM_AVAIL_0_0_0:            // [NVM:AVAIL]
+			  LOG(5,BL_B "NVM not supported by bl_wl");
+			  return -1;                     // no, NVM functionality not available
 
       default:
         return -1;                     // bad input

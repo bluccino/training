@@ -18,7 +18,7 @@
   BL_oval bl_cb(BL_ob *o, BL_oval def, BL_txt msg)
   {
     BL_oval cb = o->data;              // fetch callback from object's data ref
-    if (cb != def && bl_dbg(2)) // does callback deviate from default?
+    if (def && cb != def && bl_dbg(2)) // does callback deviate from default?
       bl_prt(BL_R "warning: change of default callback %s\n" BL_0, msg);
     return cb;
   }
@@ -41,6 +41,11 @@
 
   __weak void bl_run(BL_oval app, int tick_ms, int tock_ms, BL_oval when)
   {
+    BL_oval A = app;                   // short hand
+    BL_oval B = bluccino;              // shorthand for bluccino module
+    BL_oval W = when;                  // short hand for when callback
+    BL_oval T = test;                  // short hand for top test module
+
     BL_pace tick_pace = {tick_ms,0};
     BL_pace tock_pace = {tock_ms,0};
 
@@ -54,11 +59,11 @@
 
       // init Bluccino library module and app init
 
-    bl_init(bluccino,when);            // always use upward gear for core output
-    if (app)
-      bl_init(app,when);
-    if (test)
-      bl_init(test,when);
+    bl_init((B),(W));                  // init bluccino module, output to <when>
+    if ((A))
+      bl_init((A),(W));                // init app
+    if ((T))
+      bl_init((T),(W));
 
       // post periodic ticks and tocks ...
 
@@ -68,26 +73,32 @@
 
         // post [SYS:TICK @id,cnt] events
 
-      bluccino(&oo_tick,ticks);        // tick BLUCCINO module
-      if (app)
-        app(&oo_tick,ticks);           // tick APP module
-      if (test)
-        test(&oo_tick,ticks);          // tick TEST module
+      bl_fwd(&oo_tick,ticks,(B));      // tick bluccino module
+      if ((A))
+        bl_fwd(&oo_tick,ticks,(A));    // tick APP module
+      if ((T))
+        bl_fwd(&oo_tick,ticks,(T));    // tick TEST module
 
         // post [SYS:TOCK @id,cnt] events
 
       if (ticks % multiple == 0)       // time for tocking?
       {
-        bluccino(&oo_tock,tocks);      // tock BLUCCINO module
-        if (app)
-          app(&oo_tock,tocks);         // tock APP module
-        if (test)
-          test(&oo_tock,tocks);        // tock TEST module
+        bl_fwd(&oo_tock,tocks,(B));    // tock BLUCCINO module
+        if ((A))
+          bl_fwd(&oo_tock,tocks,(A));  // tock APP module
+        if ((T))
+          bl_fwd(&oo_tock,tocks,(T));  // tock TEST module
         tocks++;
         tock_pace.time += tock_ms;     // increase tock time
       }
 
-      bl_sleep(tick_ms);               // sleep for one tick period
+        // calculate next reference time stamp and sleep until
+        // this time
+
+      BL_ms now = bl_ms();             // current time
       tick_pace.time += tick_ms;
+
+      if (now < tick_pace.time)
+        bl_sleep(tick_pace.time-now);  // sleep for one tick period
     }
   }

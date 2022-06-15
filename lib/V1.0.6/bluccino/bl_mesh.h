@@ -4,54 +4,70 @@
 //
 // Created by Hugo Pristauz on 19.02.2022
 // Copyright © 2019 Bluenetics GmbH. All rights reserved.
-//===================================================================================================
+//==============================================================================
 
 #ifndef __BL_MESH_H__
 #define __BL_MESH_H__
 
-    #include <bluetooth/mesh.h>
-    #include "bl_blue.h"
+  #include <bluetooth/mesh.h>
+  #include "bl_blue.h"
 
-    #define BL_VOID_ADDR            BT_MESH_ADDR_UNASSIGNED
-    #define BL_VOID_KEY             BT_MESH_KEY_UNUSED
+//==============================================================================
+// some defines
+//==============================================================================
 
-    #define BL_UNUSED(x) (void)(x)
+  #define BL_VOID_ADDR            BT_MESH_ADDR_UNASSIGNED
+  #define BL_VOID_KEY             BT_MESH_KEY_UNUSED
 
-//===================================================================================================
+  #define BL_UNUSED(x) (void)(x)
+
+//==============================================================================
 // time type
-//===================================================================================================
+// - we define BL_ms to represent milisec's since system start or clock restart
+//   in 64-bit signed integer representation.
+// - this allows
+//     a) negative time stamps to indicate invalid time stamps
+//     b) sufficient long time () before overrun
+//        (note 1 year .= 2^35 ms, 2^28 years .= 268 million years = 2^63 ms)
+// - BL_ms is an expensive data structure (8 bytes), so we define an inexpen-
+//   sive BL_tick type for measuring and scheduling delays
+//==============================================================================
 
-        // we define BL_ms to represent miliseconds since system start or clock restart.
-        // in 64-bit signed integer representation. This allows
-        //
-        //     a) negative time stamps to indicate invalid time stamps
-        //     b) sufficient long time () before overrun
-        //        (note 1 year .= 2^35 ms, 2^28 years .= 268 million years = 2^63 ms)
+  typedef int16_t BL_tick;             // mili seconds
 
- // typedef int64_t BL_ms;           // mili seconds
+//==============================================================================
+// basic types for mesh communication
+//==============================================================================
 
-        // BL_ms is an expensive data structure (8 bytes), so we define an
-        // inexpensive BL_tick type for measuring and scheduling delays
+  typedef uint16_t BL_level;           // 0 .. 10000
+  typedef int16_t BL_signed;           // 0x8000 .. 0 .. 0x7ffff
+  typedef uint16_t BL_val;             // 0 .. 0xffff
+  typedef uint16_t FL_addr;            // 0 .. 0xffff (mesh element address)
+  typedef const uint8_t *BL_pay;       // const byte *  (e.g. payloads)
 
-    typedef int16_t BL_tick;         // mili seconds
+  typedef uint16_t BL_iid;             // mesh model instance ID
+  typedef uint16_t BL_mid;             // mesh model ID
 
-//===================================================================================================
-// other types
-//===================================================================================================
+//==============================================================================
+// data structure to control transitions
+//==============================================================================
 
-    typedef uint16_t BL_iid;          // mesh model instance ID
-    typedef uint16_t BL_mid;          // mesh model ID
-    typedef uint16_t BL_level;        // 0 .. 10000
-    typedef int16_t BL_signed;       // 0x8000 .. 0 .. 0x7ffff
-    typedef uint16_t BL_val;          // 0 .. 0xffff
-    typedef uint16_t FL_addr;         // 0 .. 0xffff (mesh element address)
-//  typedef const char *BL_txt;    // const char *  (e.g. text)
-    typedef const uint8_t *BL_pay;    // const byte *  (e.g. payloads)
+  typedef struct BL_trans              // transition
+          {
+            int target;                // target level of transition
+            int basis;                 // basis (starting) level of transition
+            BL_ms begin;               // beginning time of transition
+            int tt;                    // transition time in ms (duration)
+          } BL_trans;
 
-    #define BL_VAL_MAX      UINT16_MAX    // max value of BfValT type
-    #define BL_SIGNED_MIN   INT16_MIN     // min value of BfSignedT type
-    #define BL_SIGNED_MAX   INT16_MAX     // max value of BfSignedT type
-    #define BL_LEVEL_MAX    10000         // max value of BfLevelT type
+//==============================================================================
+// legacy
+//==============================================================================
+
+    #define BL_VAL_MAX     UINT16_MAX  // max value of BfValT type
+    #define BL_SIGNED_MIN  INT16_MIN   // min value of BfSignedT type
+    #define BL_SIGNED_MAX  INT16_MAX   // max value of BfSignedT type
+    #define BL_LEVEL_MAX   10000       // max value of BfLevelT type
 
     #define BL_RANGE_SIGNED  ((long)BL_SIGNED_MAX-(long)BL_SIGNED_MIN)
 
@@ -63,11 +79,11 @@
 
     #define BL_S2P(sgn)                  ((uint16_t)(BL_SIGNED2LEVEL(sgn)/100))
 
-//===================================================================================================
+//==============================================================================
 // transition type
-//===================================================================================================
+//==============================================================================
 
-  typedef struct BL_trans
+  typedef struct BL_transition
   {
   	bool just_started;
   	uint8_t type;
@@ -80,11 +96,11 @@
   	int64_t start_timestamp;
 
   	struct k_timer timer;
-  } BL_trans;
+  } BL_transition;
 
-//===================================================================================================
+//==============================================================================
 // event types
-//===================================================================================================
+//==============================================================================
 
     typedef enum BL_event    // bit masks
             {
@@ -97,9 +113,9 @@
                 BL_EVT_2CLICKS    = 0x40,
             } BL_event;
 
-//===================================================================================================
+//==============================================================================
 // persisting handler entry
-//===================================================================================================
+//==============================================================================
 
     typedef struct BL_persist
     {
@@ -109,9 +125,9 @@
       	int (*recall)(BL_txt ppath, void *pctx);
     } BL_persist;
 
-//===================================================================================================
+//==============================================================================
 // short hand for Zephyr structure types
-//===================================================================================================
+//==============================================================================
 
     typedef struct k_timer           BL_timer;        // timer structure
     typedef struct k_work            BL_work;         // worker structure
@@ -126,9 +142,9 @@
     typedef struct bt_mesh_elem      BL_element;      // mesh element
     typedef struct bt_mesh_comp      BL_comp;         // device composition
 
-//===================================================================================================
+//==============================================================================
 // data structure for de-ja-vu
-//===================================================================================================
+//==============================================================================
 
     typedef struct BL_dejavu
     {
@@ -138,9 +154,9 @@
         BL_ms time;             // time stamp of de-ja-vu
     } BL_dejavu;
 
-//===================================================================================================
+//==============================================================================
 // short hand for Zephyr structure types
-//===================================================================================================
+//==============================================================================
 
 #define BL_DNP_DATA_LENGTH 8
 
@@ -162,9 +178,9 @@
         pmsg->pub.msg = &pmsg->nbs;
     }
 
-//==================================================================================================
+//==============================================================================
 // opcode & company ID
-//==================================================================================================
+//==============================================================================
 
     #define BL_SIG_CID     0xFFFF  // used for Bluetooth SIG (non vendor) models
     #define BL_BNX_CID     0x07C6  // used for Bluenetics (vendor) models
@@ -172,14 +188,29 @@
     #define BL_SIG_OC(oc)  {.oc=oc, .cid = BL_SIG_CID}
     #define BL_BNX_OC(oc)  {.oc=oc, .cid = BL_BNX_CID}
 
-//===================================================================================================
+//==============================================================================
 // conversion msec <-> ticks or mesh format
-//===================================================================================================
+//==============================================================================
 
     uint8_t bl_ms2mesh(BL_ms ms);
     int bl_mesh2ms(uint8_t mf);                // use int instead of BL_ms type
     uint8_t bl_delay_ticks(uint8_t repeats, uint8_t i, BL_ms delay);
     int bl_tick2ms(uint8_t ticks);             // use int instead of BL_ms type
+
+    static inline int bl_delay2mesh(BL_ms ms)
+    {
+      return bl_ms2mesh(ms);
+    }
+
+    static inline int bl_delay2ms(BL_byte ticks)
+    {
+      return bl_tick2ms(ticks);
+    }
+
+    static inline int bl_tt2ms(BL_byte mf)
+    {
+      return bl_mesh2ms(mf);
+    }
 
     #define BL_MS2MESH(ms)          bl_ms2mesh(ms)
     #define BL_MESH2MS(mf)          bl_mesh2ms(mf)
