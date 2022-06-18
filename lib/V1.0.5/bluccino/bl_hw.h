@@ -12,19 +12,19 @@
 //==============================================================================
 // enable masks for button events
 // - usage:
-//     bl_cfg(bl_hw,BL_PRESS)          // enable [BUTTON:PRESS]
-//     bl_cfg(bl_hw,BL_RELEASE)        // enable [BUTTON:RELEASE]
-//     bl_cfg(bl_hw,BL_EDGE)           // enable [BUTTON:PRESS],[BUTTON:RELEASE]
-//     bl_cfg(bl_hw,BL_SWITCH)         // enable [BUTTON:SWITCH]
-//     bl_cfg(bl_hw,BL_CLICK)          // enable [BUTTON:CLICK]
-//     bl_cfg(bl_hw,BL_HOLD)           // enable [BUTTON:HOLD]
+//     bl_cfg(bl_hw,_BUTTON,BL_PRESS)          // enable [BUTTON:PRESS]
+//     bl_cfg(bl_hw,_BUTTON,BL_RELEASE)        // enable [BUTTON:RELEASE]
+//     bl_cfg(bl_hw,_BUTTON,BL_EDGE)           // enable [BUTTON:PRESS/RELEASE]
+//     bl_cfg(bl_hw,_BUTTON,BL_SWITCH)         // enable [BUTTON:SWITCH]
+//     bl_cfg(bl_hw,_BUTTON,BL_CLICK)          // enable [BUTTON:CLICK]
+//     bl_cfg(bl_hw,_BUTTON,BL_HOLD)           // enable [BUTTON:HOLD]
 //
-//     bl_cfg(bl_hw,0xffff)            // enable all [BUTTON:] events
-//     bl_cfg(bl_hw,0x0000)            // disable all [BUTTON:] events
-//     bl_cfg(bl_hw,BL_PRESS|BL_RELEASE) // press/release events
-//     bl_cfg(bl_hw,BL_EDGE)           // same as above
-//     bl_cfg(bl_hw,BL_CLICK|BL_HOLD)  // click/hold events
-//     bl_cfg(bl_hw,BL_MULTI)          // same as above
+//     bl_cfg(bl_hw,_BUTTON,0xffff)            // enable all [BUTTON:] events
+//     bl_cfg(bl_hw,_BUTTON,0x0000)            // disable all [BUTTON:] events
+//     bl_cfg(bl_hw,_BUTTON,BL_PRESS|BL_RELEASE) // press/release events
+//     bl_cfg(bl_hw,_BUTTON,BL_EDGE)           // same as above
+//     bl_cfg(bl_hw,_BUTTON,BL_CLICK|BL_HOLD)  // click/hold events
+//     bl_cfg(bl_hw,_BUTTON,BL_MULTI)          // same as above
 //==============================================================================
 
   #define BL_PRESS   0x0001  // mask for [BUTTON:PRESS] events

@@ -92,13 +92,7 @@
         tock_pace.time += tock_ms;     // increase tock time
       }
 
-        // calculate next reference time stamp and sleep until
-        // this time
-
-      BL_ms now = bl_ms();             // current time
+      bl_sleep(tick_ms);               // sleep for one tick period
       tick_pace.time += tick_ms;
-
-      if (now < tick_pace.time)
-        bl_sleep(tick_pace.time-now);  // sleep for one tick period
     }
   }

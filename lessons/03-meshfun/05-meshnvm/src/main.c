@@ -1,6 +1,6 @@
 //==============================================================================
 // main.c
-// main program for 05-nvm test
+// main program for 05-meshnvm test
 //
 // Created by Hugo Pristauz on 2022-Jan-04
 // Copyright © 2022 Bluenetics. All rights reserved.
@@ -70,10 +70,7 @@
 // defines & locals
 //==============================================================================
 
-  #define VERSION  CFG_APP_VERSION
-  #define VERBOSE  CFG_APP_VERBOSE          // verbose level for application
-
-  #define T_BLINK   1000                    // 1000 ms RGB blink period
+  #define T_BLINK    500                    // 1000 ms RGB blink period
 
   static volatile int id = 0;               // THE LED id, cycles 2->3->4->2->
   static int starts = 0;                    // counts system starts
@@ -87,9 +84,7 @@
 
   static int blink(BL_ob *o, int ticks)     // blinker to be ticked
   {
-    static BL_ms due = 0;                   // need for periodic action
-
-    if (ticks%25 == 0)
+    if ( bl_period(o,250) )
 		{
 		  if (attention)
 			  bl_led(0,-1);                       // toggle status LED
@@ -97,7 +92,7 @@
 			  bl_led(0,provision);                // status LED show provision state
 		}
 
-    if (id <= 1 || !bl_due(&due,T_BLINK))   // no blinking if @id:off or not due
+    if (id <= 1 || !bl_period(o,T_BLINK))   // no blinking if @id:off or not due
       return 0;                             // bye if LED off or not due
 
     static bool toggle;
@@ -156,10 +151,12 @@
 
       case BL_ID(_SWITCH,STS_):        // button press to cause LED on off
         LOGO(1,BL_M,o,val);
+
+        id = 2 + ((id+2) % 3);         // cyclical @id increment & store
+        bl_store(1,id);
+
         if ( bl_get(PRV_))             // only if provisioned
           bl_gooset(1,NULL,val);
-        else
-          bl_led(id,val);              // switch LED @id on/off
         return 0;                      // OK
 
       case GOOSRV_STS_id_BL_goo_sts:   // [GOOSRV:STS @id,...] status update
@@ -171,9 +168,14 @@
       case BL_ID(_NVM,READY_):         // [GOOSRV:STS] status update
         LOGO(1,BL_M,o,val);            // let us see!
         starts = bl_recall(0);         // recall system starts from NVM @0
-        id = 2 + (starts % 3);         // map starts -> 2:4
         bl_store(0,++starts);          // store back incremented value at NVM @0
-        LOG(1,BL_M "system start #%d",starts);
+        id = bl_recall(1);
+        if (id < 2 || id > 4)
+          id = 2;
+        bl_store(1,id);
+
+        LOG(1,BL_G "system start #%d",starts);
+
         return 0;                      // OK
 
       case BL_ID(_MESH,PRV_):          // [MESH:PRV sts] provision status update
@@ -195,7 +197,7 @@
 
   void main(void)
   {
-    bl_hello(VERBOSE,VERSION);         // set verbose level, print hello message
+    bl_hello(VERBOSE,PROJECT);         // set verbose level, print hello message
     bl_cfg(bl_down,_BUTTON,BL_SWITCH); // mask [BUTTON:SWITCH] events only
     bl_run(app,10,1000,app);           // run app with 10/1000 ms tick/tock
   }

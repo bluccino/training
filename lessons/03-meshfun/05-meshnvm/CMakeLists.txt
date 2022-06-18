@@ -6,12 +6,24 @@
 	find_package(Zephyr REQUIRED HINTS $ENV{ZEPHYR_BASE})
 
 #===============================================================================
-# project definition and path setup
+# project personality (definitions to be pushed down to C-level)
 #===============================================================================
 
   project(05-meshnvm)
 
-  set (LIB ../../../lib/V1.0.6)
+  add_definitions(-DPROJECT="${CMAKE_PROJECT_NAME}")
+  add_definitions(-DVERBOSE=4)                             # verbose level
+
+    # log control
+
+  add_definitions(-DCFG_LOG_GEAR=0)    # no gear logging
+  add_definitions(-DCFG_LOG_LED=0)     # no LED logging
+
+#===============================================================================
+# path setup
+#===============================================================================
+
+  set (LIB ../../../lib/V1.0.7)
   set (BLU ${LIB}/bluccino)            # Bluccino stuff
   set (HWC ${LIB}/core/hwcore/hwtiny)  # tiny hardware core
   set (WLC ${LIB}/core/wlcore/wlstd)   # standard wireless core
@@ -19,9 +31,6 @@
   set (SRC src)
 
   include_directories(${SRC} ${BLU} ${LMO} ${HWC} ${WLC})
-
-  add_definitions(-DBL_CONFIG="config.h")   # push define down to C level
-  add_definitions(-DBL_LOGGING="logging.h") # push define down to C level
 
 #===============================================================================
 # source files

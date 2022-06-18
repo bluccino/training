@@ -4,12 +4,18 @@
   find_package(Zephyr REQUIRED HINTS $ENV{ZEPHYR_BASE})
 
 #===============================================================================
-# project definition and path setup
+# project personality (definitions to be pushed down to C-level)
 #===============================================================================
 
   project(10-msgout)
 
-  set (LIB ../../../lib/V1.0)
+  add_definitions(-DPROJECT="${CMAKE_PROJECT_NAME}")
+
+#===============================================================================
+# path setup
+#===============================================================================
+
+  set (LIB ../../../lib/V1.0.7)
   set (BLU ${LIB}/bluccino)
   set (SRC src)
 

@@ -4,7 +4,7 @@
 //
 //        +-----------------+                       +-----------------+
 //        |                 |     [SINGLE:SET]      |                 |
-//        |      FUNNY      |---------------------->|       LED       |
+//        |      funny      |---------------------->|       led       |
 //        |                 |      @id,onooff       |                 |
 //        +-----------------+                       +-----------------+
 //
@@ -12,7 +12,8 @@
 //
 // Event Flow Chart
 //
-//                 FUNNY                                 LED
+//                 funny                                 led
+//                  (F)                                  (L)
 //                   |                                    |
 //              t==3 -      [SINGLE:SET @1,true]          |
 //                   o----------------------------------->|
@@ -35,9 +36,9 @@
 // - [SINGLE:SET @id,onoff]  // set LED @id on or off (depending on onoff value)
 //==============================================================================
 //
-// (F) := (FUNNY)
+// (F) := (funny)
 //                  +--------------------+
-//                  |        LED         |
+//                  |        led         | led module
 //                  +--------------------+
 //                  |       SINGLE:      | SINGLE input interface
 // (F)->      SET ->|      @id,onoff     | turn single LED @id on or off
@@ -57,17 +58,17 @@
 // - after 10s funny module toggles LED @1 with 1s period
 //==============================================================================
 //
-// (L) := (LED)
+// (L) := (led)
 //                  +--------------------+
-//                  |       FUNNY        |
+//                  |       funny        | funny module
 //                  +--------------------+
-//                  |       SINGLE:      | SINGLE output interface
+//                  |      #SINGLE:      | SINGLE output interface
 // (L)<-      SET <-|      @id,onoff     | turn single LED @id on or off
 //                  +--------------------+
 //
 //==============================================================================
 
-  void funny(void)                     // a FUNNY module
+  void funny(void)                     // funny module
   {
     for (int i=0;;bl_sleep(1000),i++)  // forever with 1s period
     {
@@ -84,7 +85,7 @@
 
   void main(void)
   {
-    bl_hello(4,"01-funny - (basic Bluccino messaging - stage 1)");
-    bl_init(bluccino,NULL);
+    bl_hello(4,PROJECT " - (basic Bluccino messaging - stage 1)");
+    bl_init(bluccino,NULL);            // init bluccino cores/drivers
     funny();                           // run our funny module
   }

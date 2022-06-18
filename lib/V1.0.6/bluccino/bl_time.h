@@ -22,17 +22,10 @@
 
 //==============================================================================
 // periode detection
-// - usage: ok = bl_period(o,ms)       // is tick/tock time meeting a period?
+// - usage: ok = bl_period(o,ms)        // is tick/tock time meeting a period?
 //==============================================================================
 
   bool bl_period(BL_ob *o, BL_ms ms);
-
-//==============================================================================
-// after system start (one time TRUE condition)
-// - usage: ok = bl_after(o,ms)        // tick/tock time after system startd?
-//==============================================================================
-
-  bool bl_after(BL_ob *o, BL_ms ms);
 
 //==============================================================================
 // timing & sleep, system halt

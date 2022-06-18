@@ -15,7 +15,7 @@
 # path setup
 #===============================================================================
 
-  set (LIB ../../../lib/V1.0.6)        # library path
+  set (LIB ../../../lib/V1.0.7)        # library path
   set (BLU ${LIB}/bluccino)            # Bluccino library modules
   set (HWC ${LIB}/core/hwcore/hwtiny)  # tiny hardware core
   set (WLC ${LIB}/core/wlcore/wltiny)  # wireless core

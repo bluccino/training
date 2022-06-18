@@ -92,7 +92,8 @@
 //                  +--------------------+
 //                  |        SYS:        | SYS input interface
 // (M)->     INIT ->|       <cb>         | init module, store output callback
-// (M)->     TICK ->|       @id,cnt      | tick the module
+// (M)->     TICK ->|       @id,cnt      | system tick
+// (M)->     TOCK ->|       @id,cnt      | system tock
 //                  +--------------------+
 //                  |       BUTTON:      | BUTTON output interface
 // (U)->    PRESS ->|        @id,1       | button @id pressed (rising edge)
