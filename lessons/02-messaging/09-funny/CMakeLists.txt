@@ -2,15 +2,20 @@
 
   cmake_minimum_required(VERSION 3.20.0)
   find_package(Zephyr REQUIRED HINTS $ENV{ZEPHYR_BASE})
-# set(QEMU_EXTRA_FLAGS -s)
+
+#===============================================================================
+# project personality (definitions to be pushed down to C-level)
+#===============================================================================
+
+  project(09-funny)
+
+  add_definitions(-DPROJECT="${CMAKE_PROJECT_NAME}")
 
 #===============================================================================
 # project definition and path setup
 #===============================================================================
 
-  project(02-funny)
-
-  set (LIB ../../../lib/V1.0)
+  set (LIB ../../../lib/V1.0.7)
   set (BLU ${LIB}/bluccino)
   set (HWC ${LIB}/core/hwcore/hwtiny)
   set (SRC src)

@@ -34,12 +34,12 @@
 
   void led_set(int id, bool onoff)
   {
-		bl_led(id, onoff);                 // turn LED @id on/off
+    bl_led(id, onoff);                 // turn LED @id on/off
   }
 
   void led_toggle(int id)
   {
-    bl_led(led_id, -1);                // toggle LED @id
+    bl_led(id, -1);                    // toggle LED @id
   }
 
 //==============================================================================
@@ -48,28 +48,28 @@
 
   void clock(void)                     // run clock module
   {
-		for (int i=0; i < 10; i++)
-		{
+    for (int i=0; i < 10; i++)
+    {
       led_toggle(1);                   // toggle LED @led_id
-			bl_sleep(500);                   // sleep 500ms
-		}
+      bl_sleep(500);                   // sleep 500ms
+    }
   }
 
 //==============================================================================
-// SOS "modue"
+// SOS "module"
 //==============================================================================
 
   void sos(void)                       // run clock module
   {
-		BL_txt pattern = "*-*-*--***--***--***--*-*-*------";
-		BL_txt p = pattern;
+    BL_txt pattern = "*-*-*--***--***--***--*-*-*------";
+    BL_txt p = pattern;
 
-		for (; *p; p++)
-		{
-			p = *p ? p : pattern;            // re-start pattern, if end of pattern
+    for (; *p; p++)
+    {
+      p = *p ? p : pattern;            // re-start pattern, if end of pattern
       led_set(1, (*p=='*'));           // toggle LED @led_id
-			bl_sleep(500);                   // sleep 500ms
-		}
+      bl_sleep(500);                   // sleep 500ms
+    }
   }
 
 //==============================================================================
@@ -79,6 +79,7 @@
   void main(void)
   {
     bl_hello(4,"01-ledmsg - (basic Bluccino messaging - stage 1)");
+    bl_init(bluccino,NULL);
     clock();                           // run 10 toggle cycles
-		sos();                             // after this run SOS pattern forever
+    sos();                             // after this run SOS pattern forever
   }

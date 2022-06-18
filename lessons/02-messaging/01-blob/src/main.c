@@ -40,7 +40,7 @@
 
   void main(void)
   {
-    bl_hello(4,"01-blob - messaging with Blobs (Bluccino messaging objects)");
+    bl_hello(4,PROJECT" - messaging with Blobs (Bluccino messaging objects)");
 
     BL_ob oo = {LIGHT,CTRL,0,NULL};
     app(&oo,0);                        // (APP)<-[LIGHT:CTRL] - post to app()

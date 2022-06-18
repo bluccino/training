@@ -242,11 +242,11 @@
 // (L,B)<-   TICK <-|       @id,cnt      | tick the module
 // (B)<-      CFG <-|        mask        | config module
 //                  +--------------------+
-//                  |        LED:        | LED input interface
+//                  |        LED:        | LED: input interface
 // (D)->      SET ->|      @id,onoff     | set LED @id on/off (i=0..4)
 // (D)->   TOGGLE ->|                    | toggle LED @id (i=0..4)
 //                  |....................|
-//                  |        LED:        | LED output interface
+//                  |        LED:        | LED: output interface
 // (L)<-      SET <-|      @id,onoff     | set LED @id on/off (i=0..4)
 // (L)<-   TOGGLE <-|                    | toggle LED @id (i=0..4)
 //                  +--------------------+
@@ -266,14 +266,11 @@
 // (B)<-      CFG <-|        mask        | config button event mask
 // (B)<-       MS <-|         ms         | set click/hold discrimination time
 //                  +--------------------+
-//                  |       SWITCH:      | SWITCH input interface
+//                  |       SWITCH:      | SWITCH: input interface
 // (B)->      STS ->|       @id,sts      | on/off status update of switch @id
 //                  |....................|
-//                  |       SWITCH:      | SWITCH output interface
+//                  |       SWITCH:      | SWITCH: output interface
 // (U)<-      STS <-|       @id,sts      | on/off status update of switch @id
-//                  +--------------------+
-//                  |        NVM:        | NVM input interface
-// (H)->    AVAIL ->|                    | is NVM functionality available?
 //                  +--------------------+
 //
 //==============================================================================
@@ -295,7 +292,7 @@
       	return 0;                      // OK
       }
 
-      case SYS_TICK_id_BL_pace_cnt:
+      case SYS_TICK_id_0_cnt:
         return bl_fwd(o,val,(B));      // tick BL_HWBUT module
 
       case LED_SET_id_0_onoff:
@@ -312,10 +309,6 @@
       case BUTTON_CFG_0_0_mask:
       case BUTTON_MS_0_0_ms:
         return bl_fwd(o,val,(B));      // config BL_HWBUT module
-
-      case NVM_AVAIL_0_0_0:            // [NVM:AVAIL]
-        LOG(5,BL_B "NVM not supported by bl_hw");
-				return -1;                     // no, NVM functionality not available
 
       default:
         return -1;                     // bad input

@@ -23,7 +23,7 @@
   #undef LOG
   #undef LOGO
 
-  #include "notrans.c"
+  #include "no_transition_work_handler.c"
   #undef LOG
   #undef LOGO
 

@@ -134,11 +134,7 @@ static int output_string(const char *str)
   	if (bt_le_oob_get_local(BT_ID_DEFAULT, &oob))
     	LOG(1,BL_R "Identity Address unavailable");
   	else
-    {
   		memcpy(dev_uuid, oob.addr.a.val, 6);
-LOG(3,BL_B "device UUID: [%02X%02X:%02X%02X:%02X%02X]",
-      dev_uuid[5],dev_uuid[4],dev_uuid[3],dev_uuid[2],dev_uuid[1],dev_uuid[0]);
-    }
 
   	bt_mesh_prov_enable(BT_MESH_PROV_GATT | BT_MESH_PROV_ADV);
     LOG(4,BL_B"mesh initialized");

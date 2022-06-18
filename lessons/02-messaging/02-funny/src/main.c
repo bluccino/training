@@ -59,8 +59,8 @@
     if ( ID(cl,op) == ID(MULTI,TOGGLE) )
     {
       for (int id=1; id <= BL_LEN(data->mask); id++)
-	if (data->mask[id-1])
-	  bl_led(id,-1);                   // toggle LED @id
+	      if (data->mask[id-1])
+	        bl_led(id,-1);                   // toggle LED @id
     }
   }
 

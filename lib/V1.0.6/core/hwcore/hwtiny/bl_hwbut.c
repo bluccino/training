@@ -275,7 +275,7 @@
 
   static int sys_init(BL_ob *o, int val)
   {
-    LOG(4,BL_B "init button");
+    LOG(4,BL_B "button init");
 
   	k_work_init(&work, workhorse);
 
@@ -324,7 +324,7 @@
         U = bl_cb(o,(U),WHO"(U)");        // store output callback
       	return sys_init(o,val);           // delegate to sys_init() worker
 
-      case SYS_TICK_id_BL_pace_cnt:
+      case SYS_TICK_id_0_cnt:
       	return sys_tick(o,val);           // delegate to sys_tick() worker
 
       case BUTTON_CFG_0_0_mask:

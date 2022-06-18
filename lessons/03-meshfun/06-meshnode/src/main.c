@@ -138,7 +138,7 @@
 //
 // (U) := (bl_up);  (D) := (bl_down)
 //                  +--------------------+
-//                  |        APP         |
+//                  |        app         |
 //                  +--------------------+
 //                  |        SYS:        | SYS: interface
 // (D)->     INIT ->|       @id,cnt      | init module, store <out> callback
@@ -148,14 +148,17 @@
 //                  |       SWITCH:      | SWITCH: output interface
 // (U)->      STS ->|       @id,sts      | on/off status update of switch @id
 //                  +--------------------+
-//                  |       GOOSRV:      | GOOSRV: ifc. (generic on/off server)
+//                  |       GOOSRV:      | GOOSRV input interface (gen. on/off)
 // (U)->      STS ->| @id,<BL_goo>,onoff | on/off server status update
 //                  +--------------------+
-//                  |       GOOCLI:      | GOOCLI: ifc. (generic on/off client)
+//                  |      #GOOCLI:      | GOOCLI output interface (gen. on/off)
 // (D)<-      SET <-| @id,<BL_goo>,onoff | publish generic on/off SET command
 //                  +--------------------+
 //                  |         NVM:       | NVM: interface (non volatile memory)
 // (U)->    READY ->|                    | notify that NVM is ready
+//                  +--------------------+
+//                  |        #LED:       | LED output interface
+// (D)<-      SET <-|      @id,onoff     | set LED @id on/off
 //                  +--------------------+
 //
 //==============================================================================
@@ -192,7 +195,7 @@
           activate(val);               // activate/deactivate blinker
         return 0;                      // OK
 
-      case _BL_ID(_GOOCLI,SET_):       // [GOOCLI:SET]
+      case _BL_ID(_GOOCLI,SET_):       // [#GOOCLI:SET]
         return bl_out(o,val,(D));
 
       case BL_ID(_NVM,READY_):         // [GOOSRV:STS] status update

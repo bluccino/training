@@ -263,16 +263,15 @@ LOG(4,BL_G"snd [GOOCLI:LET @1,0]");
 // transmit generic onoff set
 //==============================================================================
 
-  static int tx_goo(BL_ob *o, BL_model *pmod, BL_mid mid, BL_txt msg,
-             BL_byte onoff, BL_byte tid, BL_byte tt, BL_byte delay)
+  static int tx_gooset(BL_model *pmod, BL_u8 on, BL_u8 tid, BL_u8 tt, BL_u8 delay)
   {
-    LOG(5,"tx_goo: <$%d|%d|%d>, [%s @%d,<#%d,/%dms,&%dms>,%d]",
-  	      bl_iid(pmod), pmod->elem_idx, pmod->mod_idx,
-          msg, o->id, tid,bl_tt2ms(tt),bl_delay2ms(delay), onoff);
+    LOG(5,"tx_gooset($%d[%d|%d],%d,#%d,/%d,&%d)",
+  	      bl_iid(pmod), pmod->elem_idx, pmod->mod_idx, on, tid,
+  			  bl_mesh2ms(tt), bl_tick2ms(delay));
 
-    bt_mesh_model_msg_init(pmod->pub->msg, mid);
+    bt_mesh_model_msg_init(pmod->pub->msg, BL_GOO_SET);
 
-    net_buf_simple_add_u8(pmod->pub->msg, onoff);
+    net_buf_simple_add_u8(pmod->pub->msg, on);
     net_buf_simple_add_u8(pmod->pub->msg, tid);
     net_buf_simple_add_u8(pmod->pub->msg, tt);
     net_buf_simple_add_u8(pmod->pub->msg, delay);
@@ -283,24 +282,23 @@ LOG(4,BL_G"snd [GOOCLI:LET @1,0]");
 //==============================================================================
 // transmit generic onoff let
 //==============================================================================
-/*
-  static int tx_goolet(BL_ob *o, BL_model *pmod, BL_mid mid, BL_txt msg,
-             BL_byte onoff, BL_byte tid, BL_byte tt, BL_byte delay)
+
+  static int tx_goolet(BL_model *pmod, BL_u8 on, BL_u8 tid, BL_u8 tt, BL_u8 delay)
   {
-    LOG(5,"tx_goo: <$%d|%d|%d>, [%s @%d,<#%d,/%d,&%d>,%d]",
-  	      bl_iid(pmod), pmod->elem_idx, pmod->mod_idx,
-          msg, o->id, tid,bl_tt2ms(tt),bl_delay2ms(delay), onoff);
+    LOG(5,"tx_goolet($%d[%d|%d], %d,#%d,/%d,&%d)",
+  	      bl_iid(pmod), pmod->elem_idx, pmod->mod_idx, on, tid,
+  			  bl_mesh2ms(tt), bl_tick2ms(delay));
 
-    bt_mesh_model_msg_init(pmod->pub->msg, mid);
+    bt_mesh_model_msg_init(pmod->pub->msg, BL_GOO_LET);
 
-    net_buf_simple_add_u8(pmod->pub->msg, onoff);
+    net_buf_simple_add_u8(pmod->pub->msg, on);
     net_buf_simple_add_u8(pmod->pub->msg, tid);
     net_buf_simple_add_u8(pmod->pub->msg, tt);
     net_buf_simple_add_u8(pmod->pub->msg, delay);
 
     return bt_mesh_model_publish(pmod);
   }
-*/
+
 //==============================================================================
 // GOOCLI publisher
 //==============================================================================
@@ -308,36 +306,24 @@ LOG(4,BL_G"snd [GOOCLI:LET @1,0]");
   static int goocli_pub(BL_ob *o, int val)
   {
     static BL_iid goocli[4] = {GONOFF_CLI0,GONOFF_CLI0,GONOFF_CLI0,GONOFF_CLI0};
-    static BL_byte tid = 0;           // must be static
 
+    LOG0(4,BL_G "pub:",o,val);
     bl_assert(o->id > 0 && o->id <= 4);
 
     BL_model *pmod = bl_model(goocli[o->id-1]);
-    BL_gooset *g = bl_data(o);
-
-
-    BL_byte onoff = ((g ? g->target:val) != 0);
-    BL_u8 tt = g ? g->tt:0;
-    BL_u8 delay = g ? g->delay:0;
-
-      // tid is either from local static (will be incremented) or, in case
-      // a data reference is provide, tid comes from data reference!
-      // thus we must store the actual value back to static tid
-
-    tid = g ? g->tid : tid+1;
+    bool onoff = (val != 0);
+    static BL_u8 tid = 0;           // must be static
+    BL_u8 tt = 0;
+    BL_u8 delay = 0;
 
     switch (bl_id(o))
     {
-      case GOOCLI_LET_id_BL_goo_onoff:
-        LOG(4,BL_G "pub: [GOOCLI:LET @%d,<#%d,/%d,&%d>,%d]",
-                   o->id, tid,bl_tt2ms(tt),bl_delay2ms(delay), val);
-        tx_goo(o, pmod, BL_GOOLET, "GONOFF:LET", onoff, tid, tt, delay);
+      case BL_ID(_GOOCLI,LET_):
+        tx_goolet(pmod, onoff, tid++, tt, delay);
         return 0;
 
-      case GOOCLI_SET_id_BL_goo_onoff:
-        LOG(4,BL_G "pub: [GOOCLI:SET @%d,<#%d,/%d,&%d>,%d]",
-                   o->id, tid,bl_tt2ms(tt),bl_delay2ms(delay), val);
-        tx_goo(o, pmod, BL_GOOSET, "GONOFF:SET", onoff, tid, tt, delay);
+      case BL_ID(_GOOCLI,SET_):
+        tx_gooset(pmod, onoff, tid++, tt, delay);
         return 0;                      // OK
 
       default:
@@ -356,8 +342,8 @@ LOG(4,BL_G"snd [GOOCLI:LET @1,0]");
 
     switch (bl_id(o))
     {
-      case GOOCLI_LET_id_BL_goo_onoff:
-      case GOOCLI_SET_id_BL_goo_onoff:
+      case BL_ID(_GOOCLI,LET_):
+      case BL_ID(_GOOCLI,SET_):
         return goocli_pub(o,val);      // publisg generic onoff LET or SET
 
       default:

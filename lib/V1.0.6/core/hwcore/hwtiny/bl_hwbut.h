@@ -86,10 +86,10 @@
 // syntactic sugar: set click grace time (ms), default: 350 ms
 // - usage: bl_hwbut_ms(ms)   // ms discriminates between :CLICK and :HOLD event
 //==============================================================================
-/*
+
   static inline int bl_hwbut_ms(int ms)
   {
     return bl_set(bl_hwbut,MS_,ms);        // set click grace time
   }
-*/
+
 #endif // __BL_HWBUT_H__

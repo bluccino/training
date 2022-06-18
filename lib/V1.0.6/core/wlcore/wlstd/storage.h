@@ -27,7 +27,7 @@ enum ps_variables_id {
 
 extern uint8_t reset_counter;
 
-//extern struct k_work storage_work;
+extern struct k_work storage_work;
 
 //int ps_settings_init(void);
 void save_on_flash(uint8_t id);
@@ -48,11 +48,11 @@ void save_on_flash(uint8_t id);
 // (C)<-    READY <-|       ready        | notification that NVM is now ready
 // (C)->    STORE ->|      @id,val       | store value in NVM at location @id
 // (C)->   RECALL ->|        @id         | recall value in NVM at location @id
-// (C)->     SAVE ->|        @id         | save NVM cache or variable to NVM
+// (C)->     SAVE ->|                    | save NVM cache to NVM
 //                  +--------------------+
 //
 //==============================================================================
 
-  int bl_storage(BL_ob *o, int val);
+  int bl_nvm(BL_ob *o, int val);
 
 #endif

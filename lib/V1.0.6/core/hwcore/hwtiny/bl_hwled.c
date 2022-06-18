@@ -19,10 +19,10 @@
 // logging shorthands
 //==============================================================================
 
-  #define WHO "bl_hwled:"          // who is logging
+  #define WHO "bl_hwled"          // who is logging
 
   #define LOG                     LOG_LED
-  #define LOGO(lvl,col,o,val)     LOGO_LED(lvl,col WHO,o,val)
+  #define LOGO(lvl,col,o,val)     LOGO_LED(lvl,col WHO ":",o,val)
 
 //==============================================================================
 // defines

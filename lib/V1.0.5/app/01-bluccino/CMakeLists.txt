@@ -11,10 +11,10 @@
 
   project(01-bluccino)
 
-  set (LIB ../../../../lib/V1.0)
+  set (LIB ../../../../lib/V1.0.5)
   set (BLU ${LIB}/bluccino)
   set (HWC ${LIB}/core/hwcore/hwtiny)
-  set (WLC ${LIB}/core/wlcore/wlmono)
+  set (WLC ${LIB}/core/wlcore/wlstd)
   set (LMO ${LIB}/module)
   set (SRC src)
 

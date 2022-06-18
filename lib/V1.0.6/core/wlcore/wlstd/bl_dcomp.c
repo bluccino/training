@@ -15,7 +15,6 @@
 #include "ble_mesh.h"
 #include "common.h"
 #include "bl_dcomp.h"
-#include "bl_trans.h"
 #include "state_binding.h"
 #include "transition.h"
 #include "storage.h"
@@ -32,10 +31,8 @@
 // CORE level logging shorthands
 //==============================================================================
 
-  #define WHO   "bl_dcomp"
-
   #define LOG                     LOG_CORE
-  #define LOGO(lvl,col,o,val)     LOGO_CORE(lvl,col WHO ":",o,val)
+  #define LOGO(lvl,col,o,val)     LOGO_CORE(lvl,col"devcomp:",o,val)
   #define LOG0(lvl,col,o,val)     LOGO_CORE(lvl,col,o,val)
 
 //==============================================================================
@@ -65,12 +62,6 @@
   #endif
 
 //==============================================================================
-// BL_goo data structures, for any generic on/off server
-//==============================================================================
-
-  static BL_goo goo[1];              // only 1 generic on/off server
-
-//==============================================================================
 // workhorse which post messages through the upward gear to the application
 //==============================================================================
 #if MIGRATION_STEP6                  // data structures for notification
@@ -82,7 +73,7 @@
 
             union pay
             {
-              BL_gooset gooset;
+              BL_gonoff_set gooset;
             } pay;
           } TP_post;
 
@@ -108,58 +99,19 @@
     k_work_submit(&work);              // invoke workhorse() to post note
   }
 
-  static void goo_submit(BL_ob *o, BL_gooset *pay, BL_txt msg)
-  {
-    BL_ms now = bl_ms();
-    int val = pay->target;
-
-      // do we have a static BL_goo structure?
-
-    int idx = o->id - 1;
-    if (idx < 0 || idx >= BL_LEN(goo))
-    {
-      LOGO(1,BL_R,o,val);
-      bl_err(-1,"goo_notify: model @id out of range");
-    }
-
-        // fill BL_goo structure
-
-    BL_goo *g = goo + idx;
-    g->trans.basis = bl_cur(&g->trans);
-    g->delay = bl_tick2ms(pay->delay);
-    g->trans.tt = bl_mesh2ms(pay->tt);
-    g->trans.target = pay->target;
-    g->trans.begin = now + g->delay;
-    g->remain = g->delay;
-    g->tid = pay->tid;
-
-      // do some logging
-
-    if (g->delay == 0 && g->trans.tt == 0)
-      LOG0(5,msg,o,g->trans.target);
-    else
-      LOG(5,BL_C"%s [#GONOFF:STS @%d,<#%d,&%d,/%d>,%d]", msg, o->id,
-        g->tid,(int)(g->trans.begin-now),(int)g->trans.tt, val);
-
-      // submit message
-
-    o->data = g;                   // store as object reference
-    submit(o,pay->target);
-  }
-
 #endif
 //==============================================================================
 // receive logging
 //==============================================================================
 
   static void log_rx(int lvl, BL_txt ptxt, uint16_t oc,
-      BL_model *pmod, BL_ctx *ctx, BL_gooset *pay, long cnt)
+      BL_model *pmod, BL_ctx *ctx, BL_gonoff_set *ppay, long cnt)
   {
     LOG(lvl,
-      "%s($%d:%d:%d, <%04x.%04x>, [%04x]->[%04x], <#%d,&%dms,/%dms>, %s) #%ld#",
+      "%s($%d:%d:%d, <%04x.%04x>, [%04x]->[%04x], %s,#%d,/%dms,&%dms) #%ld#",
       ptxt, bl_iid(pmod), pmod->elem_idx, pmod->mod_idx, BL_SIG_CID, oc,
-      bl_src(ctx), bl_dst(ctx),  pay->tid, bl_tick2ms(pay->delay),
-      bl_mesh2ms(pay->tt), pay->target?"ON":"OFF", cnt);
+      bl_src(ctx), bl_dst(ctx), ppay->onoff ? "ON" : "OFF",
+      ppay->tid, bl_mesh2ms(ppay->tt), bl_tick2ms(ppay->delay), cnt);
   }
 
 //==============================================================================
@@ -201,13 +153,12 @@ struct lightness light;
 struct temperature temp;
 struct delta_uv duv;
 
-struct light_ctl_state state =
-       {
-	       .light = &light,
-	       .temp = &temp,
-	       .duv = &duv,
-	       .transition = &transition,
-       };
+struct light_ctl_state state = {
+	.light = &light,
+	.temp = &temp,
+	.duv = &duv,
+	.transition = &transition,
+};
 
 struct light_ctl_state *const ctl = &state;
 
@@ -289,19 +240,19 @@ static int gen_onoff_set_unack(struct bt_mesh_model *model,
 			       struct net_buf_simple *buf)
 {
   #if MIGRATION_STEP6
-    uint32_t oc = BL_GOOSET;
+    uint32_t oc = BL_GOO_SET;
     static long bl_log_gonoff_set_rx = 0;
     long cnt = ++bl_log_gonoff_set_rx;
-    BL_gooset *pay = &post.pay.gooset;
+    BL_gonoff_set *pay = &post.pay.gooset;
   #endif
 
 	uint8_t tid, onoff, tt, delay;
 	int64_t now;
 
-	pay->target = onoff = net_buf_simple_pull_u8(buf);
+	pay->onoff = onoff = net_buf_simple_pull_u8(buf);
 	pay->tid = tid = net_buf_simple_pull_u8(buf);
 
-  LOG(4,BL_M"rcv: [GOOSRV:LET @id,<#%d>,%d]",pay->tid,pay->target);
+  LOG(4,BL_G"rcv [GOOSRV:LET @id,%d]",pay->onoff);
 
 	if (onoff > STATE_ON)
   {
@@ -373,8 +324,9 @@ static int gen_onoff_set_unack(struct bt_mesh_model *model,
   #if MIGRATION_STEP6                  // post upward
     bool dummy = 0;
 SUBMIT:  dummy = 1;                    // need this in order to use label
-    BL_ob oo = {BL_AUG(_GOOSRV),STS_,1,NULL};
-    goo_submit(&oo, pay, "goosrv:let:");
+    BL_ob oo = {BL_AUG(_GOOSRV),STS_,1,pay};
+    LOG0(5,BL_R"goosrv:let:",&oo,pay->onoff);
+    submit(&oo,pay->onoff);
   #endif
 
   return 0;
@@ -389,23 +341,22 @@ SUBMIT:  dummy = 1;                    // need this in order to use label
   			 struct net_buf_simple *buf)
   {
     #if MIGRATION_STEP6
-      uint32_t oc = BL_GOOSET;
+      uint32_t oc = BL_GOO_SET;
       static long bl_log_gonoff_set_rx = 0;
       long cnt = ++bl_log_gonoff_set_rx;
-      BL_gooset *pay = &post.pay.gooset;
+      BL_gonoff_set *pay = &post.pay.gooset;
     #endif
 
     uint8_t tid, onoff, tt, delay;
   	int64_t now;
 
-    pay->target = onoff = net_buf_simple_pull_u8(buf);
+    pay->onoff = onoff = net_buf_simple_pull_u8(buf);
     pay->tid = tid = net_buf_simple_pull_u8(buf);
 
-    LOG(4,BL_M"rcv: [GOOSRV:SET @id,%d] #%d",pay->target,tid);
+    LOG(4,BL_G"rcv [GOOSRV:SET @id,%d] #%d",pay->onoff,tid);
 
   	if (onoff > STATE_ON)
     {
-      bl_err(-1,"onoff > STATE_ON");
   		return 0;
     }
 
@@ -416,8 +367,7 @@ SUBMIT:  dummy = 1;                    // need this in order to use label
   	    (now - ctl->last_msg_timestamp <= (6 * MSEC_PER_SEC)))
     {
   		(void)gen_onoff_get(model, ctx, buf);
-      LOG(5,BL_R "ignore #%d repeat tid",tid);
-   		return 0;
+  		return 0;
   	}
 
   	switch (buf->len)
@@ -482,8 +432,10 @@ SUBMIT:  dummy = 1;                    // need this in order to use label
     #if MIGRATION_STEP6                  // post upward
       bool dummy = 0;
   SUBMIT:  dummy = 1;                    // need this in order to use label
-      BL_ob oo = {BL_AUG(_GOOSRV),STS_,1,NULL};
-      goo_submit(&oo, pay, "goosrv:set:");
+
+      BL_ob oo = {BL_AUG(_GOOSRV),STS_,1,pay};
+      LOG0(5,"goosrv:set",&oo,pay->onoff);
+      submit(&oo,pay->onoff);
     #endif
     return 0;
   }
@@ -3459,8 +3411,7 @@ struct bt_mesh_model s0_models[] = {
 // public module interface
 //==============================================================================
 //
-// (W) := (bl_wl);  (U) := (bl_up)
-//
+// (W) := (BL_WL)
 //                  +--------------------+
 //                  |     BL_DEVCOMP     |
 //                  +--------------------+
@@ -3468,23 +3419,23 @@ struct bt_mesh_model s0_models[] = {
 // (W)->     INIT ->|       <out>        | init module, store <out> callback
 //                  +--------------------+
 //                  |       GOOSRV:      | GOOSRV: interface (generic onoff srv)
-// (U)<-      STS <-|   @id,<data>,val   | status [GOOSRV:STS @id,<data>,val]
+// (W)<-      STS <-|   @id,<data>,val   | status [GOOSRV:STS @id,<data>,val]
 //                  +--------------------+
 //
 //==============================================================================
 
   int bl_dcomp(BL_ob *o, int val)
   {
-    static BL_oval O = NULL;           // to store output callback
+    static BL_oval out = NULL;          // store <out> callback
 
     switch (bl_id(o))                  // dispatch message ID
     {
-      case SYS_INIT_0_cb_0:
-        O = bl_cb(o,(O),WHO"(O)");     // store <out> callback
+      case BL_ID(_SYS,INIT_):          // [SYS:INIT <out>]
+        out = o->data;                 // store <out> callback
         return 0;                      // OK
 
-      case _GOOSRV_STS_id_BL_goo_sts:  // [#GOOSRV:STS @id,<BL_goo>,sts]
-        return bl_out(o,val,(O));
+      case _BL_ID(_GOOSRV,STS_):       // [#GOOSRV:STS @id,<BL_goo>,sts]
+        return bl_out(o,val,out);
 
       default:
         return -1;                     // bad args

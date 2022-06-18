@@ -14,48 +14,33 @@ Bluccino V1.0.6
 * introduce syntactic sugar bl_fwd() as simplified bl_out() function
 * introduce bl_post() function and SYS: message definition symbols
 * define message IDs for SYS:, LED:, BUTTON: and SWITCH: classes
-* more precise timing for bl_run()/bl_engine()
-* introduce bl_after() function
-* new hwstd hardware core with NVM support
-* mesh publisher (bl_mpub) for repeated publishing of mesh messages
-* support of transitions (bl_trans)
-* logging.h and config.h in many cases replaced by CMakeLists.txt definitions
-* bl_node module for mesh node house keeping (replaces bl_house)
 ================================================================================
 
 Roadmap:
 - add bl_duty(o,duty,period) inline function
 - add a bl_nvm core library module
-- replace bl_is(o,cl,op) interface by bl_is(o,mid) interface
+- exact timing for bl_run (how to solve HW independent timer challenge?)
 - rewrite top gear to use augmented messages for upstream and unaugmented
   messages for downstream messages
 
 Changelog History
-* use GEAR logging instead of API logging
-* introduce _bl_out() for augmented output
-* add augmented _bl_led() function
-* bl_cb() must not warn for defaults which are NULL
++ use GEAR logging instead of API logging
++ introduce _bl_out() for augmented output
++ add augmented _bl_led() function
++ bl_cb() must not warn for defaults which are NULL
 - slight modification of standard log macro (intro of WHO define)
-* introduce systactic sugar bl_fwd() as simpliefied bl_out() function
-* introduce bl_post() function and SYS: message definition symbols
-* define message IDs for SYS:, LED:, BUTTON: and SWITCH: classes
++ introduce systactic sugar bl_fwd() as simpliefied bl_out() function
++ introduce bl_post() function and SYS: message definition symbols
++ define message IDs for SYS:, LED:, BUTTON: and SWITCH: classes
 - replace BL_ID() macro calls in bl_hwled.c case statements by message ID defs
 - replace BL_ID() macro calls in bl_hwbut.c case statements by message ID defs
-- Bluccino V1.0.6a Beta
-* more precise timing for bl_run()/bl_engine()
-- add bl_after() function (bl_time.c)
-* new hwstd hardware core with NVM support
-* mesh publisher (bl_mpub) for repeated publishing of mesh messages
-* support of transitions (bl_trans)
-- test all 01-quicktour/* samples
-- [SYS:TICK] and [SYS:TOCK] -> SYS_TICK_id_BL_pace_cnt, SYS_TOCK_id_BL_pace_cnt
-* logging.h and config.h in many cases replaced by CMakeLists.txt definitions
-* bl_node module for mesh node house keeping (replaces bl_house)
+- Bluccino V1.0.6a Beta 
+
+################################################################################
 
 ================================================================================
+
 Bluccino V1.0.5
-================================================================================
-
 Goals:
 + new organisation (bl_run.c/.h, bl_gear.c/.h, ...)
 
@@ -64,18 +49,16 @@ Changelog History
 - Bluccino v1.0.5
 
 ================================================================================
-Bluccino V1.0.4
-================================================================================
 
+Bluccino V1.0.4
 Goals:
 
 Changelog History
 - Bluccino v1.0.4
 
 ================================================================================
-Bluccino V1.0.3
-================================================================================
 
+Bluccino V1.0.3
 Goals:
 - bug: housekeep starts flashing the blue LED in the startup sequence, but it
        should start the status LED
@@ -89,9 +72,8 @@ Changelog History
 - Bluccino v1.0.3
 
 ================================================================================
-Bluccino V1.0.2
-================================================================================
 
+Bluccino V1.0.2
 Goals:
 + bug fix: already defined LOG/LOGO macros in case of #include "symbol.h"
 - test all training lecture sample programs
@@ -103,9 +85,8 @@ Changelog History
 - Bluccino v1.0.2
 
 ================================================================================
-Bluccino V1.0.1
-================================================================================
 
+Bluccino V1.0.1
 Goals:
 + provide a bl_core.c/.h module as a default template for HW core and WL core
   integration

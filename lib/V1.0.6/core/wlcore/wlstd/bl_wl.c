@@ -28,7 +28,7 @@
   #undef LOG
   #undef LOGO
 
-  #include "notrans.c"
+  #include "no_transition_work_handler.c"
   #undef LOG
   #undef LOGO
 
@@ -42,18 +42,12 @@
   #undef LOG
   #undef LOGO
 
-  #define sys_init storage_sys_init
   #include "storage.c"
   #undef LOG
   #undef LOGO
   #undef LOG0
-  #undef sys_init
 
   #include "transition.c"
-  #undef LOG
-  #undef LOGO
-
-  #include "bl_trans.c"
   #undef LOG
   #undef LOGO
 
@@ -70,7 +64,7 @@
 
   #include "ble_mesh.h"
   #include "bl_dcomp.h"
-  #include "notrans.h"
+  #include "no_transition_work_handler.h"
   #include "state_binding.h"
   #include "storage.h"
   #include "transition.h"
@@ -80,10 +74,8 @@
 // CORE level logging shorthands
 //==============================================================================
 
-  #define WHO                     "bl_core:"
-
   #define LOG                     LOG_CORE
-  #define LOGO(lvl,col,o,val)     LOGO_CORE(lvl,col WHO,o,val)
+  #define LOGO(lvl,col,o,val)     LOGO_CORE(lvl,col"bl_core:",o,val)
   #define LOG0(lvl,col,o,val)     LOGO_CORE(lvl,col,o,val)
 
 //==============================================================================
@@ -295,21 +287,19 @@ K_TIMER_DEFINE(reset_counter_timer, reset_counter_timer_handler, NULL);
   }
 
 //==============================================================================
-// worker: system init (fomer main())
+// init (fomer main())
 //==============================================================================
 
-  static int sys_init(BL_ob *o, int val)
+  static int init(BL_ob *o, int val)
   {
-    static BL_oval W = bl_wl;          // wireless core
-
     light_default_var_init();
 
     #if defined(CONFIG_MCUMGR)
       smp_svr_init();
     #endif
 
-    bl_init((bl_storage),(W));         // init NVM, output => bl_wl()
-    bl_init((ble_mesh),(W));           // output of BLE_MESH goes to here!
+    bl_init(bl_nvm,bl_wl);         // init NVM, output => bl_wl()
+    bl_init(ble_mesh,bl_wl);       // output of BLE_MESH goes to here!
 
 /*
     LOG(3,BL_C "init BLE/Mesh...");
@@ -355,20 +345,20 @@ K_TIMER_DEFINE(reset_counter_timer, reset_counter_timer_handler, NULL);
 // (!)->     TOCK ->|       @id,cnt      | tock the module
 //                  +--------------------+
 //                  |       MESH:        | MESH upper interface
-// (U)<-      PRV <-|       onoff        | provision on/off
-// (U)<-      ATT <-|       onoff        | attention on/off
+// (O)<-      PRV <-|       onoff        | provision on/off
+// (O)<-      ATT <-|       onoff        | attention on/off
 //                  |....................|
 //                  |       MESH:        | MESH lower interface
 // (B)->      PRV ->|       onoff        | provision on/off
 // (B)->      ATT ->|       onoff        | attention on/off
 //                  +--------------------+
 //                  |       RESET:       | RESET: public interface
-// (U)<-      DUE <-|                    | reset timer is due
+// (O)<-      DUE <-|                    | reset timer is due
 // (!)->      INC ->|         ms         | inc reset counter & set due timer
 // (!)->      PRV ->|                    | unprovision node
 //                  +--------------------+
 //                  |        NVM:        | NVM: upper interface
-// (U)<-    READY <-|       ready        | notification that NVM is now ready
+// (O)<-    READY <-|       ready        | notification that NVM is now ready
 // (!)->    STORE ->|      @id,val       | store value in NVM at location @id
 // (!)->   RECALL ->|        @id         | recall value in NVM at location @id
 // (!)->     SAVE ->|                    | save NVM cache to NVM
@@ -378,7 +368,7 @@ K_TIMER_DEFINE(reset_counter_timer, reset_counter_timer_handler, NULL);
 // (N)<-    STORE <-|      @id,val       | store value in NVM at location @id
 // (N)<-   RECALL <-|        @id         | recall value in NVM at location @id
 // (N)<-     SAVE <-|                    | save NVM cache to NVM
-//                  +--------------------+
+//                  +====================+
 //                  |       #SET:        | SET: private interface
 // (#)->      PRV ->|       onoff        | provision on/off
 // (#)->      ATT ->|       onoff        | attention on/off
@@ -386,40 +376,31 @@ K_TIMER_DEFINE(reset_counter_timer, reset_counter_timer_handler, NULL);
 //                  |      #RESET:       | RESET: private interface
 // (#)->      DUE ->|                    | reset timer is due
 //                  +--------------------+
-//                  |      GOOCLI:       | GOOCLI: input interface
-// (!)->      SET ->| @id,<BL_goo>,onoff | acknowledged generic on/off set
-// (!)->      LET ->| @id,<BL_goo>,onoff | unacknowledged generic on/off set
-// (!)->      GET ->|        @id         | request generic on/off server status
-//                  +--------------------+
-//                  |      GOOSRV:       | GOOSRV: output interface
-// (U)<-      STS <-|  @id,<BL_goo>,sts  | notify server status change
-//                  +--------------------+
 //
 //==============================================================================
 
   int bl_wl(BL_ob *o, int val)
   {
-    static BL_oval U = bl_up;
-    static BL_oval S = bl_storage;
+    static BL_oval out = NULL;
 
     switch (bl_id(o))
     {
-      case SYS_INIT_0_cb_0:          // [SYS:INIT <out>]
-        U = bl_cb(o,(U),WHO"(U)");   // store output callback
+      case BL_ID(_SYS,INIT_):        // [SYS:INIT <out>]
+        out = o->data;               // store output callback
         LOG(2,BL_B "init Bluccino core");
         bl_init(bl_dcomp,bl_wl);     // output of BL_DEVCMP goes to here!
-        return sys_init(o,val);      // forward to sys_init() worker
+        return init(o,val);          // forward to init() worker
 
-      case SYS_TICK_id_BL_pace_cnt:        // [SYS:TICK @0,cnt]
+      case BL_ID(_SYS,TICK_):        // [SYS:TICK @0,cnt]
         return 0;                    // OK - nothing to tick/tock
 
-      case SYS_TOCK_id_BL_pace_cnt:        // [SYS:TICK @0,cnt]
-        return bl_fwd(o,val,(S));    // bl_storage module to be tocked
+      case BL_ID(_SYS,TOCK_):        // [SYS:TICK @0,cnt]
+        return bl_nvm(o,val);        // BL_NVM module to be tocked
 
-      case MESH_PRV_0_0_sts:         // (B)->[MESH:PRV sts]->(O)  (provision)
-      case MESH_ATT_0_0_sts:         // (B)->[MESH:ATT sts]->(O)  (attention)
+      case BL_ID(_MESH,PRV_):        // (B)->[MESH:PRV sts]->(O)  (provision)
+      case BL_ID(_MESH,ATT_):        // (B)->[MESH:ATT sts]->(O)  (attention)
         LOGO(3,"",o,val);
-        return bl_out(o,val,(U));    // output to subscriber
+        return bl_out(o,val,out);    // output to subscriber
 
       case BL_ID(_RESET,INC_):       // cnt = [RESET:INC <ms>]
         return increment(o,val);     // delegate to increment()
@@ -428,24 +409,22 @@ K_TIMER_DEFINE(reset_counter_timer, reset_counter_timer_handler, NULL);
         return unprovision(o,val);   // unprovision node
 
       case _BL_ID(_RESET,DUE_):      // (O)<-[#RESET:DUE] reset timer is due
-        return bl_out(o,val,(U));    // output message (strip off aug bit)
+        return bl_out(o,val,out);    // output message (strip off aug bit)
 
-      case GOOCLI_LET_id_BL_goo_onoff:
-      case GOOCLI_SET_id_BL_goo_onoff:
+      case BL_ID(_GOOCLI,LET_):      // [GOOCLI:LET] publish unack'ed GOO msg
+      case BL_ID(_GOOCLI,SET_):      // [GOOCLI:SET] publish ack'ed GOO msg
         return bl_pub(o,val);        // publish [GOOCLI:LET] or [GOOCLI:SET] msg
 
-      case GOOSRV_STS_id_BL_goo_sts:
-        return bl_out(o,val,(U));    // notify [GOOSRV:STS]
+      case BL_ID(_GOOSRV,STS_):      // [GOOSRV:STS] post GOO status msg upward
+        return bl_out(o,val,out);    // publish [GOOCLI:LET] or [GOOCLI:SET] msg
 
-      case NVM_READY_0_0_sts:        // [NVM:READY] notify that NVM is ready
-        return bl_out(o,val,(U));    // output [NVM:READY] to subscriber
+      case BL_ID(_NVM,READY_):       // [NVM:READY] notify that NVM is ready
+        return bl_out(o,val,out);    // output [NVM:READY] to subscriber
 
-      case NVM_STORE_id_0_val:
-      case NVM_RECALL_id_0_0:
-      case NVM_SAVE_0_BL_dac_0:
-      case NVM_LOAD_0_BL_dac_0:
-      case NVM_AVAIL_0_0_0:
-        return bl_fwd(o,val,(S));    // forward to bl_storage module
+      case BL_ID(_NVM,STORE_):       // [NVM:STORE @id,val] store value in NVM
+      case BL_ID(_NVM,RECALL_):      // val = [NVM:RECALL @id] recall NVM value
+      case BL_ID(_NVM,SAVE_):        // [NVM:SAVE] save NVM cache to NVM
+        return bl_nvm(o,val);        // forward to BL_NVM module
 
       default:
         return -1;                   // bad input

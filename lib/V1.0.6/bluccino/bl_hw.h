@@ -12,19 +12,19 @@
 //==============================================================================
 // enable masks for button events
 // - usage:
-//     bl_cfg(bl_hw,_BUTTON,BL_PRESS)          // enable [BUTTON:PRESS]
-//     bl_cfg(bl_hw,_BUTTON,BL_RELEASE)        // enable [BUTTON:RELEASE]
-//     bl_cfg(bl_hw,_BUTTON,BL_EDGE)           // enable [BUTTON:PRESS/RELEASE]
-//     bl_cfg(bl_hw,_BUTTON,BL_SWITCH)         // enable [BUTTON:SWITCH]
-//     bl_cfg(bl_hw,_BUTTON,BL_CLICK)          // enable [BUTTON:CLICK]
-//     bl_cfg(bl_hw,_BUTTON,BL_HOLD)           // enable [BUTTON:HOLD]
+//     bl_cfg(bl_hw,BL_PRESS)          // enable [BUTTON:PRESS]
+//     bl_cfg(bl_hw,BL_RELEASE)        // enable [BUTTON:RELEASE]
+//     bl_cfg(bl_hw,BL_EDGE)           // enable [BUTTON:PRESS],[BUTTON:RELEASE]
+//     bl_cfg(bl_hw,BL_SWITCH)         // enable [BUTTON:SWITCH]
+//     bl_cfg(bl_hw,BL_CLICK)          // enable [BUTTON:CLICK]
+//     bl_cfg(bl_hw,BL_HOLD)           // enable [BUTTON:HOLD]
 //
-//     bl_cfg(bl_hw,_BUTTON,0xffff)            // enable all [BUTTON:] events
-//     bl_cfg(bl_hw,_BUTTON,0x0000)            // disable all [BUTTON:] events
-//     bl_cfg(bl_hw,_BUTTON,BL_PRESS|BL_RELEASE) // press/release events
-//     bl_cfg(bl_hw,_BUTTON,BL_EDGE)           // same as above
-//     bl_cfg(bl_hw,_BUTTON,BL_CLICK|BL_HOLD)  // click/hold events
-//     bl_cfg(bl_hw,_BUTTON,BL_MULTI)          // same as above
+//     bl_cfg(bl_hw,0xffff)            // enable all [BUTTON:] events
+//     bl_cfg(bl_hw,0x0000)            // disable all [BUTTON:] events
+//     bl_cfg(bl_hw,BL_PRESS|BL_RELEASE) // press/release events
+//     bl_cfg(bl_hw,BL_EDGE)           // same as above
+//     bl_cfg(bl_hw,BL_CLICK|BL_HOLD)  // click/hold events
+//     bl_cfg(bl_hw,BL_MULTI)          // same as above
 //==============================================================================
 
   #define BL_PRESS   0x0001  // mask for [BUTTON:PRESS] events
@@ -42,11 +42,11 @@
 // - [SYS:CFG mask]  config module
 //==============================================================================
 
-  #define SYS_CFG_0_0_mask        BL_ID(_SYS,CFG_)
+  #define SYS_CFG_0_0_mask   BL_ID(_SYS,CFG_)     // [SYS:CFG mask]
 
     // augmented messages
 
-  #define _SYS_CFG_0_0_mask       _BL_ID(_SYS,CFG_)
+  #define _SYS_CFG_0_0_mask  _BL_ID(_SYS,CFG_)     // [#SYS:CFG mask]
 
 //==============================================================================
 // [LED:op] message definition
@@ -54,13 +54,13 @@
 // - [LED:TOGGLE @id] toggle LED @id (i=0..4)
 //==============================================================================
 
-  #define LED_SET_id_0_onoff      BL_ID(_LED,SET_)
-  #define LED_TOGGLE_id_0_0       BL_ID(_LED,TOGGLE_)
+  #define LED_SET_id_0_onoff BL_ID(_LED,SET_)     // [LED:SET @id,onoff]
+  #define LED_TOGGLE_id_0_0  BL_ID(_LED,TOGGLE_)  // [LED:SET @id,onoff]
 
     // augmented messages
 
-  #define _LED_SET_id_0_onoff     _BL_ID(_LED,SET_)
-  #define _LED_TOGGLE_id_0_0      _BL_ID(_LED,TOGGLE_)
+  #define _LED_SET_id_0_onoff _BL_ID(_LED,SET_)    // [#LED:SET @id,onoff]
+  #define _LED_TOGGLE_id_0_0  _BL_ID(_LED,TOGGLE_) // [#LED:SET @id,onoff]
 
 //==============================================================================
 // [BUTTON:op] message definition
@@ -72,58 +72,32 @@
 // - [BUTTON:CFG mask] set click/hold discrimination time
 //==============================================================================
 
-  #define BUTTON_PRESS_id_0_0     BL_ID(_BUTTON,PRESS_)
-  #define BUTTON_RELEASE_id_0_ms  BL_ID(_BUTTON,RELEASE_)
-  #define BUTTON_CLICK_id_0_cnt   BL_ID(_BUTTON,CLICK_)
-  #define BUTTON_HOLD_id_0_ms     BL_ID(_BUTTON,HOLD_)
-  #define BUTTON_CFG_0_0_mask     BL_ID(_BUTTON,CFG_)
-  #define BUTTON_MS_0_0_ms        BL_ID(_BUTTON,MS_)
+  #define BUTTON_PRESS_id_0_0    BL_ID(_BUTTON,PRESS_)   // [BUTTON:PRESS @id]
+  #define BUTTON_RELEASE_id_0_ms BL_ID(_BUTTON,RELEASE_) // [B.:RELEASE @id,ms]
+  #define BUTTON_CLICK_id_0_cnt  BL_ID(_BUTTON,CLICK_)   // [B.:CLICK @id,cnt]
+  #define BUTTON_HOLD_id_0_ms    BL_ID(_BUTTON,HOLD_)    // [BUTTON:HOLD @id,ms]
+  #define BUTTON_CFG_0_0_mask    BL_ID(_BUTTON,CFG_)     // [BUTTON:CFG mask]
+  #define BUTTON_MS_0_0_ms       BL_ID(_BUTTON,MS_)      // [BUTTON:MS ms]
 
     // augmented messages
 
-  #define _BUTTON_PRESS_id_0_0    _BL_ID(_BUTTON,PRESS_)
-  #define _BUTTON_RELEASE_id_0_ms _BL_ID(_BUTTON,RELEASE_)
-  #define _BUTTON_CLICK_id_0_cnt  _BL_ID(_BUTTON,CLICK_)
-  #define _BUTTON_HOLD_id_0_ms    _BL_ID(_BUTTON,HOLD_)
-  #define _BUTTON_CFG_0_0_mask    _BL_ID(_BUTTON,CFG_)
-  #define _BUTTON_MS_0_0_ms       _BL_ID(_BUTTON,MS_)
+  #define _BUTTON_PRESS_id_0_0    _BL_ID(_BUTTON,PRESS_)   // [*:PRESS @id]
+  #define _BUTTON_RELEASE_id_0_ms _BL_ID(_BUTTON,RELEASE_) // [*:RELEASE @id,ms]
+  #define _BUTTON_CLICK_id_0_cnt  _BL_ID(_BUTTON,CLICK_)   // [*:CLICK @id,cnt]
+  #define _BUTTON_HOLD_id_0_ms    _BL_ID(_BUTTON,HOLD_)    // [*:HOLD @id,ms]
+  #define _BUTTON_CFG_0_0_mask    _BL_ID(_BUTTON,CFG_)     // [BUTTON:CFG mask]
+  #define _BUTTON_MS_0_0_ms       _BL_ID(_BUTTON,MS_)      // [BUTTON:MS ms]
 
 //==============================================================================
 // [SWITCH:STS @id,sts] message definition
 // - [SWITCH:STS @id,sts] on/off status update of switch @id
 //==============================================================================
 
-  #define SWITCH_STS_id_0_sts     BL_ID(_SWITCH,STS_)
+  #define SWITCH_STS_id_0_sts    BL_ID(_SWITCH,STS_)   // [SWITCH:STS @id,sts]
 
     // augmented messages
 
-  #define _SWITCH_STS_id_0_sts    _BL_ID(_SWITCH,STS_)
-
-//==============================================================================
-// [NVM:] non volatile memory (NVM) message definitions
-// - [NVM:LOAD <BL_nvm>] load nvm data
-// - [NVM:SAVE <BL_nvm>] load nvm data
-// - [NVM:READY sts] notification that NVM is now ready
-// - [NVM:STORE @id,val] store value in NVM at location @id
-// - [NVM:RECALL @id] recall value in NVM at location @id
-// - [NVM:AVAIL] is NVM functionality available? (return ok value >= 0)
-//==============================================================================
-
-  #define NVM_LOAD_0_BL_dac_0     BL_ID(_NVM,LOAD_)
-  #define NVM_SAVE_0_BL_dac_0     BL_ID(_NVM,SAVE_)
-  #define NVM_STORE_id_0_val      BL_ID(_NVM,STORE_)
-  #define NVM_RECALL_id_0_0       BL_ID(_NVM,RECALL_)
-  #define NVM_READY_0_0_sts       BL_ID(_NVM,READY_)
-  #define NVM_AVAIL_0_0_0         BL_ID(_NVM,AVAIL_)
-
-    // augmented messages
-
-  #define _NVM_LOAD_0_BL_dac_0    _BL_ID(_NVM,LOAD_)
-  #define _NVM_SAVE_0_BL_dac_0    _BL_ID(_NVM,SAVE_)
-  #define _NVM_STORE_id_0_val     _BL_ID(_NVM,STORE_)
-  #define _NVM_RECALL_id_0_0      _BL_ID(_NVM,RECALL_)
-  #define _NVM_READY_0_0_sts      _BL_ID(_NVM,READY_)
-  #define _NVM_AVAIL_0_0_0        _BL_ID(_NVM,AVAIL_)
+  #define _SWITCH_STS_id_0_sts   _BL_ID(_SWITCH,STS_)  // [#SWITCH:STS @id,sts]
 
 //==============================================================================
 // public module interface
@@ -174,13 +148,49 @@
 //                  |       SWITCH:      | SWITCH output interface
 // (U)<-      STS <-|       @id,sts      | on/off status update of switch @id
 //                  +--------------------+
-//                  |        NVM:        | NVM input interface
-// (D)->     LOAD ->|      <BL_dac>      | load NVM data
-// (D)->     SAVE ->|      <BL_dac>      | save NVM data
-//                  +--------------------+
 //
 //==============================================================================
 
   int bl_hw(BL_ob *o, int val);        // HW core module interface
+
+//==============================================================================
+// syntactic sugar: set LED @id on/off,         // send un-augmented message
+// - usage: _LED_SET_(id,val,(to))              // val 0:off, 1:on
+//==============================================================================
+
+  static inline int _LED_SET_(int id, int val,BL_oval to)
+  {
+    return bl_msg((to),_LED,SET_, id,NULL,val);
+  }
+
+//==============================================================================
+// syntactic sugar: set LED @id on/off,          // send augmented message
+// - usage: __LED_SET_(id,val,(to))              // val 0:off, 1:on
+//==============================================================================
+
+  static inline int __LED_SET_(int id, int val,BL_oval to)
+  {
+    return _bl_msg((to), _LED,SET_, id,NULL,val);
+  }
+
+//==============================================================================
+// syntactic sugar: toggle LED @id (@id: 0..4),  // send un-augmented message
+// - usage: _LED_TOGGLE_(id,(to))                // (BL_HW)<-[LED:TOGGLE @id]
+//==============================================================================
+
+  static inline int _LED_TOGGLE_(int id,BL_oval to)
+  {
+    return bl_msg((to), _LED,TOGGLE_, id,NULL,0);
+  }
+
+//==============================================================================
+// syntactic sugar: toggle LED @id (@id: 0..4),  // send augmented message
+// - usage: __LED_TOGGLE_(id,(to))               // (BL_HW)<-[#LED:TOGGLE @id]
+//==============================================================================
+
+  static inline int __LED_TOGGLE_(int id,BL_oval to)
+  {
+    return _bl_msg((to), _LED,TOGGLE_, id,NULL,0);
+  }
 
 #endif // __BL_HW_H__
