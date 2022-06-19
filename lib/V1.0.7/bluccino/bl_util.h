@@ -9,14 +9,18 @@
 #ifndef __BL_UTIL_H__
 #define __BL_UTIL_H__
 
+  #include <random/rand32.h>           // random generator
+
 //==============================================================================
 // get a random int value (passes general randomness tests)
-// - usage: val = bl_rand()  // get random number (not cryptocally secure)
+// - usage: val = bl_rand(modulus) // get random number (not cryptocally secure)
+//          val = bl_rand(0)       // get rand integer number (+/-)
 //==============================================================================
 
-  static inline int bl_rand(void)
+  static inline int bl_rand(int modulus)
   {
-    return sys_rand32_get();
+    int n = sys_rand32_get();
+    return modulus ? (int)((uint32_t)n % (uint32_t)BL_ABS(modulus)) : n;
   }
 
 #endif // __BL_UTIL_H__
