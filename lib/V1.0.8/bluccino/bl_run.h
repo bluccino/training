@@ -180,7 +180,7 @@
 
   static inline int bl_init(BL_oval module,BL_oval cb)
   {
-    return bl_msg(module,_SYS,INIT_, 0,cb,0);  // init module
+    return bl_msg(module,_SYS,INIT_, 0,(void*)cb,0);  // init module
   }
 
 //==============================================================================
