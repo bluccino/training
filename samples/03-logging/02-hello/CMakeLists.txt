@@ -21,7 +21,7 @@
   set (BLU ${LIB}/bluccino)
   set (SRC src)
 
-  include_directories(${SRC} ${BLU})
+  include_directories(${BLU})
 
 #===============================================================================
 # source files

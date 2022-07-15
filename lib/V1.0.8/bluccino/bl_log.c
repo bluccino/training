@@ -8,6 +8,8 @@
 
 #include <stdarg.h>
 #include <stdint.h>
+#include <usb/usb_device.h>
+#include <drivers/uart.h>
 
 #include "bluccino.h"
 
@@ -26,8 +28,167 @@
 #if (CFG_BLUCCINO_RTL)
   static void now(int *pmin, int *psec, int *pms, int *pus);  // split us time
 
-  #include "bl_rtl.c"
-  #include "bl_lfifo.c"
+  
+  BL_rtl bl_rtl, bl_rtl_prt;
+//==============================================================================
+// log fifo
+//==============================================================================
+
+  #define NLFIFO 50                              // number of logs in fifo
+
+  typedef struct FA_lfifo                        // log fifo
+          {
+            BL_rtl fifo[NLFIFO];                 // to store log data
+            uint8_t len;                         // fifo length
+            uint8_t gdx;                         // get index
+            uint8_t pdx;                         // put index
+            volatile uint8_t free;               // number of free fifo items
+          } FA_lfifo;                            // log fifo
+
+    // THE log fifo
+
+  static FA_lfifo lfifo = { len: NLFIFO, gdx:0, pdx:0, free: NLFIFO };
+  static int drops = 0;                         // drop counter for log messages
+
+//==============================================================================
+// get FA_rtl data from log fifo
+// - usage: err = fc_lfifo_get(p)      // return 0:OK, -1:error
+//==============================================================================
+
+  int fc_lfifo_get(BL_rtl *p)
+  {
+//    if (fl_dbg(6))
+//      bl_prt(BL_C"lfifo: get(%d)\n",lfifo.len-lfifo.free);
+
+    if (lfifo.free == lfifo.len)
+      return -1;                            // no more log data in fifo
+
+    BL_rtl *q = lfifo.fifo + lfifo.gdx;
+    lfifo.gdx = (lfifo.gdx + 1) % lfifo.len;// cyclic increment of get index
+
+    memcpy(p,q,sizeof(BL_rtl));             // copy log data from fifo
+    lfifo.free++;                           // another one fifo cell went free
+    return 0;                               // OK
+  }
+
+//==============================================================================
+// put FA_rtl data to log fifo
+// - usage: err = fc_lfifo_put(p)      // return 0:OK, -1:error
+//==============================================================================
+
+  int fc_lfifo_put(BL_rtl *p)
+  {
+//    if (fl_dbg(6))
+//      bl_prt(BL_C"lfifo: put(%d)\n",lfifo.len-lfifo.free+1);
+
+    if (lfifo.free == 0)
+      return -1;                            // log fifo full
+
+    BL_rtl *q = lfifo.fifo + lfifo.pdx;     // pointer to free fifo cell
+    lfifo.pdx = (lfifo.pdx + 1) % NLFIFO;   // cyclic increment of put index
+
+    memcpy(q,p,sizeof(BL_rtl));             // copy log data into fifo
+    lfifo.free--;
+    return 0;
+  }
+
+//==============================================================================
+// how many <FA_rtl> data entries are in fifo?
+// - usage: n = fc_lfifo_avail()            // return number of available
+//==============================================================================
+
+  int fc_lfifo_avail(void)
+  {
+    return (lfifo.len - lfifo.free);
+  }
+
+//==============================================================================
+// is fifo full?
+// - usage: full = fc_lfifo_full()            // return true if fifo is full
+//==============================================================================
+
+  bool fc_lfifo_full(void)
+  {
+    return (lfifo.free == 0);
+  }
+
+//==============================================================================
+// increase the log drop counter
+// - usage: drops = fc_lfifo_drop(0)     // read number of drops and clear drops
+//          fc_lfifo_drop(1)             // increment drops counter
+//==============================================================================
+
+  int fc_lfifo_drop(int mode)
+  {
+    if(!mode)                           // read number of drops and clear drops
+    {
+      int drop_cnt = drops;
+      drops = 0;
+      return drop_cnt;
+    }
+    else                                // increment drops counter
+    {
+        drops++;
+        return drops;
+    }
+  }
+//==============================================================================
+// print work horse - send fifo logs data bl_prt
+// - K_WORK_DEFINE(print_work,workhorse); // assign print work with work horse
+//==============================================================================
+
+  static void workhorse(struct k_work *work)
+  {
+    int drops = fc_lfifo_drop(0);       // read number of drops and clear drops
+    if(drops)
+      bl_prt(BL_R"*** %d messages dropped\n",drops);
+
+    while(fc_lfifo_avail())           // number of available log messages in fifo
+    {
+      bl_rtl_get(&bl_rtl_prt);
+      bl_prt("%s",bl_rtl_prt.buf);
+    }
+  }
+
+  K_WORK_DEFINE(print_work, workhorse);    // assign work buffer with workhorse
+
+  void bl_rtl_put(BL_rtl *p)
+  {
+    if(fc_lfifo_full())                 // cannot put message in the fifo?
+      fc_lfifo_drop(1);                 // increment drops counter
+    else
+    {
+      fc_lfifo_put(p);
+      k_work_submit(&print_work);     // continue at button_workhorse()
+    }
+  }
+
+  void bl_rtl_get(BL_rtl *p)
+  {
+    fc_lfifo_get(p);
+  }
+
+//==============================================================================
+// bl_rtl_init: initializes real time logging.
+//==============================================================================
+
+  void bl_rtl_init(void)
+  {
+    const struct device *dev = DEVICE_DT_GET(DT_CHOSEN(zephyr_console));
+    uint32_t dtr = 0;
+
+    if (usb_enable(NULL))
+      return;
+
+    // poll if the DTR flag was set
+    while (!dtr)
+    {
+      uart_line_ctrl_get(dev, UART_LINE_CTRL_DTR, &dtr);
+      // give CPU resources to low priority threads.
+      bl_sleep(100);
+    }
+    k_work_init(&print_work, workhorse);
+  }
 #endif // CFG_BLUCCINO_RTL
 
 //==============================================================================
@@ -162,6 +323,29 @@
     return true;
   }
 
+#else
+
+  bool bl_dbg(int lev)
+  {
+    if (lev > debug)
+      return false;
+
+    int min, sec, ms, us;
+    now(&min,&sec,&ms,&us);
+
+      // print header in green if in attention mode,
+      // yellow if node is provisioned, otherwise white by default
+    bl_irq(0);
+    sprintf(bl_rtl.buf, "%s#%d[%03d:%02d:%03d.%03d] " BL_0, color,lev, min,sec,ms,us);
+
+    for (int i=0; i < lev; i++)
+      strcat(bl_rtl.buf,"  ");                   // indentation
+
+    bl_rtl_put(&bl_rtl);
+    bl_irq(1);
+
+    return true;
+  }
 #endif
 //==============================================================================
 // log helper
